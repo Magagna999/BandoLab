@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<title>BandoLab — Area amministrativa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..24,400..600,0..1,0&display=block" rel="stylesheet">
+<script src="bandolab-core.js"></script>
+<style>
+:root{--bg:#F5F0E6;--surface:#FFFDF9;--surface-2:#EDE6D8;--ink:#171717;--ink-2:#45403A;--ink-3:#655E55;--line:#E2D9C9;--accent:#F47732;--accent-hover:#E2621C;--accent-soft:#FDE6D6;--accent-text:#A3440E;--side:#171717;--side-ink:#F5F0E6;--side-ink-2:#B8B0A3;--ok:#1F7A4A;--ok-soft:#DDF0E4;--err:#B3261E;--err-soft:#F9E0DC;--warn:#7E5300;--warn-soft:#F7E9C6;--info:#24578A;--info-soft:#DDE8F4;--shadow:0 1px 2px rgba(23,23,23,.05),0 8px 28px rgba(23,23,23,.06);--overlay:rgba(23,23,23,.45)}
+[data-theme="dark"]{--bg:#121110;--surface:#1C1A18;--surface-2:#26231F;--ink:#F5F0E6;--ink-2:#D2CABD;--ink-3:#A59D90;--line:#34302B;--accent:#F47732;--accent-hover:#FF8B4D;--accent-soft:#3B2416;--accent-text:#FF9B5E;--side:#0B0A09;--side-ink:#F5F0E6;--side-ink-2:#9E968A;--ok:#6FD39A;--ok-soft:#14301F;--err:#FF8F85;--err-soft:#3A1A17;--warn:#F0C062;--warn-soft:#332810;--info:#8FBDF0;--info-soft:#142538;--shadow:0 1px 2px rgba(0,0,0,.4);--overlay:rgba(0,0,0,.6)}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4,p{margin:0}
+a{color:var(--accent-text)}
+a:hover{color:var(--ink)}
+button,input,select,textarea{font:inherit;color:inherit}
+button:disabled{cursor:not-allowed}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+@keyframes blFade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</helmet>
+<div style="min-height:100vh;background:var(--bg);color:var(--ink)">
+  <sc-if value="{{ notReady }}" hint-placeholder-val="{{ true }}"><div role="status" style="padding:40px;color:var(--ink-3)">Caricamento dell'area amministrativa…</div></sc-if>
+  <sc-if value="{{ denied }}">
+    <main style="min-height:100vh;display:grid;place-items:center;padding:24px">
+      <div style="max-width:460px;padding:36px;border-radius:24px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;gap:14px;text-align:center;align-items:center">
+        <span aria-hidden="true" style="width:56px;height:56px;border-radius:16px;background:var(--err-soft);color:var(--err);display:grid;place-items:center;font-family:'Material Symbols Rounded';font-size:28px">block</span>
+        <h1 style="font:800 24px Manrope,sans-serif">Permesso insufficiente</h1>
+        <p style="color:var(--ink-2);line-height:1.5">{{ deniedMsg }}</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center"><a href="BandoLab%20Landing.dc.html" style="min-height:46px;padding:0 18px;border-radius:12px;background:var(--accent);color:#171717;display:flex;align-items:center;text-decoration:none;font-weight:700">Accedi con un ruolo editoriale</a><sc-if value="{{ deniedUser }}"><a href="BandoLab%20App.dc.html" style="min-height:46px;padding:0 18px;border-radius:12px;border:1px solid var(--line);display:flex;align-items:center;text-decoration:none;color:var(--ink);font-weight:600">Torna all'app</a></sc-if></div>
+      </div>
+    </main>
+  </sc-if>
+
+  <sc-if value="{{ ok }}">
+    <div style="display:flex;min-height:100vh">
+      <sc-if value="{{ wide }}">
+        <nav aria-label="Sezioni amministrative" style="position:sticky;top:0;height:100vh;width:248px;flex:none;background:var(--side);color:var(--side-ink);padding:18px 12px;display:flex;flex-direction:column;gap:2px;overflow-y:auto">
+          <div style="display:flex;align-items:center;gap:10px;padding:2px 8px 6px">
+            <span style="width:32px;height:32px;border-radius:9px;background:#F5F0E6;position:relative;display:grid;place-items:center;flex:none"><span style="font:800 18px Manrope,sans-serif;color:#171717">B</span><span style="position:absolute;right:-4px;top:-4px;width:13px;height:13px;border-radius:4px;background:#F47732;display:grid;place-items:center;font-family:'Material Symbols Rounded';font-size:11px;color:#171717;font-variation-settings:'wght' 700">check</span></span>
+            <span style="font:800 18px Manrope,sans-serif;letter-spacing:-.03em">Bando<span style="color:#F47732">Lab</span></span>
+          </div>
+          <span style="padding:0 8px 14px;font-size:12px;color:var(--side-ink-2)">Area editoriale</span>
+          <sc-for list="{{ nav }}" as="n" hint-placeholder-count="10">
+            <button onClick="{{ n.onClick }}" aria-current="{{ n.current }}" style="display:flex;align-items:center;gap:12px;min-height:42px;padding:0 12px;border-radius:10px;border:0;cursor:pointer;background:{{ n.bg }};color:{{ n.color }};font-weight:600;font-size:14px;text-align:left" style-hover="color:#F5F0E6">
+              <span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:20px">{{ n.icon }}</span><span style="flex:1">{{ n.label }}</span>
+              <sc-if value="{{ n.hasCount }}"><span style="min-width:22px;height:20px;padding:0 6px;border-radius:10px;background:{{ n.countBg }};color:{{ n.countColor }};font-size:11px;font-weight:700;display:grid;place-items:center">{{ n.count }}</span></sc-if>
+            </button>
+          </sc-for>
+          <div style="margin-top:auto;padding-top:14px;display:flex;flex-direction:column;gap:2px">
+            <a href="BandoLab%20App.dc.html" style="display:flex;align-items:center;gap:12px;min-height:42px;padding:0 12px;border-radius:10px;color:var(--side-ink-2);text-decoration:none;font-weight:600;font-size:14px"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:20px">open_in_new</span>Apri l'app utente</a>
+            <button onClick="{{ logout }}" style="display:flex;align-items:center;gap:12px;min-height:42px;padding:0 12px;border-radius:10px;border:0;background:transparent;color:var(--side-ink-2);cursor:pointer;font-weight:600;font-size:14px"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:20px">logout</span>Esci</button>
+          </div>
+        </nav>
+      </sc-if>
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+        <header style="position:sticky;top:0;z-index:9;background:color-mix(in oklab,var(--bg) 92%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)">
+          <div style="padding:10px clamp(14px,3vw,28px);display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-height:64px">
+            <h1 style="font:800 20px Manrope,sans-serif;letter-spacing:-.02em">{{ title }}</h1>
+            <span style="padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;letter-spacing:.05em;background:var(--warn-soft);color:var(--warn)">DEMO</span>
+            <div style="margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <sc-if value="{{ narrow }}"><label style="display:flex;align-items:center;gap:6px"><span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Sezione</span><select value="{{ section }}" onChange="{{ onSection }}" style="min-height:42px;padding:0 10px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-weight:600"><sc-for list="{{ nav }}" as="n" hint-placeholder-count="10"><option value="{{ n.id }}">{{ n.label }}</option></sc-for></select></label></sc-if>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-2)"><span>Simula ruolo</span><select value="{{ meId }}" onChange="{{ onRole }}" style="min-height:42px;padding:0 10px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-weight:600;color:var(--ink)"><sc-for list="{{ staff }}" as="u" hint-placeholder-count="4"><option value="{{ u.id }}">{{ u.label }}</option></sc-for></select></label>
+              <button onClick="{{ toggleTheme }}" aria-label="Cambia tema" style="width:42px;height:42px;border-radius:10px;border:1px solid var(--line);background:var(--surface);cursor:pointer;display:grid;place-items:center"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:20px">contrast</span></button>
+            </div>
+          </div>
+          <p style="padding:0 clamp(14px,3vw,28px) 10px;font-size:12px;color:var(--ink-3)">I permessi sono verificati solo in questo browser. In produzione ogni azione dovrà essere autorizzata dal backend.</p>
+        </header>
+        <main style="flex:1;padding:clamp(14px,3vw,28px);display:flex;flex-direction:column;gap:20px;max-width:1320px;width:100%">
+
+          <sc-if value="{{ sOverview }}">
+            <div style="display:flex;flex-direction:column;gap:20px;animation:blFade .2s ease-out">
+              <div><h2 style="font:800 26px Manrope,sans-serif;letter-spacing:-.02em">Ciao, {{ me.first }}</h2><p style="color:var(--ink-2)">{{ ov.roleIntro }}</p></div>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:12px">
+                <sc-for list="{{ ov.kpis }}" as="k" hint-placeholder-count="5">
+                  <button onClick="{{ k.onClick }}" style="padding:18px;border-radius:16px;background:var(--surface);border:1px solid var(--line);text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:4px" style-hover="border-color:var(--ink)"><span style="font-size:13px;color:var(--ink-3)">{{ k.label }}</span><span style="font:800 30px Manrope,sans-serif;color:{{ k.color }}">{{ k.value }}</span><span style="font-size:12px;color:var(--ink-3)">{{ k.note }}</span></button>
+                </sc-for>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px">
+                <section style="padding:20px;border-radius:18px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;gap:10px">
+                  <h3 style="font:700 17px Manrope,sans-serif">{{ ov.listTitle }}</h3>
+                  <sc-if value="{{ ov.listEmpty }}"><p style="color:var(--ink-3);font-size:14px">Niente in attesa.</p></sc-if>
+                  <sc-for list="{{ ov.list }}" as="q" hint-placeholder-count="4">
+                    <button onClick="{{ q.open }}" style="display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);cursor:pointer;text-align:left;min-height:52px"><span style="font:600 12px ui-monospace,Menlo,monospace;color:var(--ink-3)">{{ q.id }}</span><span style="flex:1;min-width:0;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ q.text }}</span><span style="padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;background:{{ q.sBg }};color:{{ q.sColor }};white-space:nowrap">{{ q.status }}</span></button>
+                  </sc-for>
+                </section>
+                <section style="padding:20px;border-radius:18px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;gap:10px">
+                  <h3 style="font:700 17px Manrope,sans-serif">Attività recente</h3>
+                  <sc-for list="{{ ov.audit }}" as="a" hint-placeholder-count="5">
+                    <div style="display:grid;grid-template-columns:auto 1fr;gap:2px 12px;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px"><span style="font:600 12px ui-monospace,Menlo,monospace;color:var(--ink-3);grid-row:span 2">{{ a.target }}</span><span><strong>{{ a.actor }}</strong> · {{ a.action }}</span><span style="font-size:12px;color:var(--ink-3)">{{ a.time }}{{ a.note }}</span></div>
+                  </sc-for>
+                </section>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ sQuestions }}">
+            <div style="display:flex;flex-direction:column;gap:14px;animation:blFade .2s ease-out">
+              <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end">
+                <label style="display:flex;flex-direction:column;gap:6px;flex:1;min-width:200px"><span style="font-size:13px;font-weight:600;color:var(--ink-2)">Cerca</span><input type="search" value="{{ ql.q }}" onInput="{{ ql.onQ }}" placeholder="Testo o identificativo" style="min-height:42px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface)"></label>
+                <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:600;color:var(--ink-2)">Stato</span><select value="{{ ql.status }}" onChange="{{ ql.onStatus }}" style="min-height:42px;padding:0 10px;border-radius:10px;border:1px solid var(--line);background:var(--surface)"><sc-for list="{{ ql.statusOpts }}" as="o" hint-placeholder-count="6"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select></label>
+                <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:600;color:var(--ink-2)">Materia</span><select value="{{ ql.subject }}" onChange="{{ ql.onSubject }}" style="min-height:42px;padding:0 10px;border-radius:10px;border:1px solid var(--line);background:var(--surface)"><sc-for list="{{ ql.subjectOpts }}" as="o" hint-placeholder-count="6"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select></label>
+                <button onClick="{{ ql.create }}" title="{{ ql.createWhy }}" style="min-height:42px;padding:0 16px;border-radius:10px;border:0;background:var(--accent);color:#171717;font-weight:700;cursor:pointer;display:flex;gap:6px;align-items:center;opacity:{{ ql.createOpacity }}"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:20px">add</span>Nuova domanda</button>
+              </div>
+              <p style="font-size:13px;color:var(--ink-3)">{{ ql.count }}</p>
+              <div style="overflow-x:auto;border-radius:14px;border:1px solid var(--line);background:var(--surface)">
+                <table style="width:100%;border-collapse:collapse;font-size:14px;min-width:820px">
+                  <thead><tr style="text-align:left;background:var(--bg)"><th scope="col" style="padding:10px 12px">ID</th><th scope="col" style="padding:10px 12px">Domanda</th><th scope="col" style="padding:10px 12px">Materia</th><th scope="col" style="padding:10px 12px">Stato</th><th scope="col" style="padding:10px 12px">Ver.</th><th scope="col" style="padding:10px 12px">Autore</th><th scope="col" style="padding:10px 12px">Prossima revisione</th></tr></thead>
+                  <tbody>
+                    <sc-for list="{{ ql.rows }}" as="r" hint-placeholder-count="8">
+                      <tr style="border-top:1px solid var(--line);cursor:pointer" onClick="{{ r.open }}" style-hover="background:var(--bg)">
+                        <td style="padding:10px 12px;font:600 12px ui-monospace,Menlo,monospace"><button onClick="{{ r.open }}" style="border:0;background:transparent;cursor:pointer;color:var(--accent-text);font:inherit;text-decoration:underline">{{ r.id }}</button></td>
+                        <td style="padding:10px 12px;max-width:380px"><span style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.text }}</span></td>
+                        <td style="padding:10px 12px;white-space:nowrap">{{ r.subject }}</td>
+                        <td style="padding:10px 12px"><div style="display:flex;gap:4px;flex-wrap:wrap"><span style="padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;background:{{ r.sBg }};color:{{ r.sColor }};white-space:nowrap">{{ r.status }}</span><sc-if value="{{ r.due }}"><span style="padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;background:var(--warn-soft);color:var(--warn);white-space:nowrap">DA AGGIORNARE</span></sc-if><sc-if value="{{ r.wip }}"><span style="padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;background:var(--info-soft);color:var(--info);white-space:nowrap">{{ r.wipLabel }}</span></sc-if></div></td>
+                        <td style="padding:10px 12px">{{ r.ver }}</td>
+                        <td style="padding:10px 12px;white-space:nowrap">{{ r.author }}</td>
+                        <td style="padding:10px 12px;white-space:nowrap">{{ r.next }}</td>
+                      </tr>
+                    </sc-for>
+                  </tbody>
+                </table>
+              </div>
+              <sc-if value="{{ ql.empty }}"><p style="padding:24px;border-radius:14px;border:1.5px dashed var(--line);color:var(--ink-2);text-align:center">Nessuna domanda corrisponde ai filtri.</p></sc-if>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ sEditor }}">
+            <div style="display:flex;flex-direction:column;gap:16px;animation:blFade .2s ease-out">
+              <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                <button onClick="{{ ed.back }}" style="min-height:40px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);cursor:pointer;display:flex;gap:6px;align-items:center"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:18px">arrow_back</span>Domande</button>
+                <span style="font:700 14px ui-monospace,Menlo,monospace">{{ ed.id }}</span>
+                <span style="padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700;background:{{ ed.sBg }};color:{{ ed.sColor }}">{{ ed.status }}</span>
+                <span style="font-size:13px;color:var(--ink-3)">Versione in lavorazione v{{ ed.v }} · pubblicata: {{ ed.liveV }}</span>
+                <sc-if value="{{ ed.suspended }}"><span style="padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700;background:var(--err-soft);color:var(--err)">SOSPESA DAI NUOVI QUIZ</span></sc-if>
+              </div>
+              <sc-if value="{{ ed.hasReviewNote }}"><p role="note" style="padding:12px 14px;border-radius:12px;background:var(--warn-soft);color:var(--warn);font-size:14px"><strong>Nota del revisore:</strong> {{ ed.reviewNote }}</p></sc-if>
+              <sc-if value="{{ ed.hasErrors }}"><div role="alert" style="padding:12px 14px;border-radius:12px;background:var(--err-soft);color:var(--err);font-size:14px">Prima dell'invio in revisione completa i campi obbligatori evidenziati ({{ ed.errorCount }}).</div></sc-if>
+              <div style="display:grid;grid-template-columns:{{ ed.cols }};gap:18px;align-items:start">
+                <section style="padding:clamp(16px,3vw,24px);border-radius:18px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;gap:16px;min-width:0">
+                  <sc-if value="{{ ed.readOnly }}"><p style="font-size:13px;padding:10px 12px;border-radius:10px;background:var(--bg);color:var(--ink-2)">{{ ed.readOnlyMsg }}</p></sc-if>
+                  <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:600">Testo della domanda *</span><textarea value="{{ f.text }}" onInput="{{ f.on.text }}" readOnly="{{ ed.readOnly }}" rows="3" aria-invalid="{{ e.textBad }}" aria-describedby="err-text" style="padding:10px 12px;border-radius:10px;border:{{ e.textBorder }};background:var(--bg);resize:vertical"></textarea><sc-if value="{{ e.textBad }}"><span id="err-text" style="font-size:13px;color:var(--err)">{{ e.text }}</span></sc-if></label>
+                  <fieldset style="border:0;padding:0;margin:0;display:flex;flex-direction:column;gap:8px"><legend style="font-size:14px;font-weight:600;margin-bottom:8px">Opzioni di risposta e risposta corretta *</legend>
+                    <sc-for list="{{ f.options }}" as="o" hint-placeholder-count="4">
+                      <div style="display:flex;gap:10px;align-items:center"><input type="radio" name="correct" checked="{{ o.correct }}" onChange="{{ o.onCorrect }}" disabled="{{ ed.readOnly }}" aria-label="Segna l'opzione {{ o.letter }} come corretta" style="width:20px;height:20px;accent-color:#1F7A4A"><span style="font-weight:700;width:18px">{{ o.letter }}</span><input value="{{ o.value }}" onInput="{{ o.onInput }}" readOnly="{{ ed.readOnly }}" aria-label="Opzione {{ o.letter }}" style="flex:1;min-height:42px;padding:0 12px;border-radius:10px;border:{{ o.border }};background:var(--bg)"></div>
+                    </sc-for>
+                    <sc-if value="{{ e.optionsBad }}"><span style="font-size:13px;color:var(--err)">{{ e.options }}</span></sc-if>
+                    <sc-if value="{{ e.correctBad }}"><span style="font-size:13px;color:var(--err)">{{ e.correct }}</span></sc-if>
+                  </fieldset>
+                  <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:600">Spiegazione {{ ed.explReq }}</span><textarea value="{{ f.explanation }}" onInput="{{ f.on.explanation }}" readOnly="{{ ed.readOnly }}" rows="3" aria-invalid="{{ e.explanationBad }}" style="padding:10px 12px;border-radius:10px;border:{{ e.explanationBorder }};background:var(--bg);resize:vertical"></textarea><sc-if value="{{ e.explanationBad }}"><span style="font-size:13px;color:var(--err)">{{ e.explanation }}</span></sc-if></label>
+                  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:12px">
+                    <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:600">Materia *</span><select value="{{ f.subject }}" onChange="{{ f.on.subject }}" disabled="{{ ed.readOnly }}" style="min-height:42px;padding:0 10px;border-radius:10px;border:{{ e.subjectBorder }};background:var(--bg)"><sc-for list="{{ f.subjectOpts }}" as="o" hint-placeholder-count="6"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select><sc-if value="{{ e.subjectBad }}"><span style="font-size:13px;color:var(--err)">{{ e.subject }}</span></sc-if></label>
+                    <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:600">Argomento *</span><select value="{{ f.topic }}" onChange="{{ f.on.topic }}" disabled="{{ ed.readOnly }}" style="min-height:42px;padding:0 10px;border-radius:10px;border:{{ e.topicBorder }};background:var(--bg)"><sc-for list="{{ f.topicOpts }}" as="o" hint-placeholder-count="4"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select><sc-if value="{{ e.topicBad }}"><span style="font-size:13px;color:var(--err)">{{ e.topic }}</span></sc-if></label>
+                    <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:600">Difficoltà (manuale) *</span><select value="{{ f.difficulty }}" onChange="{{ f.on.difficulty }}" disabled="{{ ed.readOnly }}" style="min-height:42px;padding:0 10px;border-radius:10px;border:{{ e.difficultyBorder }};background:var(--bg)"><option value="">Seleziona</option><option value="1">Base</option><option value="2">Intermedia</option><option value="3">Avanzata</option></select><sc-if value="{{ e.difficultyBad }}"><span style="font-size:13px;color:var(--err)">{{ e.difficulty }}</span></sc-if></label>
+                  </div>
+                  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:12px">
+                    <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:600">Fonte ufficiale o documentale *</span><input value="{{ f.source }}" onInput="{{ f.on.source }}" readOnly="{{ ed.readOnly }}" placeholder="Es. L. 241/1990, art. 2" style="min-height:42px;padding:0 12px;border-radius:10px;border:{{ e.sourceBorder }};background:var(--bg)"><sc-if value="{{ e.sourceBad }}"><span style="font-size:13px;color:var(--err)">{{ e.source }}</span></sc-if></label>
+                    <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:600">URL della fonte {{ ed.urlReq }}</span><input type="url" value="{{ f.sourceUrl }}" onInput="{{ f.on.sourceUrl }}" readOnly="{{ ed.readOnly }}" placeholder="https://" style="min-height:42px;padding:0 12px;border-radius:10px;border:{{ e.sourceUrlBorder }};background:var(--bg)"><sc-if value="{{ e.sourceUrlBad }}"><span style="font-size:13px;color:var(--err)">{{ e.sourceUrl }}</span></sc-if></label>
+                    <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:600">Ultima verifica *</span><input type="date" value="{{ f.lastVerified }}" onChange="{{ f.on.lastVerified }}" readOnly="{{ ed.readOnly }}" style="min-height:42px;padding:0 12px;border-radius:10px;border:{{ e.lastVerifiedBorder }};background:var(--bg)"><sc-if value="{{ e.lastVerifiedBad }}"><span style="font-size:13px;color:var(--err)">{{ e.lastVerified }}</span></sc-if></label>
+                    <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:600">Prossima revisione *</span><input type="date" value="{{ f.nextReview }}" onChange="{{ f.on.nextReview }}" readOnly="{{ ed.readOnly }}" style="min-height:42px;padding:0 12px;border-radius:10px;border:{{ e.nextReviewBorder }};background:var(--bg)"><sc-if value="{{ e.nextReviewBad }}"><span style="font-size:13px;color:var(--err)">{{ e.nextReview }}</span></sc-if></label>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:600">Associazioni (derivate dalla tassonomia)</span><p style="font-size:14px;color:var(--ink-2);line-height:1.5"><span style="color:var(--ink-3)">Profili:</span> {{ ed.profiles }}<br><span style="color:var(--ink-3)">Enti:</span> {{ ed.entities }}<br><span style="color:var(--ink-3)">Quiz:</span> {{ ed.quizzes }}</p></div>
+                  <sc-if value="{{ ed.canSave }}"><div style="display:flex;gap:10px;flex-wrap:wrap"><button onClick="{{ ed.save }}" style="min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--ink);background:transparent;cursor:pointer;font-weight:600">Salva bozza</button><span style="font-size:13px;color:var(--ink-3);align-self:center">{{ ed.dirtyLabel }}</span></div></sc-if>
+                </section>
+                <aside style="display:flex;flex-direction:column;gap:14px">
+                  <section style="padding:18px;border-radius:18px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;gap:10px">
+                    <h3 style="font:700 16px Manrope,sans-serif">Workflow</h3>
+                    <p style="font-size:13px;color:var(--ink-3)">Bozza → In revisione → Approvato → Pubblicato</p>
+                    <sc-if value="{{ ed.needsNote }}"><label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:600">Nota (obbligatoria per modifiche, rifiuto o sospensione)</span><textarea value="{{ ed.note }}" onInput="{{ ed.onNote }}" rows="2" style="padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);resize:vertical"></textarea></label></sc-if>
+                    <sc-for list="{{ ed.actions }}" as="a" hint-placeholder-count="3">
+                      <div style="display:flex;flex-direction:column;gap:4px">
+                        <button onClick="{{ a.onClick }}" disabled="{{ a.disabled }}" aria-describedby="{{ a.whyId }}" style="min-height:44px;padding:0 14px;border-radius:10px;border:{{ a.border }};background:{{ a.bg }};color:{{ a.color }};cursor:pointer;font-weight:700;text-align:left;display:flex;gap:8px;align-items:center;opacity:{{ a.opacity }}"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:20px">{{ a.icon }}</span>{{ a.label }}</button>
+                        <sc-if value="{{ a.disabled }}"><span id="{{ a.whyId }}" style="font-size:12px;color:var(--ink-3);display:flex;gap:4px;align-items:flex-start"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:14px">lock</span>{{ a.why }}</span></sc-if>
+                      </div>
+                    </sc-for>
+                  </section>
+                  <section style="padding:18px;border-radius:18px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;gap:10px">
+                    <h3 style="font:700 16px Manrope,sans-serif">Versioni</h3>
+                    <sc-for list="{{ ed.versions }}" as="v" hint-placeholder-count="2">
+                      <div style="padding:10px 12px;border-radius:10px;background:var(--bg);display:flex;flex-direction:column;gap:4px;font-size:13px">
+                        <div style="display:flex;justify-content:space-between;gap:8px"><strong>v{{ v.v }}</strong><span style="padding:2px 6px;border-radius:5px;font-size:11px;font-weight:700;background:{{ v.sBg }};color:{{ v.sColor }}">{{ v.status }}</span></div>
+                        <span style="color:var(--ink-2)">{{ v.note }}</span>
+                        <span style="color:var(--ink-3)">Autore {{ v.author }} · revisore {{ v.reviewer }} · {{ v.date }}</span>
+                        <span style="color:var(--ink-3)">{{ v.attempts }}</span>
+                        <sc-if value="{{ v.hasDiff }}"><span style="color:var(--info)">{{ v.diff }}</span></sc-if>
+                      </div>
+                    </sc-for>
+                  </section>
+                  <section style="padding:18px;border-radius:18px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;gap:8px">
+                    <h3 style="font:700 16px Manrope,sans-serif">Cronologia</h3>
+                    <sc-if value="{{ ed.noLog }}"><p style="font-size:13px;color:var(--ink-3)">Nessuna transizione registrata.</p></sc-if>
+                    <sc-for list="{{ ed.log }}" as="l" hint-placeholder-count="3"><div style="font-size:13px;padding:6px 0;border-bottom:1px solid var(--line)"><strong>{{ l.action }}</strong> · v{{ l.v }}<br><span style="color:var(--ink-3)">{{ l.actor }} · {{ l.time }}{{ l.note }}</span></div></sc-for>
+                  </section>
+                </aside>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ sReview }}">
+            <div style="display:flex;flex-direction:column;gap:12px;animation:blFade .2s ease-out">
+              <p style="color:var(--ink-2)">Contenuti in attesa di revisione. Non puoi revisionare contenuti di cui sei autore.</p>
+              <sc-if value="{{ rq.empty }}"><p style="padding:24px;border-radius:14px;border:1.5px dashed var(--line);color:var(--ink-2);text-align:center">La coda di revisione è vuota.</p></sc-if>
+              <sc-for list="{{ rq.items }}" as="q" hint-placeholder-count="3">
+                <article style="padding:18px;border-radius:16px;background:var(--surface);border:1px solid var(--line);display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+                  <div style="flex:1;min-width:240px;display:flex;flex-direction:column;gap:4px"><span style="font-size:12px;color:var(--ink-3)">{{ q.kind }} · {{ q.id }} · v{{ q.v }} · autore {{ q.author }} · {{ q.subject }}</span><span style="font-weight:600">{{ q.text }}</span><span style="font-size:13px;color:var(--ink-3)">Fonte: {{ q.source }}</span></div>
+                  <sc-if value="{{ q.own }}"><span style="font-size:12px;color:var(--warn);display:flex;gap:4px;align-items:center"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:16px">lock</span>Sei l'autore</span></sc-if>
+                  <button onClick="{{ q.open }}" style="min-height:42px;padding:0 14px;border-radius:10px;border:1px solid var(--ink);background:transparent;cursor:pointer;font-weight:600">{{ q.openLabel }}</button>
+                </article>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ sReports }}">
+            <div style="display:flex;flex-direction:column;gap:12px;animation:blFade .2s ease-out">
+              <div role="tablist" aria-label="Stato segnalazioni" style="display:inline-flex;align-self:flex-start;padding:4px;border-radius:12px;background:var(--surface-2);gap:4px"><sc-for list="{{ rr.tabs }}" as="t" hint-placeholder-count="2"><button role="tab" aria-selected="{{ t.active }}" onClick="{{ t.onClick }}" style="min-height:38px;padding:0 14px;border-radius:9px;border:0;cursor:pointer;font-weight:600;font-size:13px;background:{{ t.bg }}">{{ t.label }} · {{ t.count }}</button></sc-for></div>
+              <sc-if value="{{ rr.empty }}"><p style="padding:24px;border-radius:14px;border:1.5px dashed var(--line);color:var(--ink-2);text-align:center">Nessuna segnalazione.</p></sc-if>
+              <sc-for list="{{ rr.items }}" as="r" hint-placeholder-count="2">
+                <article style="padding:18px;border-radius:16px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;gap:12px">
+                  <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><span style="font-size:12px;color:var(--ink-3)">{{ r.id }} · domanda {{ r.qid }} v{{ r.v }} · {{ r.time }} · da {{ r.by }}</span><span style="padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;background:{{ r.sBg }};color:{{ r.sColor }}">{{ r.status }}</span></div>
+                  <div><strong>{{ r.reason }}</strong> — {{ r.text }}</div>
+                  <p style="font-size:13px;color:var(--ink-2);padding:10px 12px;border-radius:10px;background:var(--bg)">{{ r.qtext }}</p>
+                  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+                    <label style="display:flex;flex-direction:column;gap:4px"><span style="font-size:12px;font-weight:600">Priorità</span><select value="{{ r.priority }}" onChange="{{ r.onPriority }}" disabled="{{ r.noAssign }}" style="min-height:40px;padding:0 8px;border-radius:9px;border:1px solid var(--line);background:var(--bg)"><option value="alta">Alta</option><option value="media">Media</option><option value="bassa">Bassa</option></select></label>
+                    <label style="display:flex;flex-direction:column;gap:4px"><span style="font-size:12px;font-weight:600">Assegnata a</span><select value="{{ r.assignee }}" onChange="{{ r.onAssign }}" disabled="{{ r.noAssign }}" style="min-height:40px;padding:0 8px;border-radius:9px;border:1px solid var(--line);background:var(--bg)"><sc-for list="{{ rr.assignees }}" as="u" hint-placeholder-count="3"><option value="{{ u.value }}">{{ u.label }}</option></sc-for></select></label>
+                    <button onClick="{{ r.openQ }}" style="min-height:40px;padding:0 12px;border-radius:9px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-weight:600">Apri domanda</button>
+                    <sc-if value="{{ r.isOpen }}">
+                      <button onClick="{{ r.suspend }}" disabled="{{ r.noSuspend }}" title="{{ r.suspendWhy }}" style="min-height:40px;padding:0 12px;border-radius:9px;border:0;background:var(--err);color:var(--surface);cursor:pointer;font-weight:700;opacity:{{ r.suspendOpacity }}">{{ r.suspendLabel }}</button>
+                      <button onClick="{{ r.resolve }}" disabled="{{ r.noHandle }}" style="min-height:40px;padding:0 12px;border-radius:9px;border:1px solid var(--ok);background:transparent;color:var(--ok);cursor:pointer;font-weight:700;opacity:{{ r.handleOpacity }}">Segna come risolta</button>
+                      <button onClick="{{ r.dismiss }}" disabled="{{ r.noHandle }}" style="min-height:40px;padding:0 12px;border-radius:9px;border:0;background:transparent;cursor:pointer;color:var(--ink-2);opacity:{{ r.handleOpacity }}">Archivia senza modifiche</button>
+                    </sc-if>
+                  </div>
+                  <sc-if value="{{ r.noHandle }}"><span style="font-size:12px;color:var(--ink-3)">{{ r.handleWhy }}</span></sc-if>
+                  <sc-if value="{{ r.hasLog }}"><ul style="margin:0;padding-left:18px;font-size:12px;color:var(--ink-3)"><sc-for list="{{ r.log }}" as="l" hint-placeholder-count="1"><li>{{ l }}</li></sc-for></ul></sc-if>
+                </article>
+              </sc-for>
+              <p style="font-size:12px;color:var(--ink-3)">La sospensione esclude la domanda dai nuovi quiz e non modifica i tentativi già completati.</p>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ sVerify }}">
+            <div style="display:flex;flex-direction:column;gap:12px;animation:blFade .2s ease-out">
+              <p style="color:var(--ink-2);line-height:1.5">Contenuti pubblicati con verifica scaduta o in scadenza nei prossimi 30 giorni. Una data scaduta avvia una revisione: non prova che il contenuto sia errato e non lo disattiva.</p>
+              <sc-if value="{{ vf.empty }}"><p style="padding:24px;border-radius:14px;border:1.5px dashed var(--line);color:var(--ink-2);text-align:center">Nessun contenuto da verificare.</p></sc-if>
+              <sc-for list="{{ vf.items }}" as="q" hint-placeholder-count="3">
+                <article style="padding:16px 18px;border-radius:16px;background:var(--surface);border:1px solid var(--line);display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+                  <span style="padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;background:{{ q.bg }};color:{{ q.color }}">{{ q.badge }}</span>
+                  <div style="flex:1;min-width:240px;display:flex;flex-direction:column;gap:2px"><span style="font-weight:600">{{ q.text }}</span><span style="font-size:13px;color:var(--ink-3)">{{ q.kind }} {{ q.id }} · fonte {{ q.source }} · ultima verifica {{ q.last }} · prossima {{ q.next }}</span></div>
+                  <button onClick="{{ q.verify }}" disabled="{{ q.noVerify }}" title="{{ q.why }}" style="min-height:42px;padding:0 14px;border-radius:10px;border:0;background:var(--ok);color:var(--surface);cursor:pointer;font-weight:700;opacity:{{ q.opacity }}">Confermata: aggiorna date</button>
+                  <sc-if value="{{ q.isQ }}"><button onClick="{{ q.open }}" style="min-height:42px;padding:0 14px;border-radius:10px;border:1px solid var(--line);background:transparent;cursor:pointer;font-weight:600">Apri e modifica</button></sc-if>
+                </article>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ sMaterials }}">
+            <div style="display:flex;flex-direction:column;gap:12px;animation:blFade .2s ease-out">
+              <sc-for list="{{ mt.items }}" as="m" hint-placeholder-count="5">
+                <article style="padding:16px 18px;border-radius:16px;background:var(--surface);border:1px solid var(--line);display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+                  <span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:24px;color:var(--accent-text)">{{ m.icon }}</span>
+                  <div style="flex:1;min-width:220px;display:flex;flex-direction:column;gap:2px"><span style="font-weight:600">{{ m.title }}</span><span style="font-size:13px;color:var(--ink-3)">{{ m.meta }}</span></div>
+                  <span style="padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;background:{{ m.sBg }};color:{{ m.sColor }}">{{ m.status }}</span>
+                  <sc-for list="{{ m.actions }}" as="a" hint-placeholder-count="1"><button onClick="{{ a.onClick }}" disabled="{{ a.disabled }}" title="{{ a.why }}" style="min-height:40px;padding:0 12px;border-radius:9px;border:1px solid var(--line);background:var(--bg);cursor:pointer;font-weight:600;font-size:13px;opacity:{{ a.opacity }}">{{ a.label }}</button></sc-for>
+                </article>
+              </sc-for>
+              <p style="font-size:12px;color:var(--ink-3)">Solo i materiali pubblicati compaiono nella biblioteca degli utenti.</p>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ sQuizzes }}">
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,400px),1fr));gap:14px;animation:blFade .2s ease-out">
+              <sc-for list="{{ qm.items }}" as="z" hint-placeholder-count="4">
+                <article style="padding:18px;border-radius:16px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;gap:12px">
+                  <div style="display:flex;justify-content:space-between;gap:10px"><div><span style="font-size:12px;color:var(--ink-3)">{{ z.id }} · {{ z.mode }}</span><h3 style="font:700 16px/1.3 Manrope,sans-serif">{{ z.title }}</h3></div><span style="align-self:flex-start;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;background:{{ z.sBg }};color:{{ z.sColor }}">{{ z.status }}</span></div>
+                  <p style="font-size:13px;color:var(--ink-2)">{{ z.assoc }}</p>
+                  <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px">
+                    <sc-for list="{{ z.checks }}" as="c" hint-placeholder-count="7"><li style="display:flex;gap:8px;font-size:13px;align-items:flex-start"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:18px;color:{{ c.color }}">{{ c.icon }}</span><span><span style="font-weight:600">{{ c.label }}</span> <span style="color:var(--ink-3)">· {{ c.detail }}</span><span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">{{ c.sr }}</span></span></li></sc-for>
+                  </ul>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button onClick="{{ z.toggle }}" disabled="{{ z.disabled }}" style="min-height:42px;padding:0 14px;border-radius:10px;border:0;background:{{ z.btnBg }};color:{{ z.btnColor }};cursor:pointer;font-weight:700;opacity:{{ z.opacity }}">{{ z.btnLabel }}</button><span style="font-size:12px;color:var(--ink-3)">{{ z.why }}</span></div>
+                </article>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ sDup }}">
+            <div style="display:flex;flex-direction:column;gap:12px;animation:blFade .2s ease-out">
+              <p style="color:var(--ink-2);line-height:1.5">Coppie di domande simili nello stesso argomento (testo, fonte e risposta corretta). La decisione è sempre manuale e viene registrata. Il consolidamento conserva associazioni e riferimenti ai tentativi precedenti.</p>
+              <sc-if value="{{ dp.empty }}"><p style="padding:24px;border-radius:14px;border:1.5px dashed var(--line);color:var(--ink-2);text-align:center">Nessuna coppia da valutare.</p></sc-if>
+              <sc-for list="{{ dp.items }}" as="d" hint-placeholder-count="1">
+                <article style="padding:18px;border-radius:16px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;gap:12px">
+                  <span style="font-size:13px;color:var(--ink-3)">Similarità {{ d.sim }} · {{ d.decision }}</span>
+                  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:10px">
+                    <div style="padding:12px;border-radius:12px;background:var(--bg);font-size:14px;line-height:1.5"><strong>{{ d.a }}</strong> · {{ d.aStatus }}<br>{{ d.aText }}</div>
+                    <div style="padding:12px;border-radius:12px;background:var(--bg);font-size:14px;line-height:1.5"><strong>{{ d.b }}</strong> · {{ d.bStatus }}<br>{{ d.bText }}</div>
+                  </div>
+                  <sc-if value="{{ d.pending }}"><div style="display:flex;gap:8px;flex-wrap:wrap"><button onClick="{{ d.keep }}" disabled="{{ d.noPerm }}" style="min-height:42px;padding:0 14px;border-radius:10px;border:1px solid var(--line);background:var(--bg);cursor:pointer;font-weight:600;opacity:{{ d.opacity }}">Mantieni entrambe</button><button onClick="{{ d.merge }}" disabled="{{ d.noPerm }}" style="min-height:42px;padding:0 14px;border-radius:10px;border:0;background:var(--ink);color:var(--bg);cursor:pointer;font-weight:700;opacity:{{ d.opacity }}">Consolida {{ d.b }} in {{ d.a }}</button><sc-if value="{{ d.noPerm }}"><span style="font-size:12px;color:var(--ink-3);align-self:center">{{ d.why }}</span></sc-if></div></sc-if>
+                </article>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ sTax }}">
+            <div style="display:flex;flex-direction:column;gap:14px;animation:blFade .2s ease-out">
+              <sc-if value="{{ tx.noPerm }}"><p style="padding:12px 14px;border-radius:12px;background:var(--warn-soft);color:var(--warn);font-size:14px">{{ tx.why }}</p></sc-if>
+              <div role="tablist" aria-label="Tassonomia" style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ tx.kinds }}" as="k" hint-placeholder-count="5"><button role="tab" aria-selected="{{ k.active }}" onClick="{{ k.onClick }}" style="min-height:40px;padding:0 14px;border-radius:999px;cursor:pointer;font-weight:600;font-size:14px;background:{{ k.bg }};border:{{ k.border }};color:var(--ink)">{{ k.label }} · {{ k.count }}</button></sc-for></div>
+              <div style="border-radius:14px;border:1px solid var(--line);background:var(--surface);overflow:hidden">
+                <sc-for list="{{ tx.items }}" as="t" hint-placeholder-count="5">
+                  <div style="display:flex;gap:10px;align-items:center;padding:10px 14px;border-top:1px solid var(--line);flex-wrap:wrap">
+                    <span style="font:600 12px ui-monospace,Menlo,monospace;color:var(--ink-3);width:80px">{{ t.id }}</span>
+                    <input value="{{ t.value }}" onInput="{{ t.onInput }}" readOnly="{{ tx.noPerm }}" aria-label="Nome di {{ t.id }}" style="flex:1;min-width:180px;min-height:40px;padding:0 10px;border-radius:9px;border:1px solid var(--line);background:var(--bg)">
+                    <span style="font-size:12px;color:var(--ink-3)">{{ t.sub }}</span>
+                    <sc-if value="{{ t.dirty }}"><button onClick="{{ t.save }}" style="min-height:40px;padding:0 12px;border-radius:9px;border:0;background:var(--accent);color:#171717;cursor:pointer;font-weight:700">Salva</button></sc-if>
+                  </div>
+                </sc-for>
+              </div>
+              <sc-if value="{{ tx.canAdd }}"><div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end"><label style="display:flex;flex-direction:column;gap:6px;flex:1;min-width:220px"><span style="font-size:13px;font-weight:600">Nuova voce</span><input value="{{ tx.newName }}" onInput="{{ tx.onNew }}" placeholder="Nome" style="min-height:42px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface)"></label><sc-if value="{{ tx.needsParent }}"><label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:600">{{ tx.parentLabel }}</span><select value="{{ tx.parent }}" onChange="{{ tx.onParent }}" style="min-height:42px;padding:0 10px;border-radius:10px;border:1px solid var(--line);background:var(--surface)"><sc-for list="{{ tx.parentOpts }}" as="o" hint-placeholder-count="3"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select></label></sc-if><button onClick="{{ tx.add }}" style="min-height:42px;padding:0 16px;border-radius:10px;border:0;background:var(--ink);color:var(--bg);cursor:pointer;font-weight:700">Aggiungi</button></div></sc-if>
+              <p style="font-size:12px;color:var(--ink-3)">Le associazioni usano identificativi stabili: rinominare una voce non modifica i contenuti collegati.</p>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ sUsers }}">
+            <div style="display:flex;flex-direction:column;gap:12px;animation:blFade .2s ease-out">
+              <sc-if value="{{ us.noPerm }}"><p style="padding:12px 14px;border-radius:12px;background:var(--warn-soft);color:var(--warn);font-size:14px">{{ us.why }}</p></sc-if>
+              <div style="overflow-x:auto;border-radius:14px;border:1px solid var(--line);background:var(--surface)">
+                <table style="width:100%;border-collapse:collapse;font-size:14px;min-width:640px">
+                  <thead><tr style="text-align:left;background:var(--bg)"><th scope="col" style="padding:10px 12px">Nome</th><th scope="col" style="padding:10px 12px">E-mail</th><th scope="col" style="padding:10px 12px">Ruolo</th><th scope="col" style="padding:10px 12px">Permessi principali</th></tr></thead>
+                  <tbody><sc-for list="{{ us.rows }}" as="u" hint-placeholder-count="6"><tr style="border-top:1px solid var(--line)"><td style="padding:10px 12px;font-weight:600">{{ u.name }}</td><td style="padding:10px 12px;color:var(--ink-2)">{{ u.email }}</td><td style="padding:10px 12px"><select value="{{ u.role }}" onChange="{{ u.onRole }}" disabled="{{ us.noPerm }}" aria-label="Ruolo di {{ u.name }}" style="min-height:38px;padding:0 8px;border-radius:9px;border:1px solid var(--line);background:var(--bg)"><option value="user">Utente</option><option value="editor">Editor</option><option value="reviewer">Revisore</option><option value="admin">Amministratore</option></select></td><td style="padding:10px 12px;font-size:13px;color:var(--ink-3)">{{ u.perms }}</td></tr></sc-for></tbody>
+                </table>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ sHistory }}">
+            <div style="display:flex;flex-direction:column;gap:12px;animation:blFade .2s ease-out">
+              <label style="display:flex;flex-direction:column;gap:6px;max-width:320px"><span style="font-size:13px;font-weight:600">Filtra per identificativo</span><input value="{{ hs.q }}" onInput="{{ hs.onQ }}" placeholder="Es. q12" style="min-height:42px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface)"></label>
+              <div style="border-radius:14px;border:1px solid var(--line);background:var(--surface)">
+                <sc-for list="{{ hs.items }}" as="a" hint-placeholder-count="6"><div style="display:grid;grid-template-columns:150px 90px minmax(0,1fr);gap:12px;padding:10px 14px;border-top:1px solid var(--line);font-size:14px"><span style="color:var(--ink-3);font-size:13px">{{ a.time }}</span><span style="font:600 12px ui-monospace,Menlo,monospace">{{ a.target }}</span><span><strong>{{ a.actor }}</strong> · {{ a.action }}<span style="color:var(--ink-3)">{{ a.note }}</span></span></div></sc-for>
+              </div>
+              <sc-if value="{{ hs.empty }}"><p style="color:var(--ink-3)">Nessuna voce.</p></sc-if>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ sSettings }}">
+            <div style="display:flex;flex-direction:column;gap:14px;max-width:760px;animation:blFade .2s ease-out">
+              <sc-if value="{{ ps.noPerm }}"><p style="padding:12px 14px;border-radius:12px;background:var(--warn-soft);color:var(--warn);font-size:14px">{{ ps.why }}</p></sc-if>
+              <section style="padding:20px;border-radius:18px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;gap:14px">
+                <h2 style="font:700 18px Manrope,sans-serif">Policy editoriale</h2>
+                <sc-for list="{{ ps.toggles }}" as="t" hint-placeholder-count="2"><label style="display:flex;gap:12px;align-items:center;min-height:44px;cursor:pointer"><input type="checkbox" checked="{{ t.on }}" onChange="{{ t.onChange }}" disabled="{{ ps.noPerm }}" style="width:22px;height:22px;accent-color:#F47732"><span><span style="display:block;font-weight:600">{{ t.label }}</span><span style="font-size:13px;color:var(--ink-3)">{{ t.desc }}</span></span></label></sc-for>
+                <label style="display:flex;flex-direction:column;gap:6px;max-width:280px"><span style="font-weight:600">Intervallo di verifica</span><select value="{{ ps.months }}" onChange="{{ ps.onMonths }}" disabled="{{ ps.noPerm }}" style="min-height:42px;padding:0 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg)"><option value="6">6 mesi</option><option value="12">12 mesi</option><option value="18">18 mesi</option><option value="24">24 mesi</option></select></label>
+              </section>
+              <section style="padding:20px;border-radius:18px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;gap:10px">
+                <h2 style="font:700 18px Manrope,sans-serif">Regole di punteggio (non modificabili)</h2>
+                <p style="font-size:14px;color:var(--ink-2);line-height:1.6">Corretta +1 · Errata −0,5 · Omessa −0,25 · S = max(0, min(30, 30 × P / N)) · soglia BandoLab 21/30, calcolata sul valore non arrotondato. Le regole sono definite nel codice in un'unica funzione condivisa e verificate dai test.</p>
+                <a href="BandoLab%20Test.dc.html" style="align-self:flex-start;font-weight:600">Apri i test automatici</a>
+              </section>
+              <section style="padding:20px;border-radius:18px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;gap:10px">
+                <h2 style="font:700 18px Manrope,sans-serif">Ambienti</h2>
+                <p style="font-size:14px;color:var(--ink-2);line-height:1.6">L'area editoriale lavora sull'ambiente demo. L'ambiente reale è separato e attualmente vuoto: nessun dato demo vi viene copiato. In produzione l'isolamento dovrà essere garantito lato server.</p>
+              </section>
+            </div>
+          </sc-if>
+        </main>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ hasToast }}">
+    <div role="{{ toast.role }}" aria-live="polite" style="position:fixed;left:50%;transform:translateX(-50%);bottom:24px;z-index:70;max-width:min(560px,calc(100vw - 32px));width:max-content;padding:12px 14px;border-radius:14px;background:{{ toast.bg }};color:{{ toast.color }};box-shadow:0 12px 32px rgba(0,0,0,.25);display:flex;gap:10px;align-items:center;animation:blFade .2s ease-out">
+      <span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:22px">{{ toast.icon }}</span>
+      <span style="font-size:14px;line-height:1.4;flex:1">{{ toast.text }}</span>
+      <button onClick="{{ toast.close }}" aria-label="Chiudi" style="width:36px;height:36px;border-radius:8px;border:0;background:transparent;color:inherit;cursor:pointer;display:grid;place-items:center"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:20px">close</span></button>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { ready: false, w: window.innerWidth, sec: 'overview', qid: null, form: null, dirty: false, errors: {}, note: '', toast: null, ql: { q: '', status: 'all', subject: 'all' }, rTab: 'open', taxKind: 'subjects', taxEdits: {}, taxNew: '', taxParent: '', hq: '', suspendAsk: null };
+  componentDidMount() { this.onResize = () => this.setState({ w: window.innerWidth }); window.addEventListener('resize', this.onResize); const go = () => window.BL ? (window.BL.load(), this.setState({ ready: true })) : setTimeout(go, 30); go(); }
+  componentWillUnmount() { window.removeEventListener('resize', this.onResize); clearTimeout(this.tt); }
+  toast(text, kind) { clearTimeout(this.tt); this.setState({ toast: { text, kind: kind || 'ok' } }); this.tt = setTimeout(() => this.setState({ toast: null }), kind === 'err' ? 8000 : 4500); }
+  done(r, ok) { if (!r.ok) { this.toast(r.why || ('Non salvato: ' + r.error), 'err'); if (r.errors) this.setState({ errors: r.errors }); return false; } if (ok) this.toast(ok); this.forceUpdate(); return true; }
+  go(sec, extra) { this.setState(Object.assign({ sec }, extra || {})); window.scrollTo(0, 0); }
+  openQ(qid) { const q = this.B.bank('demo').questions.find(x => x.id === qid); const w = this.B.working(q); this.go('editor', { qid, form: JSON.parse(JSON.stringify(w)), dirty: false, errors: {}, note: '' }); }
+  statusChip(s) { return { draft: ['var(--surface-2)', 'var(--ink-2)'], review: ['var(--info-soft)', 'var(--info)'], changes: ['var(--warn-soft)', 'var(--warn)'], approved: ['var(--ok-soft)', 'var(--ok)'], published: ['var(--ink)', 'var(--bg)'], rejected: ['var(--err-soft)', 'var(--err)'], superseded: ['var(--surface-2)', 'var(--ink-3)'], suspended: ['var(--err-soft)', 'var(--err)'], merged: ['var(--surface-2)', 'var(--ink-3)'], open: ['var(--accent-soft)', 'var(--accent-text)'], resolved: ['var(--ok-soft)', 'var(--ok)'], dismissed: ['var(--surface-2)', 'var(--ink-2)'] }[s] || ['var(--surface-2)', 'var(--ink-2)']; }
+  qStatus(q) { const B = this.B; if (q.mergedInto) return ['merged', 'Consolidata in ' + q.mergedInto]; if (q.suspended) return ['suspended', 'Sospesa']; const w = B.working(q); return [w.status, B.STATUS[w.status]]; }
+  saveForm() { const B = this.B, me = B.me(); const f = this.state.form; const fields = { text: f.text, options: f.options, correct: f.correct, explanation: f.explanation, subject: f.subject, topic: f.topic, difficulty: f.difficulty ? +f.difficulty : null, source: f.source, sourceUrl: f.sourceUrl, lastVerified: f.lastVerified, nextReview: f.nextReview }; const r = B.updateDraft(me, this.state.qid, fields); if (r.ok) this.setState({ dirty: false }); return r; }
+  act(action) {
+    const B = this.B, me = B.me(), st = this.state;
+    if (this.busy) return; this.busy = true;
+    try {
+      if (action === 'submit' && st.dirty) { const r = this.saveForm(); if (!r.ok) { this.done(r); return; } }
+      const r = B.transition(me, st.qid, action, st.note);
+      const msgs = { submit: 'Inviata in revisione.', approve: 'Approvata. Ora può essere pubblicata.', changes: "Modifiche richieste all'autore.", reject: 'Contenuto rifiutato.', publish: 'Pubblicata: i nuovi quiz useranno questa versione.', newVersion: 'Creata una nuova versione in bozza. La versione pubblicata resta attiva finché la nuova non viene approvata.', suspend: 'Domanda sospesa dai nuovi quiz.', unsuspend: 'Sospensione revocata.', verify: 'Verifica registrata.', reopen: 'Riaperta come bozza.' };
+      if (this.done(r, msgs[action])) { const q = B.bank('demo').questions.find(x => x.id === st.qid); this.setState({ errors: {}, note: '', form: JSON.parse(JSON.stringify(B.working(q))), dirty: false }); }
+    } finally { this.busy = false; }
+  }
+  renderVals() {
+    const st = this.state, B = this.B; const wide = st.w >= 1000;
+    const out = { notReady: !st.ready, wide, narrow: !wide };
+    if (!st.ready) return out;
+    const me = B.me(); const S = B.state();
+    if (!me || me.role === 'user') return Object.assign(out, { denied: true, deniedUser: !!me, deniedMsg: me ? `L'account ${me.name} ha il ruolo Utente e non può accedere all'area amministrativa.` : "Accedi con un account Editor, Revisore o Amministratore." });
+    const bank = B.bank('demo'), T = bank.taxonomy, qs = bank.questions;
+    const can = (a, t) => B.can(me, a, t);
+    const chip = on => ({ bg: on ? 'var(--accent-soft)' : 'var(--surface)', border: on ? '1.5px solid var(--accent)' : '1.5px solid var(--line)' });
+    const inReview = qs.filter(q => B.working(q).status === 'review' && !q.mergedInto);
+    const dueQ = qs.filter(q => B.isLive(q) && (B.isDue(B.live(q)) || B.isSoon(B.live(q))));
+    const dueM = bank.materials.filter(m => m.status === 'published' && (B.isDue(m) || B.isSoon(m)));
+    const openRep = S.reports.filter(r => r.status === 'open');
+    const dups = B.duplicates(bank); const dupPending = dups.filter(d => !(S.dupDecisions || {})[d.a + '|' + d.b]);
+    const navDef = [['overview', 'Dashboard', 'space_dashboard'], ['questions', 'Domande', 'quiz'], ['review', 'Coda di revisione', 'fact_check', inReview.length + bank.materials.filter(m => m.status === 'review').length], ['reports', 'Segnalazioni', 'flag', openRep.length], ['verify', 'Verifiche normative', 'event_upcoming', dueQ.length + dueM.length], ['materials', 'Materiali', 'menu_book'], ['quizzes', 'Quiz e associazioni', 'checklist'], ['dup', 'Duplicati', 'compare', dupPending.length], ['tax', 'Tassonomia e catalogo', 'account_tree'], ['users', 'Utenti e ruoli', 'group'], ['history', 'Cronologia', 'history'], ['settings', 'Impostazioni', 'settings']];
+    const sec = st.sec === 'editor' ? 'questions' : st.sec;
+    const titles = { overview: 'Dashboard editoriale', questions: 'Gestione domande', editor: 'Editor della domanda', review: 'Coda di revisione', reports: 'Segnalazioni', verify: 'Verifica e aggiornamento', materials: 'Gestione materiali', quizzes: 'Quiz e associazioni', dup: 'Banca dati e duplicati', tax: 'Tassonomia e catalogo', users: 'Utenti e ruoli', history: 'Cronologia delle versioni', settings: 'Impostazioni editoriali e di prodotto' };
+    const aud = a => ({ target: a.target, actor: B.userName(a.actor), action: a.action, time: B.fmtDateTime(a.at), note: a.note ? ' · ' + a.note : '' });
+    Object.assign(out, { ok: true, title: titles[st.sec], me: { first: me.name.split(' ')[0] }, meId: me.id, section: sec, onSection: e => this.go(e.target.value),
+      nav: navDef.map(([id, label, icon, count]) => ({ id, label, icon, current: sec === id ? 'page' : 'false', bg: sec === id ? '#F47732' : 'transparent', color: sec === id ? '#171717' : 'var(--side-ink-2)', hasCount: !!count, count: String(count || ''), countBg: sec === id ? '#171717' : '#34302B', countColor: '#F5F0E6', onClick: () => this.go(id) })),
+      staff: S.users.filter(u => u.role !== 'user').map(u => ({ id: u.id, label: `${u.name} · ${B.ROLES[u.role]}` })),
+      onRole: e => { const r = B.login(e.target.value, 'demo'); if (this.done(r, 'Ruolo simulato: ' + B.ROLES[S.users.find(u => u.id === e.target.value).role])) this.setState({ form: st.qid ? JSON.parse(JSON.stringify(B.working(qs.find(x => x.id === st.qid)))) : null, dirty: false, errors: {} }); },
+      toggleTheme: () => { B.commit(s => { s.theme = s.theme === 'dark' ? 'light' : 'dark'; }); B.applyTheme(); this.forceUpdate(); },
+      logout: () => { B.logout(); location.href = 'BandoLab%20Landing.dc.html'; },
+      sOverview: st.sec === 'overview', sQuestions: st.sec === 'questions', sEditor: st.sec === 'editor', sReview: st.sec === 'review', sReports: st.sec === 'reports', sVerify: st.sec === 'verify', sMaterials: st.sec === 'materials', sQuizzes: st.sec === 'quizzes', sDup: st.sec === 'dup', sTax: st.sec === 'tax', sUsers: st.sec === 'users', sHistory: st.sec === 'history', sSettings: st.sec === 'settings' });
+    const qRow = q => { const [s, label] = this.qStatus(q); const c = this.statusChip(s); const w = B.working(q); return { id: q.id, text: w.text || '(senza testo)', status: label.toUpperCase(), sBg: c[0], sColor: c[1], open: () => this.openQ(q.id) }; };
+    if (st.sec === 'overview') {
+      const mine = qs.filter(q => B.working(q).author === me.id && ['draft', 'changes', 'review', 'rejected'].includes(B.working(q).status));
+      const role = me.role;
+      const kpis = role === 'editor' ? [['Le mie bozze', mine.filter(q => B.working(q).status === 'draft').length, 'questions', 'var(--ink)', 'Da completare'], ['Modifiche richieste', mine.filter(q => B.working(q).status === 'changes').length, 'questions', 'var(--warn)', 'Da correggere'], ['In revisione', mine.filter(q => B.working(q).status === 'review').length, 'review', 'var(--info)', 'In attesa del revisore'], ['Domande pubblicate', qs.filter(B.isLive).length, 'questions', 'var(--ok)', 'Banca dati condivisa']]
+        : role === 'reviewer' ? [['Da revisionare', inReview.filter(q => B.working(q).author !== me.id).length, 'review', 'var(--info)', 'Esclusi i tuoi contenuti'], ['Fonti da verificare', dueQ.length + dueM.length, 'verify', 'var(--warn)', 'Scadute o in scadenza'], ['Segnalazioni aperte', openRep.length, 'reports', 'var(--accent-text)', 'Da gestire'], ['Possibili duplicati', dupPending.length, 'dup', 'var(--ink)', 'Decisione manuale']]
+        : [['Domande pubblicate', qs.filter(B.isLive).length, 'questions', 'var(--ok)', 'Disponibili nei quiz'], ['In revisione', inReview.length, 'review', 'var(--info)', 'Domande in coda'], ['Segnalazioni aperte', openRep.length, 'reports', 'var(--accent-text)', 'Da gestire'], ['Da verificare', dueQ.length + dueM.length, 'verify', 'var(--warn)', 'Verifica normativa'], ['Utenti', S.users.length, 'users', 'var(--ink)', 'Account del prototipo']];
+      const list = role === 'editor' ? mine : role === 'reviewer' ? inReview : inReview.concat(qs.filter(q => q.suspended));
+      out.ov = { roleIntro: { editor: 'Editor: crei e modifichi contenuti. Non puoi approvare i tuoi contenuti.', reviewer: 'Revisore: controlli correttezza, fonti e aggiornamento normativo. Puoi approvare, richiedere modifiche e pubblicare.', admin: 'Amministratore: gestisci utenti, ruoli, catalogo, pubblicazioni e impostazioni.' }[role],
+        kpis: kpis.map(([label, value, target, color, note]) => ({ label, value, color, note, onClick: () => this.go(target) })),
+        listTitle: { editor: 'I tuoi contenuti in lavorazione', reviewer: 'Coda di approvazione', admin: 'In revisione e sospese' }[role], list: list.slice(0, 6).map(qRow), listEmpty: list.length === 0,
+        audit: S.audit.slice(0, 6).map(aud) };
+    }
+    if (st.sec === 'questions') {
+      const L = st.ql; const setL = p => this.setState({ ql: Object.assign({}, L, p) }); const nq = L.q.trim().toLowerCase();
+      const rows = qs.filter(q => { const [s] = this.qStatus(q); const w = B.working(q); const lv = B.live(q);
+        if (L.status === 'due' ? !(lv && B.isDue(lv)) : L.status !== 'all' && s !== L.status) return false;
+        if (L.subject !== 'all' && w.subject !== L.subject) return false;
+        if (nq && !(q.id.includes(nq) || (w.text || '').toLowerCase().includes(nq))) return false; return true; });
+      const cc = can('q.create');
+      out.ql = { q: L.q, onQ: e => setL({ q: e.target.value }), status: L.status, onStatus: e => setL({ status: e.target.value }), subject: L.subject, onSubject: e => setL({ subject: e.target.value }),
+        statusOpts: [['all', 'Tutti'], ['draft', 'Bozza'], ['review', 'In revisione'], ['changes', 'Modifiche richieste'], ['approved', 'Approvato'], ['published', 'Pubblicato'], ['rejected', 'Rifiutato'], ['suspended', 'Sospesa'], ['due', 'Da aggiornare']].map(([value, label]) => ({ value, label })),
+        subjectOpts: [{ value: 'all', label: 'Tutte' }].concat(T.subjects.map(s => ({ value: s.id, label: s.name }))),
+        create: () => { const r = B.createQuestion(me); if (this.done(r, 'Bozza creata.')) this.openQ(r.id); }, createWhy: cc.ok ? 'Crea una nuova bozza' : cc.why, createOpacity: cc.ok ? 1 : .5,
+        count: `${rows.length} domande nella banca dati condivisa`, empty: rows.length === 0,
+        rows: rows.map(q => { const base = qRow(q); const w = B.working(q); const lv = B.live(q); return Object.assign(base, { subject: B.name(bank, 'subjects', w.subject), ver: lv && lv !== w ? `v${lv.v} → v${w.v}` : 'v' + w.v, author: B.userName(w.author), next: lv ? B.fmtDate(lv.nextReview) : '—', due: !!(lv && B.isDue(lv)), wip: !!(lv && lv !== w), wipLabel: `V${w.v} ${B.STATUS[w.status].toUpperCase()}` }); }) };
+    }
+    if (st.sec === 'editor' && st.qid) {
+      const q = qs.find(x => x.id === st.qid); const w = B.working(q); const lv = B.live(q); const f = st.form || w; const [s, label] = this.qStatus(q); const c = this.statusChip(s);
+      const editable = ['draft', 'changes'].includes(w.status) && can('q.edit').ok && !q.mergedInto;
+      const setF = p => this.setState({ form: Object.assign({}, f, p), dirty: true });
+      const E = st.errors; const err = {}; ['text', 'options', 'correct', 'explanation', 'subject', 'topic', 'difficulty', 'source', 'sourceUrl', 'lastVerified', 'nextReview'].forEach(k => { err[k] = E[k] || ''; err[k + 'Bad'] = !!E[k]; err[k + 'Border'] = E[k] ? '1.5px solid var(--err)' : '1px solid var(--line)'; });
+      out.e = err;
+      const on = {}; ['text', 'explanation', 'source', 'sourceUrl', 'lastVerified', 'nextReview', 'difficulty', 'topic'].forEach(k => { on[k] = e => setF({ [k]: e.target.value }); }); on.subject = e => setF({ subject: e.target.value, topic: '' });
+      out.f = { text: f.text, explanation: f.explanation, subject: f.subject || '', topic: f.topic || '', difficulty: f.difficulty ? String(f.difficulty) : '', source: f.source, sourceUrl: f.sourceUrl, lastVerified: f.lastVerified, nextReview: f.nextReview, on,
+        subjectOpts: [{ value: '', label: 'Seleziona' }].concat(T.subjects.map(x => ({ value: x.id, label: x.name }))), topicOpts: [{ value: '', label: 'Seleziona' }].concat(T.topics.filter(t => t.subject === f.subject).map(x => ({ value: x.id, label: x.name }))),
+        options: f.options.map((o, i) => ({ letter: 'ABCD'[i], value: o, correct: f.correct === i, border: E.options && !o.trim() ? '1.5px solid var(--err)' : f.correct === i ? '1.5px solid var(--ok)' : '1px solid var(--line)', onInput: e => { const op = f.options.slice(); op[i] = e.target.value; setF({ options: op }); }, onCorrect: () => setF({ correct: i }) })) };
+      const quizzes = bank.quizzes.filter(z => (!z.filter.subjects || z.filter.subjects.includes(w.subject)) && (!z.filter.topics || z.filter.topics.includes(w.topic)));
+      const A = (action, label, icon, perm, cond, condWhy, style) => { const p = can(perm, ['approve', 'changes', 'reject'].includes(action) ? q : null); const ok = p.ok && cond; return { label, icon, disabled: !ok, why: !p.ok ? p.why : condWhy, whyId: 'why-' + action, opacity: ok ? 1 : .45, onClick: () => this.act(action), bg: style === 'primary' ? 'var(--accent)' : style === 'danger' ? 'var(--err-soft)' : 'var(--bg)', color: style === 'primary' ? '#171717' : style === 'danger' ? 'var(--err)' : 'var(--ink)', border: style === 'primary' ? '0' : '1px solid var(--line)' }; };
+      const ws = w.status; const actions = [];
+      if (['draft', 'changes'].includes(ws)) actions.push(A('submit', 'Invia in revisione', 'send', 'q.submit', true, '', 'primary'));
+      if (ws === 'review') { actions.push(A('approve', 'Approva', 'verified', 'q.review', true, '', 'primary')); actions.push(A('changes', 'Richiedi modifiche', 'edit_note', 'q.review', !!st.note.trim(), 'Scrivi una nota per l\'autore.')); actions.push(A('reject', 'Rifiuta', 'block', 'q.review', true, '', 'danger')); }
+      if (ws === 'approved') actions.push(A('publish', 'Pubblica', 'publish', 'q.publish', true, '', 'primary'));
+      if (ws === 'published') actions.push(A('newVersion', 'Modifica: crea nuova versione', 'edit', 'q.edit', !q.mergedInto, 'Domanda consolidata.'));
+      if (ws === 'rejected') actions.push(A('reopen', 'Riapri come bozza', 'undo', 'q.edit', true, ''));
+      if (lv) { actions.push(q.suspended ? A('unsuspend', 'Revoca sospensione', 'play_circle', 'q.suspend', true, '') : A('suspend', 'Sospendi dai nuovi quiz', 'pause_circle', 'q.suspend', !!st.note.trim(), 'Indica il motivo nella nota.', 'danger')); actions.push(A('verify', 'Registra verifica normativa', 'event_available', 'q.verify', true, '')); }
+      const attemptsFor = v => { let n = 0; Object.values(S.recs).forEach(r => r.attempts.forEach(a => a.items.forEach(it => { if (it.qid === q.id && it.v === v) n++; }))); return n; };
+      out.ed = { id: q.id, v: w.v, liveV: lv ? 'v' + lv.v : 'nessuna', status: label.toUpperCase(), sBg: c[0], sColor: c[1], suspended: q.suspended, back: () => this.go('questions'), cols: wide ? 'minmax(0,1fr) 340px' : '1fr',
+        readOnly: !editable, readOnlyMsg: !can('q.edit').ok ? `Sola lettura: ${can('q.edit').why}` : ws === 'published' ? 'La versione pubblicata non si modifica direttamente: crea una nuova versione in bozza.' : ws === 'review' ? 'In revisione: il contenuto è bloccato fino alla decisione del revisore.' : ws === 'approved' ? 'Approvata: in attesa di pubblicazione.' : 'Sola lettura.',
+        hasReviewNote: !!w.reviewNote && ['changes', 'rejected'].includes(ws), reviewNote: w.reviewNote, hasErrors: Object.keys(E).length > 0, errorCount: Object.keys(E).length,
+        explReq: S.settings.requireExplanation ? '*' : '(facoltativa)', urlReq: S.settings.requireUrl ? '*' : '(facoltativo)',
+        profiles: w.profiles.map(p => B.name(bank, 'profiles', p)).join(', ') || '—', entities: w.entities.map(p => B.name(bank, 'entities', p)).join(', ') || '—', quizzes: quizzes.map(z => z.title).join(', ') || '—',
+        canSave: editable, save: () => this.done(this.saveForm(), 'Bozza salvata.'), dirtyLabel: st.dirty ? 'Modifiche non salvate' : 'Nessuna modifica in sospeso',
+        needsNote: ws === 'review' || !!lv, note: st.note, onNote: e => this.setState({ note: e.target.value }), actions,
+        versions: q.versions.slice().reverse().map(v => { const cc = this.statusChip(v.status); const prev = q.versions.find(x => x.v === v.v - 1); const diffs = prev ? ['text', 'explanation', 'options', 'correct', 'source'].filter(k => JSON.stringify(prev[k]) !== JSON.stringify(v[k])) : []; const n = attemptsFor(v.v);
+          return { v: v.v, status: B.STATUS[v.status], sBg: cc[0], sColor: cc[1], note: v.note || '', author: B.userName(v.author), reviewer: v.reviewer ? B.userName(v.reviewer) : '—', date: B.fmtDate(v.createdAt), attempts: n ? `${n} risposte nei tentativi completati usano questa versione` : 'Nessun tentativo usa questa versione', hasDiff: diffs.length > 0, diff: 'Campi modificati rispetto a v' + (v.v - 1) + ': ' + diffs.map(k => ({ text: 'testo', explanation: 'spiegazione', options: 'opzioni', correct: 'risposta corretta', source: 'fonte' })[k]).join(', ') }; }),
+        log: S.audit.filter(a => a.target === q.id).map(a => ({ action: a.action, v: a.v, actor: B.userName(a.actor), time: B.fmtDateTime(a.at), note: a.note ? ' · ' + a.note : '' })) };
+      out.ed.noLog = out.ed.log.length === 0;
+    }
+    if (st.sec === 'review') {
+      const mats = bank.materials.filter(m => m.status === 'review');
+      out.rq = { empty: inReview.length + mats.length === 0, items: inReview.map(q => { const w = B.working(q); const own = w.author === me.id; return { kind: 'Domanda', id: q.id, v: w.v, author: B.userName(w.author), subject: B.name(bank, 'subjects', w.subject), text: w.text, source: w.source || '—', own, openLabel: own || !can('q.review').ok ? 'Apri (sola lettura)' : 'Apri e revisiona', open: () => this.openQ(q.id) }; })
+        .concat(mats.map(m => ({ kind: 'Materiale', id: m.id, v: 1, author: B.userName(m.author), subject: B.name(bank, 'subjects', m.subject), text: m.title, source: m.source, own: m.author === me.id, openLabel: 'Vai ai materiali', open: () => this.go('materials') }))) };
+    }
+    if (st.sec === 'reports') {
+      const tab = st.rTab; const list = S.reports.filter(r => tab === 'open' ? r.status === 'open' : r.status !== 'open');
+      const ph = can('r.handle'), pa = can('r.assign'), ps = can('q.suspend');
+      out.rr = { tabs: [['open', 'Aperte'], ['closed', 'Chiuse']].map(([id, label]) => ({ label, count: S.reports.filter(r => id === 'open' ? r.status === 'open' : r.status !== 'open').length, active: tab === id, bg: tab === id ? 'var(--surface)' : 'transparent', onClick: () => this.setState({ rTab: id }) })), empty: list.length === 0,
+        assignees: [{ value: '', label: 'Nessuno' }].concat(S.users.filter(u => ['reviewer', 'admin'].includes(u.role)).map(u => ({ value: u.id, label: u.name }))),
+        items: list.map(r => { const q = qs.find(x => x.id === r.qid); const v = q && (q.versions.find(x => x.v === r.v) || B.working(q)); const c = this.statusChip(r.status); const ask = st.suspendAsk === r.id; const susp = q && q.suspended;
+          return { id: r.id, qid: r.qid, v: r.v, time: B.fmtDateTime(r.at), by: B.userName(r.by), status: { open: 'APERTA', resolved: 'RISOLTA', dismissed: 'ARCHIVIATA' }[r.status], sBg: c[0], sColor: c[1], reason: r.reason, text: r.text, qtext: v ? v.text : '—', priority: r.priority, assignee: r.assignee || '',
+            noAssign: !pa.ok, onPriority: e => this.done(B.updateReport(me, r.id, { priority: e.target.value }, 'Priorità: ' + e.target.value), 'Priorità aggiornata.'), onAssign: e => this.done(B.updateReport(me, r.id, { assignee: e.target.value || null }, 'Assegnata a ' + B.userName(e.target.value)), 'Assegnazione salvata.'),
+            openQ: () => this.openQ(r.qid), isOpen: r.status === 'open',
+            noSuspend: !ps.ok || susp, suspendWhy: !ps.ok ? ps.why : susp ? 'Già sospesa' : '', suspendOpacity: !ps.ok || susp ? .45 : 1, suspendLabel: susp ? 'Domanda sospesa' : ask ? 'Conferma sospensione' : 'Sospendi la domanda',
+            suspend: () => { if (!ask) { this.setState({ suspendAsk: r.id }); return; } const res = B.transition(me, r.qid, 'suspend', `Segnalazione ${r.id}: ${r.reason}`); if (this.done(res, 'Domanda sospesa dai nuovi quiz. I tentativi precedenti restano invariati.')) { B.updateReport(me, r.id, { priority: r.priority }, 'Domanda sospesa da ' + me.name); this.setState({ suspendAsk: null }); } },
+            noHandle: !ph.ok, handleWhy: ph.ok ? '' : ph.why, handleOpacity: ph.ok ? 1 : .45,
+            resolve: () => this.done(B.updateReport(me, r.id, { status: 'resolved' }, 'Risolta'), 'Segnalazione risolta. L\'utente riceverà una notifica.'), dismiss: () => this.done(B.updateReport(me, r.id, { status: 'dismissed' }, 'Archiviata senza modifiche'), 'Segnalazione archiviata.'),
+            hasLog: r.log.length > 0, log: r.log.map(l => `${B.fmtDateTime(l.at)} · ${B.userName(l.actor)} · ${l.label}`) }; }) };
+    }
+    if (st.sec === 'verify') {
+      const pv = can('q.verify');
+      const item = (kind, id, text, v, verify, isQ) => { const due = B.isDue(v); return { kind, id, text, source: v.source, last: B.fmtDate(v.lastVerified), next: B.fmtDate(v.nextReview), badge: due ? 'SCADUTA' : 'IN SCADENZA', bg: due ? 'var(--warn-soft)' : 'var(--info-soft)', color: due ? 'var(--warn)' : 'var(--info)', noVerify: !pv.ok, why: pv.ok ? '' : pv.why, opacity: pv.ok ? 1 : .45, verify, isQ, open: () => this.openQ(id) }; };
+      const items = dueQ.map(q => item('Domanda', q.id, B.live(q).text, B.live(q), () => this.done(B.transition(me, q.id, 'verify', 'Fonte ricontrollata'), 'Verifica registrata: date aggiornate.'), true))
+        .concat(dueM.map(m => item('Materiale', m.id, m.title, m, () => { if (!pv.ok) return this.done(pv); this.done(B.commit(s => { m.lastVerified = B.todayISO(); m.nextReview = B.addDays(B.todayISO(), Math.round(s.settings.verifyMonths * 30.4)); s.audit.unshift({ at: Date.now(), actor: me.id, target: m.id, v: 1, action: 'Verifica normativa completata', note: '' }); }), 'Verifica registrata.'); }, false)));
+      out.vf = { items, empty: items.length === 0 };
+    }
+    if (st.sec === 'materials') {
+      out.mt = { items: bank.materials.map(m => { const c = this.statusChip(m.status); const acts = { draft: [['submit', 'Invia in revisione']], review: [['approve', 'Approva']], approved: [['publish', 'Pubblica']], published: [['unpublish', 'Ritira']] }[m.status] || [];
+        return { title: m.title, icon: m.format === 'scheda' ? 'article' : 'picture_as_pdf', meta: `${m.id} · ${B.FORMAT[m.format]} · ${B.name(bank, 'subjects', m.subject)} · fonte ${m.source} · autore ${B.userName(m.author)} · verifica ${B.fmtDate(m.lastVerified)}`, status: B.STATUS[m.status].toUpperCase(), sBg: c[0], sColor: c[1],
+          actions: acts.map(([a, label]) => { const p = can({ submit: 'm.edit', approve: 'm.review', publish: 'm.review', unpublish: 'm.review' }[a], a === 'approve' ? m : null); return { label, disabled: !p.ok, why: p.ok ? '' : p.why, opacity: p.ok ? 1 : .45, onClick: () => this.done(B.materialTransition(me, m.id, a), 'Stato aggiornato.') }; }) }; }) };
+    }
+    if (st.sec === 'quizzes') {
+      const pz = can('z.publish');
+      out.qm = { items: bank.quizzes.map(z => { const checks = B.quizChecks(bank, z, S.settings); const all = checks.every(c => c.ok); const pub = z.status === 'published'; const c = this.statusChip(z.status);
+        const assoc = (z.filter.subjects ? 'Materie: ' + z.filter.subjects.map(s => B.name(bank, 'subjects', s)).join(', ') : '') + (z.filter.topics ? 'Argomenti: ' + z.filter.topics.map(t => B.name(bank, 'topics', t)).join(', ') : '') + ` · ${z.count} domande` + (z.durationMin ? ` · ${z.durationMin} min` : '');
+        const disabled = !pz.ok || (!pub && !all);
+        return { id: z.id, title: z.title, mode: z.mode === 'exam' ? 'Simulazione' : 'Allenamento', status: B.STATUS[z.status].toUpperCase(), sBg: c[0], sColor: c[1], assoc,
+          checks: checks.map(k => ({ label: k.label, detail: k.detail, icon: k.ok ? 'check_circle' : 'cancel', color: k.ok ? 'var(--ok)' : 'var(--err)', sr: k.ok ? ' (superato)' : ' (non superato)' })),
+          btnLabel: pub ? 'Ritira dalla pubblicazione' : 'Pubblica il quiz', btnBg: pub ? 'var(--bg)' : 'var(--accent)', btnColor: pub ? 'var(--ink)' : '#171717', disabled, opacity: disabled ? .45 : 1, why: !pz.ok ? pz.why : !pub && !all ? 'Pubblicazione bloccata: controlli non superati.' : '',
+          toggle: () => { if (disabled) return; this.done(B.commit(s => { z.status = pub ? 'draft' : 'published'; s.audit.unshift({ at: Date.now(), actor: me.id, target: z.id, v: null, action: pub ? 'Quiz ritirato' : 'Quiz pubblicato', note: '' }); }), pub ? 'Quiz ritirato.' : 'Quiz pubblicato.'); } }; }) };
+    }
+    if (st.sec === 'dup') {
+      const pd = can('dup.decide');
+      out.dp = { empty: dups.length === 0, items: dups.map(d => { const qa = qs.find(q => q.id === d.a), qb = qs.find(q => q.id === d.b); const dec = (S.dupDecisions || {})[d.a + '|' + d.b];
+        return { a: d.a, b: d.b, sim: Math.round(d.sim * 100) + '%', aText: B.working(qa).text, bText: B.working(qb).text, aStatus: this.qStatus(qa)[1], bStatus: this.qStatus(qb)[1], pending: !dec, decision: dec ? `Decisione: ${dec.decision === 'merge' ? 'consolidate' : 'mantenute entrambe'} da ${B.userName(dec.actor)} il ${B.fmtDate(dec.at)}` : 'In attesa di decisione',
+          noPerm: !pd.ok, why: pd.why, opacity: pd.ok ? 1 : .45, keep: () => this.done(B.decideDuplicate(me, d.a, d.b, 'keep', ''), 'Decisione registrata: mantenute entrambe.'), merge: () => this.done(B.decideDuplicate(me, d.a, d.b, 'merge', ''), `${d.b} consolidata in ${d.a}. Tentativi e cronologia preservati.`) }; }) };
+    }
+    if (st.sec === 'tax') {
+      const pt = can('tax.edit'); const kind = st.taxKind; const list = T[kind] || [];
+      const parentKind = { entities: ['areas', 'area', 'Area'], topics: ['subjects', 'subject', 'Materia'] }[kind];
+      const sub = x => kind === 'entities' ? B.name(bank, 'areas', x.area) : kind === 'topics' ? B.name(bank, 'subjects', x.subject) : kind === 'profiles' ? `${x.subjects.length} materie · ${x.entities.length} enti` : '';
+      out.tx = { noPerm: !pt.ok, why: pt.why + ' Solo gli amministratori modificano il catalogo.', canAdd: pt.ok,
+        kinds: [['areas', 'Aree'], ['entities', 'Enti'], ['profiles', 'Profili'], ['subjects', 'Materie'], ['topics', 'Argomenti']].map(([id, label]) => Object.assign({ label, count: T[id].length, active: kind === id, onClick: () => this.setState({ taxKind: id, taxEdits: {}, taxNew: '', taxParent: '' }) }, chip(kind === id))),
+        items: list.map(x => { const v = st.taxEdits[x.id]; return { id: x.id, value: v != null ? v : x.name, sub: sub(x), dirty: v != null && v.trim() && v !== x.name, onInput: e => this.setState({ taxEdits: Object.assign({}, st.taxEdits, { [x.id]: e.target.value }) }), save: () => { if (this.done(B.taxEdit(me, kind, x.id, { name: v.trim() }), 'Voce rinominata.')) { const t = Object.assign({}, st.taxEdits); delete t[x.id]; this.setState({ taxEdits: t }); } } }; }),
+        newName: st.taxNew, onNew: e => this.setState({ taxNew: e.target.value }), needsParent: !!parentKind, parentLabel: parentKind ? parentKind[2] : '', parent: st.taxParent, onParent: e => this.setState({ taxParent: e.target.value }),
+        parentOpts: parentKind ? [{ value: '', label: 'Seleziona' }].concat(T[parentKind[0]].map(p => ({ value: p.id, label: p.name }))) : [],
+        add: () => { const n = st.taxNew.trim(); if (n.length < 2) return this.toast('Inserisci un nome di almeno 2 caratteri.', 'err'); if (parentKind && !st.taxParent) return this.toast('Seleziona ' + parentKind[2].toLowerCase() + '.', 'err'); const obj = { name: n }; if (parentKind) obj[parentKind[1]] = st.taxParent; if (kind === 'profiles') Object.assign(obj, { entities: [], subjects: [] }); if (this.done(B.taxEdit(me, kind, null, obj), 'Voce aggiunta al catalogo.')) this.setState({ taxNew: '', taxParent: '' }); } };
+    }
+    if (st.sec === 'users') {
+      const pu = can('users.edit');
+      out.us = { noPerm: !pu.ok, why: pu.why, rows: S.users.map(u => ({ name: u.name, email: u.email, role: u.role, perms: ({ user: 'Quiz, studio, progressi', editor: 'Crea e modifica contenuti; non approva i propri', reviewer: 'Revisiona, pubblica, sospende, verifica', admin: 'Tutti i permessi, utenti e impostazioni' })[u.role], onRole: e => this.done(B.setRole(me, u.id, e.target.value), 'Ruolo aggiornato.') })) };
+    }
+    if (st.sec === 'history') {
+      const q = st.hq.trim().toLowerCase(); const items = S.audit.filter(a => !q || String(a.target).toLowerCase().includes(q));
+      out.hs = { q: st.hq, onQ: e => this.setState({ hq: e.target.value }), items: items.slice(0, 80).map(aud), empty: items.length === 0 };
+    }
+    if (st.sec === 'settings') {
+      const pp = can('settings.edit'); const set = patch => this.done(B.commit(s => { Object.assign(s.settings, patch); s.audit.unshift({ at: Date.now(), actor: me.id, target: 'impostazioni', v: null, action: 'Impostazioni modificate', note: JSON.stringify(patch) }); }), 'Impostazioni salvate.');
+      out.ps = { noPerm: !pp.ok, why: pp.why, months: String(S.settings.verifyMonths), onMonths: e => set({ verifyMonths: +e.target.value }),
+        toggles: [['requireUrl', "URL della fonte obbligatorio", "Le domande senza URL non possono essere inviate in revisione."], ['requireExplanation', 'Spiegazione obbligatoria', 'Ogni domanda deve avere una spiegazione.']].map(([k, label, desc]) => ({ label, desc, on: !!S.settings[k], onChange: e => set({ [k]: e.target.checked }) })) };
+    }
+    out.hasToast = !!st.toast;
+    if (st.toast) out.toast = { text: st.toast.text, role: st.toast.kind === 'err' ? 'alert' : 'status', bg: st.toast.kind === 'err' ? 'var(--err)' : '#171717', color: st.toast.kind === 'err' ? 'var(--surface)' : '#F5F0E6', icon: st.toast.kind === 'err' ? 'error' : 'check_circle', close: () => this.setState({ toast: null }) };
+    return out;
+  }
+}
+</script>
+</body>
+</html>

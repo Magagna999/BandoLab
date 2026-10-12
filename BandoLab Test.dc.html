@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<title>BandoLab — Test automatici</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@700;800&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..24,400..600,0..1,0&display=block" rel="stylesheet">
+<script src="bandolab-core.js"></script>
+<style>
+:root{--bg:#F5F0E6;--surface:#FFFDF9;--surface-2:#EDE6D8;--ink:#171717;--ink-2:#45403A;--ink-3:#655E55;--line:#E2D9C9;--ok:#1F7A4A;--ok-soft:#DDF0E4;--err:#B3261E;--err-soft:#F9E0DC;--accent-text:#A3440E}
+[data-theme="dark"]{--bg:#121110;--surface:#1C1A18;--surface-2:#26231F;--ink:#F5F0E6;--ink-2:#D2CABD;--ink-3:#A59D90;--line:#34302B;--ok:#6FD39A;--ok-soft:#14301F;--err:#FF8F85;--err-soft:#3A1A17;--accent-text:#FF9B5E}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif}
+h1,h2,p{margin:0}
+a{color:var(--accent-text)}
+a:hover{color:var(--ink)}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid #F47732;outline-offset:2px}
+</style>
+</helmet>
+<main style="max-width:980px;margin:0 auto;padding:40px 20px 80px;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-end">
+    <div style="display:flex;flex-direction:column;gap:6px"><h1 style="font:800 30px Manrope,sans-serif;letter-spacing:-.02em">Test automatici</h1><p style="color:var(--ink-2)">Eseguiti nel browser sul codice condiviso (bandolab-core.js). I test di scenario lavorano su una copia e ripristinano i dati al termine.</p></div>
+    <div style="display:flex;gap:8px"><button onClick="{{ rerun }}" style="min-height:44px;padding:0 16px;border-radius:10px;border:0;background:#F47732;color:#171717;font-weight:700;cursor:pointer">Esegui di nuovo</button><a href="BandoLab%20Landing.dc.html" style="min-height:44px;padding:0 14px;border-radius:10px;border:1px solid var(--line);display:flex;align-items:center;text-decoration:none;color:var(--ink);font-weight:600">Home</a></div>
+  </div>
+  <sc-if value="{{ running }}" hint-placeholder-val="{{ true }}"><p role="status">Esecuzione dei test…</p></sc-if>
+  <sc-for list="{{ groups }}" as="g" hint-placeholder-count="0">
+    <section style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><h2 style="font:700 20px Manrope,sans-serif">{{ g.title }}</h2><span style="padding:4px 10px;border-radius:8px;font-weight:700;font-size:13px;background:{{ g.bg }};color:{{ g.color }}">{{ g.summary }}</span></div>
+      <ul style="list-style:none;margin:0;padding:0;border-radius:14px;border:1px solid var(--line);background:var(--surface);overflow:hidden">
+        <sc-for list="{{ g.items }}" as="t" hint-placeholder-count="5">
+          <li style="display:flex;gap:12px;padding:12px 16px;border-top:1px solid var(--line);align-items:flex-start">
+            <span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:22px;color:{{ t.color }}">{{ t.icon }}</span>
+            <div style="flex:1;min-width:0"><div style="font-weight:600">{{ t.name }} <span style="font-size:12px;font-weight:700;color:{{ t.color }}">{{ t.label }}</span></div><div style="font:12px/1.5 ui-monospace,Menlo,monospace;color:var(--ink-3);word-break:break-word">{{ t.detail }}</div></div>
+          </li>
+        </sc-for>
+      </ul>
+    </section>
+  </sc-for>
+  <section style="padding:20px;border-radius:14px;background:var(--surface-2);display:flex;flex-direction:column;gap:8px">
+    <h2 style="font:700 18px Manrope,sans-serif">Non automatizzati in questa pagina</h2>
+    <p style="color:var(--ink-2);line-height:1.6">Navigazione da tastiera completa, lettori di schermo, contrasto misurato, zoom al 200%, viewport mobile reali e prestazioni richiedono una verifica manuale o strumenti dedicati (ad es. axe, Lighthouse, test su dispositivo). La conformità WCAG 2.2 AA non è dichiarata.</p>
+  </section>
+</main>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { groups: null };
+  componentDidMount() { const go = () => window.BL ? this.run() : setTimeout(go, 30); go(); }
+  run() {
+    const B = window.BL; const KEY = 'bandolab.state.v1';
+    const scoring = B.runScoreTests();
+    const backup = localStorage.getItem(KEY); const dbg = sessionStorage.getItem('bandolab.debug');
+    const out = []; const T = (name, fn) => { try { const r = fn(); out.push({ name, pass: r === true || (r && r.pass), detail: r && r.detail ? r.detail : '' }); } catch (e) { out.push({ name, pass: false, detail: 'Eccezione: ' + e.message }); } };
+    try {
+      sessionStorage.removeItem('bandolab.debug'); B.reset();
+      const S = () => B.state(); const U = id => S().users.find(u => u.id === id);
+      const Q = id => B.bank('demo').questions.find(q => q.id === id);
+      T("L'editor non può approvare un proprio contenuto", () => { const r = B.can(U('u-ed2'), 'q.review', Q('q91')); return { pass: !r.ok, detail: r.why }; });
+      T('Il revisore può approvare un contenuto altrui', () => B.can(U('u-rev'), 'q.review', Q('q91')).ok);
+      T("L'editor non può pubblicare né sospendere", () => !B.can(U('u-ed'), 'q.publish').ok && !B.can(U('u-ed'), 'q.suspend').ok);
+      T("Un utente non può creare domande né modificare il catalogo", () => !B.can(U('u-reg'), 'q.create').ok && !B.can(U('u-reg'), 'tax.edit').ok);
+      T('Il revisore non può modificare utenti e ruoli', () => !B.setRole(U('u-rev'), 'u-ed', 'admin').ok);
+      T('Campi obbligatori verificati prima della revisione', () => { B.login('u-ed', 'demo'); const c = B.createQuestion(U('u-ed')); const r = B.transition(U('u-ed'), c.id, 'submit'); return { pass: !r.ok && r.errors && ['text', 'options', 'correct', 'source', 'sourceUrl'].every(k => r.errors[k]), detail: 'Errori: ' + Object.keys(r.errors || {}).join(', ') }; });
+      let newId;
+      T('Workflow completo: bozza → revisione → approvato → pubblicato', () => { const ed = U('u-ed'), rev = U('u-rev'); const c = B.createQuestion(ed); newId = c.id;
+        B.updateDraft(ed, c.id, { text: 'Domanda di prova per il collaudo del workflow editoriale', options: ['A', 'B', 'C', 'D'], correct: 2, explanation: 'Spiegazione di prova sufficiente', subject: 's-amm', topic: 't-proc', difficulty: 1, source: 'Fonte di prova', sourceUrl: 'https://example.com', lastVerified: B.todayISO(), nextReview: B.addDays(B.todayISO(), 365) });
+        const steps = [B.transition(ed, c.id, 'submit'), B.transition(ed, c.id, 'approve'), B.transition(rev, c.id, 'approve'), B.transition(ed, c.id, 'publish'), B.transition(rev, c.id, 'publish')];
+        return { pass: steps[0].ok && !steps[1].ok && steps[2].ok && !steps[3].ok && steps[4].ok && B.isLive(Q(c.id)), detail: steps.map(s => s.ok ? 'ok' : 'bloccato').join(' → ') + ' (atteso: ok → bloccato → ok → bloccato → ok)' }; });
+      T('Richiesta di modifiche e correzione della bozza', () => { const ed = U('u-ed'), rev = U('u-rev'); const r1 = B.transition(rev, 'q92', 'changes', ''); const r2 = B.updateDraft(ed, 'q92', { explanation: 'I senatori elettivi sono 200; a essi si aggiungono i senatori a vita.' }); const r3 = B.transition(ed, 'q92', 'submit'); return { pass: !r1.ok && r2.ok && r3.ok && B.working(Q('q92')).status === 'review', detail: 'Nota obbligatoria, bozza modificata, reinviata' }; });
+      T('Modifica di una pubblicata crea una nuova versione in bozza', () => { const r = B.transition(U('u-ed'), newId, 'newVersion', 'Correzione'); const q = Q(newId); return { pass: r.ok && q.versions.length === 2 && B.working(q).status === 'draft' && B.live(q).v === 1, detail: `Versioni: ${q.versions.map(v => 'v' + v.v + ' ' + v.status).join(', ')}; corrente pubblicata v${q.current}` }; });
+      T('I tentativi conservano la versione usata', () => { const rev = U('u-rev'); B.transition(rev, 'q12', 'approve'); B.transition(rev, 'q12', 'publish'); const q = Q('q12'); const recs = Object.values(S().recs); const refs = recs.flatMap(r => r.attempts.flatMap(a => a.items.filter(i => i.qid === 'q12'))); const v1 = B.versionOf(B.bank('demo'), 'q12', 1);
+        return { pass: q.current === 2 && v1 && v1.status === 'superseded' && refs.every(i => i.v === 1), detail: `Corrente v${q.current}; ${refs.length} risposte storiche puntano a v1 (${v1 && v1.status})` }; });
+      T('Sospensione: esclusa dai nuovi quiz, tentativi invariati', () => { const before = JSON.stringify(B.rec('u-reg', 'demo').attempts); const r0 = B.transition(U('u-rev'), 'q01', 'suspend', ''); const r = B.transition(U('u-rev'), 'q01', 'suspend', 'Segnalazione di prova'); const inPool = B.pool(B.bank('demo'), {}).some(q => q.id === 'q01'); return { pass: !r0.ok && r.ok && !inPool && JSON.stringify(B.rec('u-reg', 'demo').attempts) === before, detail: 'Motivo obbligatorio; esclusa dal pool; storico identico' }; });
+      T('Verifica scaduta non disattiva il contenuto', () => { const q = Q('q06'); return { pass: B.isDue(B.live(q)) && B.isLive(q), detail: 'q06: verifica scaduta, ancora pubblicata e segnalata per revisione' }; });
+      T('Consolidamento duplicati manuale e tracciato', () => { const d = B.duplicates(B.bank('demo')); const has = d.some(x => [x.a, x.b].includes('q93')); const r = B.decideDuplicate(U('u-rev'), 'q01', 'q93', 'merge', 'test'); return { pass: has && r.ok && Q('q93').mergedInto === 'q01' && S().audit[0].action.includes('Consolidamento'), detail: 'Coppia rilevata, nessuna eliminazione automatica, decisione registrata' }; });
+      T("Un amministratore modifica una categoria del catalogo", () => { const r = B.taxEdit(U('u-adm'), 'subjects', 's-info', { name: 'Informatica' }); const r2 = B.taxEdit(U('u-ed'), 'subjects', 's-info', { name: 'X' }); return { pass: r.ok && !r2.ok && B.name(B.bank('demo'), 'subjects', 's-info') === 'Informatica', detail: 'Admin: ok · Editor: bloccato' }; });
+      T('Pubblicazione quiz bloccata se le domande sono insufficienti', () => { const z = B.bank('demo').quizzes.find(x => x.id === 'z05'); const c = B.quizChecks(B.bank('demo'), z, S().settings); return { pass: !c.find(x => x.label.startsWith('Numero')).ok, detail: c.find(x => x.label.startsWith('Numero')).detail }; });
+      B.login('u-reg', 'demo');
+      T('Numero insufficiente di domande: nessuna domanda generata', () => { const r = B.buildQuiz(B.bank(), { mode: 'training', filter: {}, count: 999 }); return { pass: !r.ok && r.error === 'insufficient', detail: `${r.available} disponibili su 999` }; });
+      T("Allenamento: la sessione sopravvive al ricaricamento", () => { const s = B.startSession({ mode: 'training', title: 't', key: 'k-t', filter: {}, count: 5 }); B.saveSession({ answers: { [s.session.items[0].qid]: 1 } }); B.load(); const r = B.rec(); return { pass: r.session && r.session.answers[s.session.items[0].qid] === 1, detail: 'Risposte ritrovate dopo il ricaricamento dello stato' }; });
+      T('Doppio invio impedito', () => { const a = B.finishSession('submitted'); const b = B.finishSession('submitted'); return { pass: a.ok && !b.ok, detail: 'Primo invio ok, secondo rifiutato: ' + b.error }; });
+      T('Simulazione scaduta: consegna automatica senza nuovo tempo', () => { B.startSession({ mode: 'exam', title: 'e', key: 'k-e', filter: {}, count: 5, durationMin: 5 }); B.commit(() => { B.rec().session.deadline = Date.now() - 1000; }); const c = B.checkSession(); const again = B.checkSession(); return { pass: c.state === 'expired' && c.attempt.reason === 'timeout' && again.state === 'none' && c.attempt.score.O === 5, detail: `Stato: ${c.state}; omesse ${c.attempt && c.attempt.score.O}; riavvio: ${again.state}` }; });
+      T('Interruzioni registrate nella simulazione', () => { B.startSession({ mode: 'exam', title: 'e2', key: 'k-e2', filter: {}, count: 3, durationMin: 5 }); B.logInterruption('test'); const n = B.rec().session.interruptions.length; const r = B.finishSession('submitted'); return { pass: n === 1 && r.attempt.interruptions.length === 1, detail: 'Interruzione conservata nel tentativo' }; });
+      T('Abbandono: il tentativo non entra nelle statistiche', () => { const before = B.stats(B.rec(), B.bank(), {}).nAttempts; B.startSession({ mode: 'training', title: 'a', key: 'k-a', filter: {}, count: 3 }); B.abandonSession(); return { pass: B.stats(B.rec(), B.bank(), {}).nAttempts === before && !B.rec().session, detail: 'Statistiche invariate' }; });
+      T('XP: nessun accumulo ripetendo lo stesso quiz', () => { const xs = [1, 2, 3].map(() => { B.startSession({ mode: 'training', title: 'x', key: 'k-same', filter: {}, count: 3 }); return B.finishSession('submitted').xp[0].amount; }); return { pass: xs[0] > 0 && xs[1] > 0 && xs[2] === 0, detail: 'XP assegnati: ' + xs.join(', ') }; });
+      T('Ambienti isolati: nessun dato demo nel reale', () => { const real = B.bank('real'); const r = B.rec('u-reg', 'real'); return { pass: real.questions.length === 0 && real.materials.length === 0 && r.attempts.length === 0 && B.search(real, 'procedimento').length === 0, detail: 'Banca reale vuota, statistiche reali vuote, ricerca reale vuota' }; });
+      T('Nessuna statistica per un nuovo utente', () => { const s = B.stats(B.rec('u-new', 'demo'), B.bank('demo'), {}); return { pass: !s.enough && s.nAttempts === 0 && s.weakTopics.length === 0, detail: 'Analisi non mostrata sotto ' + B.MIN_ANSWERS + ' risposte' }; });
+      T('Ricerca: nessun risultato e tolleranza ai refusi', () => { const none = B.search(B.bank('demo'), 'zzqqxx'); const fuzzy = B.search(B.bank('demo'), 'costituzone'); return { pass: none.length === 0 && fuzzy.length > 0, detail: `«zzqqxx»: 0 gruppi · «costituzone»: ${fuzzy.map(g => g.label).join(', ')}` }; });
+      T('Errore di salvataggio: stato ripristinato, nessuna falsa conferma', () => { sessionStorage.setItem('bandolab.debug', JSON.stringify({ failSave: true })); const r = B.commit(s => { s.theme = 'dark'; }); sessionStorage.removeItem('bandolab.debug'); return { pass: !r.ok && B.state().theme !== 'dark', detail: r.error }; });
+      T('Contenuti non approvati esclusi dai quiz', () => !B.pool(B.bank('demo'), {}).some(q => ['q90', 'q91'].includes(q.id)));
+    } finally {
+      if (backup) localStorage.setItem(KEY, backup); else localStorage.removeItem(KEY);
+      if (dbg) sessionStorage.setItem('bandolab.debug', dbg); else sessionStorage.removeItem('bandolab.debug');
+      B.load();
+    }
+    const fmt = list => list.map(t => ({ name: t.name, detail: t.detail, icon: t.pass ? 'check_circle' : 'cancel', color: t.pass ? 'var(--ok)' : 'var(--err)', label: t.pass ? 'SUPERATO' : 'FALLITO' }));
+    const grp = (title, list) => { const ok = list.filter(t => t.pass).length; return { title, summary: `${ok}/${list.length} superati`, bg: ok === list.length ? 'var(--ok-soft)' : 'var(--err-soft)', color: ok === list.length ? 'var(--ok)' : 'var(--err)', items: fmt(list) }; };
+    this.setState({ groups: [grp('Formula di punteggio', scoring), grp('Scenari di prodotto, permessi e sessioni', out)] });
+  }
+  renderVals() { return { running: !this.state.groups, groups: this.state.groups || [], rerun: () => { this.setState({ groups: null }); setTimeout(() => this.run(), 30); } }; }
+}
+</script>
+</body>
+</html>

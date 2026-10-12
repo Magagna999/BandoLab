@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<title>BandoLab — App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..24,400..600,0..1,0&display=block" rel="stylesheet">
+<script src="bandolab-core.js"></script>
+<style>
+:root{--bg:#F5F0E6;--surface:#FFFDF9;--surface-2:#EDE6D8;--ink:#171717;--ink-2:#45403A;--ink-3:#655E55;--line:#E2D9C9;--accent:#F47732;--accent-hover:#E2621C;--accent-soft:#FDE6D6;--accent-text:#A3440E;--side:#171717;--side-ink:#F5F0E6;--side-ink-2:#B8B0A3;--ok:#1F7A4A;--ok-soft:#DDF0E4;--err:#B3261E;--err-soft:#F9E0DC;--warn:#7E5300;--warn-soft:#F7E9C6;--info:#24578A;--info-soft:#DDE8F4;--shadow:0 1px 2px rgba(23,23,23,.05),0 8px 28px rgba(23,23,23,.06);--overlay:rgba(23,23,23,.45)}
+[data-theme="dark"]{--bg:#121110;--surface:#1C1A18;--surface-2:#26231F;--ink:#F5F0E6;--ink-2:#D2CABD;--ink-3:#A59D90;--line:#34302B;--accent:#F47732;--accent-hover:#FF8B4D;--accent-soft:#3B2416;--accent-text:#FF9B5E;--side:#0B0A09;--side-ink:#F5F0E6;--side-ink-2:#9E968A;--ok:#6FD39A;--ok-soft:#14301F;--err:#FF8F85;--err-soft:#3A1A17;--warn:#F0C062;--warn-soft:#332810;--info:#8FBDF0;--info-soft:#142538;--shadow:0 1px 2px rgba(0,0,0,.4);--overlay:rgba(0,0,0,.6)}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4,p{margin:0}
+a{color:var(--accent-text)}
+a:hover{color:var(--ink)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+@keyframes blFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes blPulse{0%,100%{opacity:1}50%{opacity:.55}}
+[data-motion="reduce"] *{animation:none!important;transition:none!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</helmet>
+<div style="min-height:100vh;background:var(--bg);color:var(--ink)">
+  <sc-if value="{{ notReady }}" hint-placeholder-val="{{ true }}">
+    <div role="status" aria-label="Caricamento" style="display:grid;grid-template-columns:76px 1fr;min-height:100vh">
+      <div style="background:var(--side)"></div>
+      <div style="padding:32px;display:grid;gap:16px;align-content:start;max-width:1100px">
+        <div style="height:32px;width:240px;border-radius:8px;background:var(--surface-2);animation:blPulse 1.2s infinite"></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px"><div style="height:140px;border-radius:16px;background:var(--surface-2);animation:blPulse 1.2s infinite"></div><div style="height:140px;border-radius:16px;background:var(--surface-2);animation:blPulse 1.2s infinite"></div><div style="height:140px;border-radius:16px;background:var(--surface-2);animation:blPulse 1.2s infinite"></div></div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ needAuth }}">
+    <main style="min-height:100vh;display:grid;place-items:center;padding:24px">
+      <div style="max-width:440px;padding:36px;border-radius:24px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:14px;text-align:center;align-items:center">
+        <span aria-hidden="true" style="width:56px;height:56px;border-radius:16px;background:var(--accent-soft);color:var(--accent-text);display:grid;place-items:center;font-family:'Material Symbols Rounded';font-size:28px">lock</span>
+        <h1 style="font:800 24px Manrope,sans-serif">Accesso richiesto</h1>
+        <p style="color:var(--ink-2);line-height:1.5">Per usare quiz, materiali e progressi accedi con Google. Se eri già connesso, la sessione potrebbe essere scaduta.</p>
+        <button onClick="{{ goLogin }}" style="min-height:48px;padding:0 22px;border-radius:12px;border:0;background:var(--accent);color:#171717;font-weight:700;cursor:pointer">Vai all'accesso</button>
+      </div>
+    </main>
+  </sc-if>
+
+  <sc-if value="{{ showShell }}">
+    <div style="display:flex;min-height:100vh">
+      <sc-if value="{{ showSidebar }}">
+        <nav aria-label="Navigazione principale" style="position:sticky;top:0;height:100vh;flex:none;width:{{ sideW }};background:var(--side);color:var(--side-ink);display:flex;flex-direction:column;padding:16px 12px;gap:4px;transition:width .2s ease;z-index:10">
+          <div style="display:flex;align-items:center;gap:10px;padding:4px 8px 18px">
+            <span style="width:34px;height:34px;border-radius:10px;background:#F5F0E6;position:relative;display:grid;place-items:center;flex:none">
+              <span style="font:800 19px Manrope,sans-serif;color:#171717;letter-spacing:-.04em">B</span>
+              <span style="position:absolute;right:-4px;top:-4px;width:14px;height:14px;border-radius:5px;background:#F47732;display:grid;place-items:center;font-family:'Material Symbols Rounded';font-size:12px;color:#171717;font-variation-settings:'wght' 700">check</span>
+            </span>
+            <sc-if value="{{ sideExpanded }}"><span style="font:800 19px Manrope,sans-serif;letter-spacing:-.03em;white-space:nowrap">Bando<span style="color:#F47732">Lab</span></span></sc-if>
+          </div>
+          <sc-for list="{{ nav }}" as="n" hint-placeholder-count="5">
+            <button onClick="{{ n.onClick }}" aria-current="{{ n.current }}" aria-label="{{ n.label }}" title="{{ n.label }}" style="position:relative;display:flex;align-items:center;gap:12px;min-height:48px;padding:0 14px;border-radius:12px;border:0;cursor:pointer;background:{{ n.bg }};color:{{ n.color }};font-weight:600;font-size:14px;text-align:left;white-space:nowrap;overflow:hidden" style-hover="color:#F5F0E6">
+              <span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:22px;flex:none;font-variation-settings:{{ n.fill }}">{{ n.icon }}</span>
+              <sc-if value="{{ n.showLabel }}"><span>{{ n.label }}</span></sc-if>
+              <sc-if value="{{ n.hasBadge }}"><span style="position:absolute;top:8px;left:30px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#F47732;color:#171717;font-size:11px;font-weight:700;display:grid;place-items:center">{{ n.badge }}</span></sc-if>
+            </button>
+          </sc-for>
+          <div style="height:1px;background:rgba(245,240,230,.12);margin:10px 6px"></div>
+          <sc-for list="{{ nav2 }}" as="n" hint-placeholder-count="2">
+            <button onClick="{{ n.onClick }}" aria-current="{{ n.current }}" aria-label="{{ n.ariaLabel }}" title="{{ n.label }}" style="position:relative;display:flex;align-items:center;gap:12px;min-height:48px;padding:0 14px;border-radius:12px;border:0;cursor:pointer;background:{{ n.bg }};color:{{ n.color }};font-weight:600;font-size:14px;text-align:left;white-space:nowrap;overflow:hidden" style-hover="color:#F5F0E6">
+              <span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:22px;flex:none;font-variation-settings:{{ n.fill }}">{{ n.icon }}</span>
+              <sc-if value="{{ n.showLabel }}"><span>{{ n.label }}</span></sc-if>
+              <sc-if value="{{ n.hasBadge }}"><span style="position:absolute;top:8px;left:30px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#F47732;color:#171717;font-size:11px;font-weight:700;display:grid;place-items:center">{{ n.badge }}</span></sc-if>
+            </button>
+          </sc-for>
+          <sc-if value="{{ isStaff }}">
+            <a href="BandoLab%20Admin.dc.html" title="Area amministrativa" aria-label="Area amministrativa" style="display:flex;align-items:center;gap:12px;min-height:48px;padding:0 14px;border-radius:12px;color:var(--side-ink-2);text-decoration:none;font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden" style-hover="color:#F5F0E6"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:22px;flex:none">admin_panel_settings</span><sc-if value="{{ sideExpanded }}"><span>Area amministrativa</span></sc-if></a>
+          </sc-if>
+          <div style="margin-top:auto"></div>
+          <sc-if value="{{ canExpand }}">
+            <button onClick="{{ toggleSide }}" aria-expanded="{{ sideExpanded }}" aria-label="{{ sideToggleLabel }}" title="{{ sideToggleLabel }}" style="display:flex;align-items:center;gap:12px;min-height:44px;padding:0 14px;border-radius:12px;border:0;cursor:pointer;background:transparent;color:var(--side-ink-2);font-size:13px;white-space:nowrap;overflow:hidden" style-hover="color:#F5F0E6"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:22px;flex:none">{{ sideToggleIcon }}</span><sc-if value="{{ sideExpanded }}"><span>Comprimi</span></sc-if></button>
+          </sc-if>
+        </nav>
+      </sc-if>
+
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+        <header style="position:sticky;top:0;z-index:9;background:color-mix(in oklab,var(--bg) 90%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)">
+          <div style="max-width:1240px;margin:0 auto;padding:10px clamp(16px,3vw,32px);display:flex;align-items:center;gap:12px;min-height:64px">
+            <sc-if value="{{ isMobile }}">
+              <span aria-hidden="true" style="width:30px;height:30px;border-radius:9px;background:#171717;display:grid;place-items:center;font:800 16px Manrope,sans-serif;color:#F5F0E6;flex:none">B</span>
+            </sc-if>
+            <h1 style="font:800 clamp(18px,2.2vw,22px) Manrope,sans-serif;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0">{{ title }}</h1>
+            <span title="{{ envTitle }}" style="padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;letter-spacing:.05em;background:{{ envBg }};color:{{ envColor }};flex:none">{{ envLabel }}</span>
+            <div style="margin-left:auto;display:flex;gap:6px;align-items:center">
+              <sc-if value="{{ isMobile }}">
+                <button onClick="{{ openSearch }}" aria-label="Ricerca" style="width:44px;height:44px;border-radius:12px;border:0;background:transparent;cursor:pointer;display:grid;place-items:center"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:24px">search</span></button>
+                <button onClick="{{ openNotif }}" aria-label="{{ notifAria }}" style="position:relative;width:44px;height:44px;border-radius:12px;border:0;background:transparent;cursor:pointer;display:grid;place-items:center"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:24px">notifications</span><sc-if value="{{ hasUnread }}"><span style="position:absolute;top:6px;right:6px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:var(--accent);color:#171717;font-size:11px;font-weight:700;display:grid;place-items:center">{{ unread }}</span></sc-if></button>
+              </sc-if>
+              <button onClick="{{ toggleTheme }}" aria-label="{{ themeLabel }}" title="{{ themeLabel }}" style="width:44px;height:44px;border-radius:12px;border:0;background:transparent;cursor:pointer;display:grid;place-items:center" style-hover="background:var(--surface-2)"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:22px">{{ themeIcon }}</span></button>
+              <button onClick="{{ openSettings }}" aria-label="Profilo di {{ user.name }}" style="display:flex;align-items:center;gap:10px;padding:4px 6px 4px 4px;border-radius:999px;border:1px solid var(--line);background:var(--surface);cursor:pointer;min-height:44px">
+                <span aria-hidden="true" style="width:34px;height:34px;border-radius:50%;background:var(--accent);color:#171717;display:grid;place-items:center;font-weight:700;font-size:13px">{{ user.initials }}</span>
+                <sc-if value="{{ showUserName }}"><span style="font-size:14px;font-weight:600;padding-right:8px;white-space:nowrap">{{ user.name }}</span></sc-if>
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <main id="main" style="flex:1;width:100%;max-width:1240px;margin:0 auto;padding:clamp(16px,3vw,32px) clamp(16px,3vw,32px) {{ mainPadBottom }}">
+          <sc-if value="{{ sDash }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;flex-direction:column;gap:20px;animation:blFade .25s ease-out">
+              <sc-if value="{{ dash.hasSession }}">
+                <section aria-label="Sessione in corso" style="padding:18px 20px;border-radius:16px;background:#171717;color:#F5F0E6;display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between">
+                  <div style="display:flex;gap:14px;align-items:center"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:26px;color:#F47732">pending_actions</span><div><div style="font-weight:700">{{ dash.sessionTitle }}</div><div style="font-size:14px;color:#D2CABD">{{ dash.sessionInfo }}</div></div></div>
+                  <button onClick="{{ resume }}" style="min-height:44px;padding:0 18px;border-radius:10px;border:0;background:#F47732;color:#171717;font-weight:700;cursor:pointer">Riprendi</button>
+                </section>
+              </sc-if>
+              <section style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-end;justify-content:space-between">
+                <div style="display:flex;flex-direction:column;gap:6px">
+                  <h2 style="font:800 clamp(26px,3.4vw,36px)/1.1 Manrope,sans-serif;letter-spacing:-.03em">{{ dash.greeting }}</h2>
+                  <p style="color:var(--ink-2)">{{ dash.sub }}</p>
+                </div>
+                <button onClick="{{ dash.startQuick }}" style="min-height:52px;padding:0 22px;border-radius:12px;border:0;background:var(--accent);color:#171717;font-weight:700;font-size:16px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:transform .15s" style-hover="background:var(--accent-hover);transform:translateY(-1px)"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:22px">play_arrow</span>Inizia un quiz</button>
+              </section>
+
+              <sc-if value="{{ dash.isNew }}">
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:20px">
+                  <section style="padding:24px;border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:16px">
+                    <div style="display:flex;justify-content:space-between;align-items:center"><h3 style="font:700 18px Manrope,sans-serif">Per iniziare</h3><span style="font-size:13px;color:var(--ink-3)">{{ dash.checkDone }} di 4 · facoltativo</span></div>
+                    <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px">
+                      <sc-for list="{{ dash.checklist }}" as="c" hint-placeholder-count="4">
+                        <li style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;background:var(--bg)">
+                          <span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:24px;color:{{ c.color }};font-variation-settings:{{ c.fill }}">{{ c.icon }}</span>
+                          <span style="flex:1;font-weight:500;text-decoration:{{ c.deco }}">{{ c.label }}<span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">{{ c.srState }}</span></span>
+                          <sc-if value="{{ c.todo }}"><button onClick="{{ c.action }}" style="min-height:36px;padding:0 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-size:13px;font-weight:600">{{ c.actionLabel }}</button></sc-if>
+                        </li>
+                      </sc-for>
+                    </ul>
+                  </section>
+                  <section style="padding:24px;border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:18px">
+                    <div style="display:flex;flex-direction:column;gap:10px">
+                      <h3 style="font:700 18px Manrope,sans-serif">La tua area di interesse</h3>
+                      <div role="radiogroup" aria-label="Area di interesse" style="display:flex;flex-wrap:wrap;gap:8px">
+                        <sc-for list="{{ dash.areaOpts }}" as="o" hint-placeholder-count="2"><button role="radio" aria-checked="{{ o.active }}" onClick="{{ o.onClick }}" style="min-height:44px;padding:0 16px;border-radius:999px;cursor:pointer;font-weight:600;background:{{ o.bg }};border:{{ o.border }};color:var(--ink)">{{ o.label }}</button></sc-for>
+                      </div>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:10px">
+                      <h3 style="font:700 18px Manrope,sans-serif">Obiettivo giornaliero</h3>
+                      <div role="radiogroup" aria-label="Risposte al giorno" style="display:flex;flex-wrap:wrap;gap:8px">
+                        <sc-for list="{{ dash.goalOpts }}" as="o" hint-placeholder-count="3"><button role="radio" aria-checked="{{ o.active }}" onClick="{{ o.onClick }}" style="min-height:44px;padding:0 16px;border-radius:999px;cursor:pointer;font-weight:600;background:{{ o.bg }};border:{{ o.border }};color:var(--ink)">{{ o.label }}</button></sc-for>
+                      </div>
+                      <p style="font-size:13px;color:var(--ink-3)">Puoi cambiarlo quando vuoi dalle impostazioni.</p>
+                    </div>
+                  </section>
+                </div>
+                <section style="display:flex;flex-direction:column;gap:14px">
+                  <h3 style="font:700 18px Manrope,sans-serif">Materiali disponibili</h3>
+                  <sc-if value="{{ dash.noMaterials }}">
+                    <div style="padding:28px;border-radius:16px;border:1.5px dashed var(--line);color:var(--ink-2);line-height:1.5">Il catalogo non contiene ancora materiali pubblicati per questo ambiente. Appena il team editoriale ne approverà, li troverai qui e nella sezione Studia.</div>
+                  </sc-if>
+                  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:14px">
+                    <sc-for list="{{ dash.materials }}" as="m" hint-placeholder-count="3">
+                      <button onClick="{{ m.open }}" style="padding:18px;border-radius:16px;background:var(--surface);border:1px solid var(--line);text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:8px" style-hover="border-color:var(--ink)">
+                        <span style="font-size:12px;font-weight:600;color:var(--ink-3)">{{ m.meta }}</span><span style="font:700 16px/1.3 Manrope,sans-serif">{{ m.title }}</span>
+                      </button>
+                    </sc-for>
+                  </div>
+                </section>
+              </sc-if>
+
+              <sc-if value="{{ dash.isRegular }}" hint-placeholder-val="{{ true }}">
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:16px">
+                  <section aria-label="Obiettivo giornaliero" style="padding:20px;border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px">
+                    <span style="font-size:13px;font-weight:600;color:var(--ink-3)">Obiettivo di oggi</span>
+                    <div style="font:800 30px Manrope,sans-serif;letter-spacing:-.02em">{{ dash.today }}<span style="font-size:16px;color:var(--ink-3)"> / {{ dash.goal }} risposte</span></div>
+                    <div role="progressbar" aria-label="Avanzamento obiettivo" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ dash.goalNow }}" style="height:8px;border-radius:8px;background:var(--surface-2);overflow:hidden"><div style="height:100%;width:{{ dash.goalPct }};background:var(--accent);border-radius:8px;transition:width .4s"></div></div>
+                    <p style="font-size:13px;color:var(--ink-2)">{{ dash.goalMsg }}</p>
+                  </section>
+                  <section aria-label="Serie di attività" style="padding:20px;border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px">
+                    <span style="font-size:13px;font-weight:600;color:var(--ink-3)">Serie di attività</span>
+                    <div style="display:flex;align-items:center;gap:8px"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:30px;color:var(--accent);font-variation-settings:'FILL' 1">local_fire_department</span><span style="font:800 30px Manrope,sans-serif">{{ dash.streak }}</span><span style="color:var(--ink-3)">{{ dash.streakUnit }}</span></div>
+                    <p style="font-size:13px;color:var(--ink-2)">{{ dash.streakMsg }}</p>
+                  </section>
+                  <section aria-label="Livello ed esperienza" style="padding:20px;border-radius:18px;background:#171717;color:#F5F0E6;display:flex;flex-direction:column;gap:10px">
+                    <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;font-weight:600;color:#B8B0A3">Livello {{ dash.level }}</span><span style="font-size:13px;font-weight:700;color:#F47732">{{ dash.xp }} XP</span></div>
+                    <div role="progressbar" aria-label="XP verso il prossimo livello" aria-valuemin="0" aria-valuemax="150" aria-valuenow="{{ dash.xpInto }}" style="height:8px;border-radius:8px;background:#34302B;overflow:hidden"><div style="height:100%;width:{{ dash.xpPct }};background:#F47732"></div></div>
+                    <p style="font-size:13px;color:#D2CABD;line-height:1.45">Gli XP misurano l'impegno nello studio, non il livello di preparazione.</p>
+                  </section>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:16px">
+                  <section style="padding:22px;border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:14px">
+                    <div style="display:flex;justify-content:space-between;align-items:center"><h3 style="font:700 17px Manrope,sans-serif">Riepilogo progressi</h3><button onClick="{{ goProgress }}" style="border:0;background:transparent;cursor:pointer;color:var(--accent-text);font-weight:600;font-size:14px;min-height:36px">Dettagli</button></div>
+                    <div style="display:flex;gap:24px;flex-wrap:wrap">
+                      <div><div style="font:800 26px Manrope,sans-serif">{{ dash.nQuiz }}</div><div style="font-size:13px;color:var(--ink-3)">quiz in 30 giorni</div></div>
+                      <div><div style="font:800 26px Manrope,sans-serif">{{ dash.acc }}</div><div style="font-size:13px;color:var(--ink-3)">risposte corrette (osservato)</div></div>
+                      <div><div style="font:800 26px Manrope,sans-serif">{{ dash.examMean }}</div><div style="font-size:13px;color:var(--ink-3)">media simulazioni</div></div>
+                    </div>
+                    <div aria-label="Ultimi punteggi" role="img" style="display:flex;align-items:flex-end;gap:6px;height:80px;padding-top:6px;border-bottom:1px solid var(--line);position:relative">
+                      <div style="position:absolute;left:0;right:0;bottom:56px;border-top:1px dashed var(--accent)"></div>
+                      <sc-for list="{{ dash.bars }}" as="b" hint-placeholder-count="8"><div title="{{ b.label }}" style="flex:1;height:{{ b.h }};border-radius:5px 5px 0 0;background:{{ b.color }}"></div></sc-for>
+                    </div>
+                    <p style="font-size:12px;color:var(--ink-3)">Ultimi punteggi in trentesimi. Linea tratteggiata: soglia BandoLab 21/30. Barre scure: simulazioni.</p>
+                  </section>
+                  <section style="padding:22px;border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px">
+                    <h3 style="font:700 17px Manrope,sans-serif">Attività recente</h3>
+                    <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column">
+                      <sc-for list="{{ dash.recent }}" as="r" hint-placeholder-count="4">
+                        <li><button onClick="{{ r.onClick }}" style="width:100%;display:flex;align-items:center;gap:12px;padding:10px 4px;border:0;border-bottom:1px solid var(--line);background:transparent;cursor:pointer;text-align:left;min-height:52px">
+                          <span aria-hidden="true" style="width:36px;height:36px;border-radius:10px;background:var(--surface-2);display:grid;place-items:center;font-family:'Material Symbols Rounded';font-size:20px;flex:none">{{ r.icon }}</span>
+                          <span style="flex:1;min-width:0"><span style="display:block;font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.title }}</span><span style="font-size:13px;color:var(--ink-3)">{{ r.sub }}</span></span>
+                          <span style="font:700 16px Manrope,sans-serif">{{ r.score }}</span>
+                        </button></li>
+                      </sc-for>
+                    </ul>
+                  </section>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px">
+                  <section style="padding:22px;border-radius:18px;background:var(--accent-soft);display:flex;flex-direction:column;gap:10px">
+                    <span style="font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--accent-text)">{{ dash.sugKind }}</span>
+                    <h3 style="font:700 18px/1.3 Manrope,sans-serif">{{ dash.sugTitle }}</h3>
+                    <p style="color:var(--ink-2);font-size:14px;line-height:1.5">{{ dash.sugBody }}</p>
+                    <sc-if value="{{ dash.hasSugAction }}"><button onClick="{{ dash.sugAction }}" style="align-self:flex-start;min-height:44px;padding:0 16px;border-radius:10px;border:0;background:#171717;color:#F5F0E6;font-weight:600;cursor:pointer">{{ dash.sugActionLabel }}</button></sc-if>
+                  </section>
+                  <section style="padding:22px;border-radius:18px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;gap:12px">
+                    <h3 style="font:700 17px Manrope,sans-serif">Argomenti da ripassare</h3>
+                    <sc-if value="{{ dash.hasWeak }}">
+                      <sc-for list="{{ dash.weak }}" as="t" hint-placeholder-count="3">
+                        <button onClick="{{ t.onClick }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);cursor:pointer;text-align:left;min-height:48px"><span style="font-weight:600;font-size:14px">{{ t.name }}</span><span style="font-size:13px;color:var(--ink-3);white-space:nowrap">{{ t.acc }} su {{ t.n }}</span></button>
+                      </sc-for>
+                      <p style="font-size:12px;color:var(--ink-3)">Dato osservato: argomenti con almeno 5 risposte e meno del 60% di risposte corrette.</p>
+                    </sc-if>
+                    <sc-if value="{{ dash.noWeak }}"><p style="color:var(--ink-2);font-size:14px;line-height:1.5">{{ dash.weakEmpty }}</p></sc-if>
+                  </section>
+                  <section style="padding:22px;border-radius:18px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;gap:12px">
+                    <h3 style="font:700 17px Manrope,sans-serif">Ultimo materiale</h3>
+                    <sc-if value="{{ dash.hasLast }}">
+                      <span style="font-size:13px;color:var(--ink-3)">{{ dash.lastMeta }}</span>
+                      <span style="font:700 16px/1.3 Manrope,sans-serif">{{ dash.lastTitle }}</span>
+                      <div style="height:6px;border-radius:6px;background:var(--surface-2);overflow:hidden"><div style="height:100%;width:{{ dash.lastPct }};background:var(--ink)"></div></div>
+                      <button onClick="{{ dash.lastOpen }}" style="align-self:flex-start;min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line);background:var(--bg);font-weight:600;cursor:pointer">Continua a leggere</button>
+                    </sc-if>
+                    <sc-if value="{{ dash.noLast }}"><p style="color:var(--ink-2);font-size:14px">Non hai ancora aperto materiali.</p><button onClick="{{ goLibrary }}" style="align-self:flex-start;min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line);background:var(--bg);font-weight:600;cursor:pointer">Vai alla biblioteca</button></sc-if>
+                  </section>
+                </div>
+              </sc-if>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ sQuiz }}">
+            <div style="display:flex;flex-direction:column;gap:20px;animation:blFade .25s ease-out">
+              <sc-if value="{{ qz.hasSession }}">
+                <section role="region" aria-label="Sessione in corso" style="padding:18px 20px;border-radius:16px;background:#171717;color:#F5F0E6;display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between">
+                  <div><div style="font-weight:700">{{ qz.sessionTitle }}</div><div style="font-size:14px;color:#D2CABD">{{ qz.sessionInfo }}</div></div>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    <button onClick="{{ resume }}" style="min-height:44px;padding:0 18px;border-radius:10px;border:0;background:#F47732;color:#171717;font-weight:700;cursor:pointer">Riprendi</button>
+                    <button onClick="{{ qz.abandon }}" style="min-height:44px;padding:0 16px;border-radius:10px;border:1px solid #6A635A;background:transparent;color:#F5F0E6;font-weight:600;cursor:pointer">{{ qz.abandonLabel }}</button>
+                  </div>
+                </section>
+              </sc-if>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:16px">
+                <section style="padding:24px;border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:14px">
+                  <div style="display:flex;align-items:center;gap:10px"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:24px;color:var(--accent-text)">bolt</span><h2 style="font:700 19px Manrope,sans-serif">Avvio rapido</h2></div>
+                  <p style="font-weight:600">{{ qz.quickLabel }}</p>
+                  <p style="color:var(--ink-3);font-size:14px">{{ qz.quickDetail }}</p>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:auto">
+                    <button onClick="{{ qz.startQuick }}" style="min-height:48px;padding:0 20px;border-radius:12px;border:0;background:var(--accent);color:#171717;font-weight:700;cursor:pointer" style-hover="background:var(--accent-hover)">Avvia</button>
+                    <button onClick="{{ qz.openCfg }}" style="min-height:48px;padding:0 18px;border-radius:12px;border:1px solid var(--line);background:transparent;font-weight:600;cursor:pointer">Modifica parametri</button>
+                  </div>
+                </section>
+                <section style="padding:24px;border-radius:18px;background:var(--surface);border:1px solid var(--line);display:grid;grid-template-columns:1fr 1fr;gap:16px">
+                  <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:12px;font-weight:700;letter-spacing:.05em;color:var(--info)">ALLENAMENTO LIBERO</span><ul style="margin:0;padding-left:18px;color:var(--ink-2);font-size:14px;line-height:1.6"><li>Nessun timer</li><li>Soluzione dopo ogni risposta</li><li>Riprendi quando vuoi</li></ul></div>
+                  <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:12px;font-weight:700;letter-spacing:.05em;color:var(--accent-text)">SIMULAZIONE D'ESAME</span><ul style="margin:0;padding-left:18px;color:var(--ink-2);font-size:14px;line-height:1.6"><li>Timer con consegna automatica</li><li>Penalità: −0,5 errata, −0,25 omessa</li><li>Correzione dopo la consegna</li></ul></div>
+                  <p style="grid-column:1/-1;font-size:13px;color:var(--ink-3)">Le due modalità hanno statistiche separate.</p>
+                </section>
+              </div>
+
+              <section style="display:flex;flex-direction:column;gap:12px">
+                <h2 style="font:700 19px Manrope,sans-serif">Quiz pronti</h2>
+                <sc-if value="{{ qz.noReady }}"><div style="padding:24px;border-radius:16px;border:1.5px dashed var(--line);color:var(--ink-2)">Nessun quiz pubblicato in questo ambiente. Puoi comunque configurarne uno se esistono domande approvate.</div></sc-if>
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr));gap:12px">
+                  <sc-for list="{{ qz.ready }}" as="z" hint-placeholder-count="3">
+                    <article style="padding:18px;border-radius:16px;background:var(--surface);border:{{ z.border }};display:flex;flex-direction:column;gap:10px">
+                      <span style="align-self:flex-start;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;letter-spacing:.04em;background:{{ z.modeBg }};color:{{ z.modeColor }}">{{ z.modeLabel }}</span>
+                      <h3 style="font:700 16px/1.3 Manrope,sans-serif">{{ z.title }}</h3>
+                      <p style="font-size:13px;color:var(--ink-3)">{{ z.meta }}</p>
+                      <button onClick="{{ z.start }}" style="align-self:flex-start;margin-top:auto;min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--ink);background:transparent;font-weight:600;cursor:pointer" style-hover="background:var(--ink);color:var(--bg)">Avvia</button>
+                    </article>
+                  </sc-for>
+                </div>
+              </section>
+
+              <section style="border-radius:18px;background:var(--surface);border:1px solid var(--line)">
+                <button onClick="{{ qz.toggleCfg }}" aria-expanded="{{ qz.cfgOpen }}" aria-controls="cfg-panel" style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:20px 24px;border:0;background:transparent;cursor:pointer;text-align:left;min-height:64px">
+                  <span style="display:flex;flex-direction:column;gap:2px"><span style="font:700 19px Manrope,sans-serif">Configurazione avanzata</span><span style="font-size:14px;color:var(--ink-3)">Modalità, profilo, materie, difficoltà e numero di domande</span></span>
+                  <span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:26px;transform:{{ qz.chevron }};transition:transform .2s">expand_more</span>
+                </button>
+                <sc-if value="{{ qz.cfgOpen }}">
+                  <div id="cfg-panel" style="padding:4px 24px 24px;display:flex;flex-direction:column;gap:20px;animation:blFade .2s ease-out">
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:16px">
+                      <div style="display:flex;flex-direction:column;gap:8px"><span id="lbl-mode" style="font-size:14px;font-weight:600">Modalità</span>
+                        <div role="radiogroup" aria-labelledby="lbl-mode" style="display:flex;padding:4px;border-radius:12px;background:var(--surface-2);gap:4px">
+                          <sc-for list="{{ qz.modeOpts }}" as="o" hint-placeholder-count="2"><button role="radio" aria-checked="{{ o.active }}" onClick="{{ o.onClick }}" style="flex:1;min-height:40px;border-radius:9px;border:0;cursor:pointer;font-weight:600;font-size:14px;background:{{ o.bg }};box-shadow:{{ o.shadow }}">{{ o.label }}</button></sc-for>
+                        </div>
+                      </div>
+                      <label style="display:flex;flex-direction:column;gap:8px"><span style="font-size:14px;font-weight:600">Profilo</span>
+                        <select value="{{ qz.profile }}" onChange="{{ qz.onProfile }}" style="min-height:48px;padding:0 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg)"><sc-for list="{{ qz.profileOpts }}" as="o" hint-placeholder-count="3"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select>
+                      </label>
+                      <label style="display:flex;flex-direction:column;gap:8px"><span style="font-size:14px;font-weight:600">Numero di domande</span>
+                        <select value="{{ qz.count }}" onChange="{{ qz.onCount }}" style="min-height:48px;padding:0 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg)"><sc-for list="{{ qz.countOpts }}" as="o" hint-placeholder-count="5"><option value="{{ o }}">{{ o }} domande</option></sc-for></select>
+                      </label>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:8px"><span id="lbl-sub" style="font-size:14px;font-weight:600">Materie <span style="font-weight:400;color:var(--ink-3)">· nessuna selezione = tutte le materie del profilo</span></span>
+                      <div role="group" aria-labelledby="lbl-sub" style="display:flex;flex-wrap:wrap;gap:8px">
+                        <sc-for list="{{ qz.subjects }}" as="s" hint-placeholder-count="5"><button aria-pressed="{{ s.active }}" onClick="{{ s.onClick }}" style="min-height:40px;padding:0 14px;border-radius:999px;cursor:pointer;font-size:14px;font-weight:500;background:{{ s.bg }};border:{{ s.border }};color:var(--ink)">{{ s.name }} <span style="color:var(--ink-3)">· {{ s.count }}</span></button></sc-for>
+                      </div>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:8px"><span id="lbl-diff" style="font-size:14px;font-weight:600">Difficoltà <span style="font-weight:400;color:var(--ink-3)">· assegnata dal team editoriale</span></span>
+                      <div role="radiogroup" aria-labelledby="lbl-diff" style="display:flex;flex-wrap:wrap;gap:8px">
+                        <sc-for list="{{ qz.diffOpts }}" as="o" hint-placeholder-count="4"><button role="radio" aria-checked="{{ o.active }}" onClick="{{ o.onClick }}" style="min-height:40px;padding:0 14px;border-radius:999px;cursor:pointer;font-size:14px;font-weight:500;background:{{ o.bg }};border:{{ o.border }};color:var(--ink)">{{ o.label }}</button></sc-for>
+                      </div>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:10px">
+                      <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><span style="font-size:14px;font-weight:600">Domande approvate disponibili e distribuzione proposta</span><span style="font-size:14px;color:var(--ink-3)">{{ qz.durationLabel }}</span></div>
+                      <div style="overflow-x:auto;border-radius:12px;border:1px solid var(--line)">
+                        <table style="width:100%;border-collapse:collapse;font-size:14px;min-width:480px">
+                          <thead><tr style="background:var(--bg);text-align:left"><th scope="col" style="padding:10px 12px;font-weight:600">Materia</th><th scope="col" style="padding:10px 8px;font-weight:600">Base</th><th scope="col" style="padding:10px 8px;font-weight:600">Intermedia</th><th scope="col" style="padding:10px 8px;font-weight:600">Avanzata</th><th scope="col" style="padding:10px 8px;font-weight:600">Totale</th><th scope="col" style="padding:10px 12px;font-weight:600">Nel quiz</th></tr></thead>
+                          <tbody>
+                            <sc-for list="{{ qz.rows }}" as="r" hint-placeholder-count="4"><tr style="border-top:1px solid var(--line)"><th scope="row" style="padding:10px 12px;font-weight:500;text-align:left">{{ r.name }}</th><td style="padding:10px 8px">{{ r.d1 }}</td><td style="padding:10px 8px">{{ r.d2 }}</td><td style="padding:10px 8px">{{ r.d3 }}</td><td style="padding:10px 8px">{{ r.total }}</td><td style="padding:10px 12px;font-weight:700">{{ r.planned }}</td></tr></sc-for>
+                          </tbody>
+                        </table>
+                      </div>
+                      <sc-if value="{{ qz.insufficient }}"><p role="alert" style="display:flex;gap:10px;padding:12px 14px;border-radius:12px;background:var(--warn-soft);color:var(--warn);font-size:14px;line-height:1.45"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:20px">warning</span>{{ qz.insufficientMsg }}</p></sc-if>
+                    </div>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+                      <button onClick="{{ qz.startCfg }}" disabled="{{ qz.insufficient }}" style="min-height:48px;padding:0 22px;border-radius:12px;border:0;background:var(--accent);color:#171717;font-weight:700;cursor:pointer;opacity:{{ qz.startOpacity }}">{{ qz.startLabel }}</button>
+                      <span style="font-size:13px;color:var(--ink-3)">Non vengono generate domande per raggiungere il numero richiesto.</span>
+                    </div>
+                  </div>
+                </sc-if>
+              </section>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ sResults }}">
+            <div style="display:flex;flex-direction:column;gap:20px;animation:blFade .25s ease-out">
+              <sc-if value="{{ res.missing }}"><div style="padding:28px;border-radius:16px;border:1.5px dashed var(--line)">Nessun risultato disponibile. <button onClick="{{ res.goQuiz }}" style="border:0;background:transparent;color:var(--accent-text);font-weight:600;cursor:pointer;text-decoration:underline">Inizia un quiz</button></div></sc-if>
+              <sc-if value="{{ res.ok }}">
+                <section style="padding:clamp(22px,4vw,36px);border-radius:24px;background:#171717;color:#F5F0E6;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:24px">
+                  <div style="display:flex;flex-direction:column;gap:14px">
+                    <div style="display:flex;gap:8px;flex-wrap:wrap"><span style="padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;letter-spacing:.05em;background:#26231F;color:#F0C062">{{ res.modeLabel }}</span><span style="font-size:13px;color:#B8B0A3">{{ res.date }}</span></div>
+                    <h2 style="font:700 20px/1.3 Manrope,sans-serif">{{ res.title }}</h2>
+                    <div style="font:800 clamp(56px,9vw,88px)/1 Manrope,sans-serif;letter-spacing:-.04em">{{ res.display }}<span style="font-size:.38em;color:#B8B0A3"> /30</span></div>
+                    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:10px;font-weight:700;background:{{ res.outBg }};color:#171717"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:20px">{{ res.outIcon }}</span>{{ res.outLabel }}</span><span style="font-size:14px;color:#D2CABD">Tempo: {{ res.time }}</span></div>
+                    <sc-if value="{{ res.hasRoundNote }}"><p style="font-size:13px;color:#F0C062">Il punteggio mostrato è arrotondato a {{ res.display }}, ma il valore esatto ({{ res.exact }}) è sotto 21: l'esito usa il valore non arrotondato.</p></sc-if>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:12px">
+                    <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px">
+                      <div style="padding:14px;border-radius:12px;background:#26231F"><div style="font:800 26px Manrope,sans-serif;color:#6FD39A">{{ res.C }}</div><div style="font-size:13px;color:#D2CABD">Corrette · +1</div></div>
+                      <div style="padding:14px;border-radius:12px;background:#26231F"><div style="font:800 26px Manrope,sans-serif;color:#FF8F85">{{ res.E }}</div><div style="font-size:13px;color:#D2CABD">Errate · −0,5</div></div>
+                      <div style="padding:14px;border-radius:12px;background:#26231F"><div style="font:800 26px Manrope,sans-serif">{{ res.O }}</div><div style="font-size:13px;color:#D2CABD">Omesse · −0,25</div></div>
+                    </div>
+                    <p style="font-size:13px;color:#D2CABD;line-height:1.55;font-family:ui-monospace,Menlo,monospace">{{ res.formula }}</p>
+                    <p style="font-size:13px;color:#B8B0A3;line-height:1.5">Esito secondo la regola BandoLab (soglia 21/30). Non è una soglia universale: ogni concorso ha le proprie regole.</p>
+                    <sc-if value="{{ res.hasReason }}"><p style="font-size:13px;color:#F0C062;line-height:1.5">{{ res.reason }}</p></sc-if>
+                  </div>
+                </section>
+                <sc-if value="{{ res.fewData }}"><p style="display:flex;gap:10px;padding:12px 14px;border-radius:12px;background:var(--info-soft);color:var(--info);font-size:14px"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:20px">info</span>Con meno di 10 domande i dati sono insufficienti per trarre conclusioni: considera il risultato indicativo.</p></sc-if>
+                <section style="display:flex;flex-direction:column;gap:12px">
+                  <h2 style="font:700 19px Manrope,sans-serif">Azioni consigliate</h2>
+                  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:12px">
+                    <sc-for list="{{ res.actions }}" as="a" hint-placeholder-count="4">
+                      <button onClick="{{ a.onClick }}" style="padding:18px;border-radius:16px;background:{{ a.bg }};border:1px solid var(--line);text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:8px;min-height:120px" style-hover="border-color:var(--ink)">
+                        <span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:24px;color:var(--accent-text)">{{ a.icon }}</span>
+                        <span style="font-weight:700">{{ a.title }}</span><span style="font-size:13px;color:var(--ink-2);line-height:1.45">{{ a.body }}</span>
+                      </button>
+                    </sc-for>
+                  </div>
+                </section>
+                <section style="padding:22px;border-radius:18px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;gap:14px">
+                  <h2 style="font:700 19px Manrope,sans-serif">Risultati per materia</h2>
+                  <sc-for list="{{ res.subjects }}" as="s" hint-placeholder-count="3">
+                    <div style="display:grid;grid-template-columns:minmax(0,220px) 1fr auto;gap:12px;align-items:center">
+                      <span style="font-size:14px;font-weight:500">{{ s.name }}</span>
+                      <div style="height:10px;border-radius:10px;background:var(--surface-2);overflow:hidden"><div style="height:100%;width:{{ s.pct }};background:{{ s.color }}"></div></div>
+                      <span style="font-size:13px;color:var(--ink-2);white-space:nowrap">{{ s.c }}/{{ s.n }} corrette</span>
+                    </div>
+                  </sc-for>
+                </section>
+                <section id="review-list" style="display:flex;flex-direction:column;gap:14px">
+                  <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;align-items:center">
+                    <h2 style="font:700 19px Manrope,sans-serif">Revisione delle risposte</h2>
+                    <div role="tablist" aria-label="Filtra le risposte" style="display:flex;padding:4px;border-radius:12px;background:var(--surface-2);gap:4px;flex-wrap:wrap">
+                      <sc-for list="{{ res.filters }}" as="f" hint-placeholder-count="4"><button role="tab" aria-selected="{{ f.active }}" onClick="{{ f.onClick }}" style="min-height:38px;padding:0 12px;border-radius:9px;border:0;cursor:pointer;font-weight:600;font-size:13px;background:{{ f.bg }};box-shadow:{{ f.shadow }}">{{ f.label }} · {{ f.count }}</button></sc-for>
+                    </div>
+                  </div>
+                  <sc-if value="{{ res.noItems }}"><p style="padding:20px;border-radius:14px;border:1.5px dashed var(--line);color:var(--ink-2)">Nessuna domanda in questa categoria.</p></sc-if>
+                  <sc-for list="{{ res.items }}" as="it" hint-placeholder-count="4">
+                    <article style="padding:20px;border-radius:16px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;gap:12px">
+                      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center">
+                        <span style="display:flex;gap:6px;align-items:center;font-size:13px;font-weight:700;color:{{ it.color }}"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:20px">{{ it.icon }}</span>{{ it.n }}. {{ it.state }}</span>
+                        <span style="font-size:12px;color:var(--ink-3)">{{ it.meta }}</span>
+                      </div>
+                      <p style="font:600 16px/1.45 Manrope,sans-serif">{{ it.text }}</p>
+                      <div style="display:grid;gap:6px;font-size:14px">
+                        <span><span style="color:var(--ink-3)">Risposta data: </span>{{ it.yours }}</span>
+                        <span><span style="color:var(--ink-3)">Risposta corretta: </span><strong>{{ it.correct }}</strong></span>
+                      </div>
+                      <p style="font-size:14px;color:var(--ink-2);line-height:1.55;padding-top:12px;border-top:1px solid var(--line)">{{ it.expl }}</p>
+                      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:13px">
+                        <span style="color:var(--ink-3)">Fonte: {{ it.source }}</span>
+                        <sc-if value="{{ it.hasMaterial }}"><button onClick="{{ it.openMaterial }}" style="min-height:36px;padding:0 12px;border-radius:8px;border:1px solid var(--line);background:var(--bg);cursor:pointer;font-weight:600">Materiale: {{ it.materialTitle }}</button></sc-if>
+                        <button onClick="{{ it.report }}" style="min-height:36px;padding:0 12px;border-radius:8px;border:0;background:transparent;cursor:pointer;color:var(--ink-2);display:flex;gap:4px;align-items:center"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:18px">flag</span>Segnala</button>
+                      </div>
+                    </article>
+                  </sc-for>
+                </section>
+              </sc-if>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ sStudyTabs }}">
+            <div role="tablist" aria-label="Studia" style="display:inline-flex;padding:4px;border-radius:12px;background:var(--surface-2);gap:4px;margin-bottom:20px">
+              <sc-for list="{{ studyTabs }}" as="t" hint-placeholder-count="2"><button role="tab" aria-selected="{{ t.active }}" onClick="{{ t.onClick }}" style="min-height:42px;padding:0 18px;border-radius:9px;border:0;cursor:pointer;font-weight:600;background:{{ t.bg }};box-shadow:{{ t.shadow }}">{{ t.label }}</button></sc-for>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ sLibrary }}">
+            <div style="display:flex;flex-direction:column;gap:18px;animation:blFade .25s ease-out">
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:10px">
+                <sc-for list="{{ lib.filters }}" as="f" hint-placeholder-count="4">
+                  <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:600;color:var(--ink-2)">{{ f.label }}</span>
+                    <select value="{{ f.value }}" onChange="{{ f.onChange }}" style="min-height:44px;padding:0 10px;border-radius:10px;border:1px solid var(--line);background:var(--surface)"><sc-for list="{{ f.options }}" as="o" hint-placeholder-count="3"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select>
+                  </label>
+                </sc-for>
+              </div>
+              <p style="font-size:14px;color:var(--ink-3)">{{ lib.countLabel }}</p>
+              <sc-if value="{{ lib.empty }}">
+                <div style="padding:40px 24px;border-radius:18px;border:1.5px dashed var(--line);display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px">
+                  <span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:36px;color:var(--ink-3)">{{ lib.emptyIcon }}</span>
+                  <h2 style="font:700 19px Manrope,sans-serif">{{ lib.emptyTitle }}</h2>
+                  <p style="color:var(--ink-2);max-width:480px;line-height:1.5">{{ lib.emptyBody }}</p>
+                  <sc-if value="{{ lib.canReset }}"><button onClick="{{ lib.reset }}" style="min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-weight:600">Azzera i filtri</button></sc-if>
+                </div>
+              </sc-if>
+              <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr));gap:14px">
+                <sc-for list="{{ lib.items }}" as="m" hint-placeholder-count="6">
+                  <button onClick="{{ m.open }}" style="padding:20px;border-radius:18px;background:var(--surface);border:1px solid var(--line);text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:12px;transition:transform .15s,border-color .15s" style-hover="border-color:var(--ink);transform:translateY(-2px)">
+                    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+                      <span style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--ink-2)"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:20px;color:var(--accent-text)">{{ m.icon }}</span>{{ m.format }}</span>
+                      <sc-if value="{{ m.done }}"><span style="display:flex;gap:4px;align-items:center;font-size:12px;font-weight:700;color:var(--ok)"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:16px">check_circle</span>Completato</span></sc-if>
+                    </div>
+                    <span style="font:700 17px/1.3 Manrope,sans-serif">{{ m.title }}</span>
+                    <span style="font-size:13px;color:var(--ink-3)">{{ m.meta }}</span>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap"><span style="padding:3px 8px;border-radius:6px;background:var(--ok-soft);color:var(--ok);font-size:11px;font-weight:700">PUBBLICATO</span><sc-if value="{{ m.demo }}"><span style="padding:3px 8px;border-radius:6px;background:var(--warn-soft);color:var(--warn);font-size:11px;font-weight:700">DEMO · NON VERIFICATO</span></sc-if></div>
+                    <sc-if value="{{ m.hasProgress }}"><div aria-label="{{ m.progressLabel }}" style="height:5px;border-radius:5px;background:var(--surface-2);overflow:hidden"><div style="height:100%;width:{{ m.pct }};background:var(--ink)"></div></div></sc-if>
+                  </button>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ sReader }}">
+            <div style="display:flex;flex-direction:column;gap:18px;animation:blFade .25s ease-out">
+              <button onClick="{{ rd.back }}" style="align-self:flex-start;min-height:40px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);cursor:pointer;display:flex;gap:6px;align-items:center;font-weight:500"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:18px">arrow_back</span>Biblioteca</button>
+              <header style="display:flex;flex-direction:column;gap:10px;max-width:760px">
+                <span style="font-size:13px;font-weight:600;color:var(--ink-3)">{{ rd.meta }}</span>
+                <h2 style="font:800 clamp(26px,3.5vw,36px)/1.15 Manrope,sans-serif;letter-spacing:-.025em">{{ rd.title }}</h2>
+                <p style="font-size:13px;color:var(--ink-3)">Fonte: {{ rd.source }} · Ultima verifica: {{ rd.lastVerified }} · Prossima revisione: {{ rd.nextReview }}</p>
+                <sc-if value="{{ rd.demo }}"><p style="font-size:13px;padding:8px 12px;border-radius:8px;background:var(--warn-soft);color:var(--warn);align-self:flex-start">Contenuto dimostrativo: non ufficiale e non verificato.</p></sc-if>
+              </header>
+              <sc-if value="{{ rd.isPdf }}">
+                <div style="padding:40px 24px;border-radius:18px;background:repeating-linear-gradient(45deg,var(--surface),var(--surface) 12px,var(--surface-2) 12px,var(--surface-2) 24px);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;min-height:320px;justify-content:center">
+                  <span style="font:600 13px ui-monospace,Menlo,monospace;color:var(--ink-2)">{{ rd.pdfLabel }}</span>
+                  <p style="max-width:440px;color:var(--ink-2);line-height:1.5">{{ rd.pdfMsg }}</p>
+                  <button disabled="{{ true }}" style="min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line);background:var(--surface);opacity:.55;display:flex;gap:6px;align-items:center"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:18px">download</span>Scarica PDF (non disponibile)</button>
+                </div>
+              </sc-if>
+              <sc-if value="{{ rd.isScheda }}">
+                <div role="progressbar" aria-label="Avanzamento di lettura" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ rd.readNow }}" style="height:6px;border-radius:6px;background:var(--surface-2);overflow:hidden;max-width:760px"><div style="height:100%;width:{{ rd.readPct }};background:var(--accent);transition:width .3s"></div></div>
+                <p style="font-size:13px;color:var(--ink-3)">{{ rd.readLabel }}</p>
+                <div style="display:grid;grid-template-columns:{{ rd.cols }};gap:28px;align-items:start">
+                  <nav aria-label="Indice" style="display:flex;flex-direction:column;gap:4px;position:{{ rd.tocPos }};top:84px">
+                    <sc-if value="{{ rd.isMobile }}"><button onClick="{{ rd.toggleToc }}" aria-expanded="{{ rd.tocOpen }}" style="min-height:44px;padding:0 14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-weight:600;display:flex;justify-content:space-between;align-items:center">Indice · {{ rd.secN }} di {{ rd.secTotal }}<span aria-hidden="true" style="font-family:'Material Symbols Rounded'">expand_more</span></button></sc-if>
+                    <sc-if value="{{ rd.showToc }}">
+                      <sc-for list="{{ rd.toc }}" as="t" hint-placeholder-count="4">
+                        <button onClick="{{ t.onClick }}" aria-current="{{ t.current }}" style="display:flex;gap:10px;align-items:center;min-height:44px;padding:8px 12px;border-radius:10px;border:0;cursor:pointer;text-align:left;font-size:14px;background:{{ t.bg }};font-weight:{{ t.weight }}">
+                          <span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:18px;color:{{ t.iconColor }}">{{ t.icon }}</span><span style="flex:1">{{ t.title }}</span>
+                          <sc-if value="{{ t.bookmarked }}"><span aria-label="Segnalibro" style="font-family:'Material Symbols Rounded';font-size:18px;color:var(--accent-text);font-variation-settings:'FILL' 1">bookmark</span></sc-if>
+                        </button>
+                      </sc-for>
+                    </sc-if>
+                  </nav>
+                  <article style="display:flex;flex-direction:column;gap:20px;max-width:720px;min-width:0">
+                    <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start">
+                      <h3 style="font:700 24px/1.25 Manrope,sans-serif">{{ rd.secTitle }}</h3>
+                      <button onClick="{{ rd.toggleBookmark }}" aria-pressed="{{ rd.bookmarked }}" aria-label="{{ rd.bookmarkLabel }}" title="{{ rd.bookmarkLabel }}" style="width:44px;height:44px;flex:none;border-radius:10px;border:1px solid var(--line);background:var(--surface);cursor:pointer;display:grid;place-items:center"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:22px;color:var(--accent-text);font-variation-settings:{{ rd.bookmarkFill }}">bookmark</span></button>
+                    </div>
+                    <p style="font-size:18px;line-height:1.75;color:var(--ink);text-wrap:pretty">{{ rd.secBody }}</p>
+                    <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;padding-top:16px;border-top:1px solid var(--line)">
+                      <button onClick="{{ rd.prev }}" disabled="{{ rd.noPrev }}" style="min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-weight:600;opacity:{{ rd.prevOpacity }}">← Sezione precedente</button>
+                      <sc-if value="{{ rd.hasNext }}"><button onClick="{{ rd.next }}" style="min-height:44px;padding:0 16px;border-radius:10px;border:0;background:var(--ink);color:var(--bg);cursor:pointer;font-weight:600">Sezione successiva →</button></sc-if>
+                    </div>
+                    <sc-if value="{{ rd.hasKey }}">
+                      <section style="padding:20px;border-radius:16px;background:var(--accent-soft);display:flex;flex-direction:column;gap:10px">
+                        <h4 style="font:700 15px Manrope,sans-serif;color:var(--accent-text)">Concetti chiave</h4>
+                        <ul style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;line-height:1.5"><sc-for list="{{ rd.keyConcepts }}" as="k" hint-placeholder-count="3"><li>{{ k }}</li></sc-for></ul>
+                      </section>
+                    </sc-if>
+                  </article>
+                </div>
+              </sc-if>
+              <section style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:18px 20px;border-radius:16px;background:var(--surface);border:1px solid var(--line)">
+                <button onClick="{{ rd.complete }}" disabled="{{ rd.completed }}" style="min-height:48px;padding:0 18px;border-radius:12px;border:0;background:{{ rd.completeBg }};color:{{ rd.completeColor }};font-weight:700;cursor:pointer;display:flex;gap:8px;align-items:center"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:20px">{{ rd.completeIcon }}</span>{{ rd.completeLabel }}</button>
+                <sc-if value="{{ rd.hasQuiz }}"><button onClick="{{ rd.quiz }}" style="min-height:48px;padding:0 18px;border-radius:12px;border:1px solid var(--ink);background:transparent;font-weight:600;cursor:pointer">{{ rd.quizLabel }}</button></sc-if>
+                <span style="font-size:13px;color:var(--ink-3)">Il materiale risulta completato solo quando premi il pulsante.</span>
+              </section>
+              <sc-if value="{{ rd.hasRelated }}">
+                <section style="display:flex;flex-direction:column;gap:10px"><h3 style="font:700 17px Manrope,sans-serif">Materiali correlati</h3>
+                  <div style="display:flex;gap:10px;flex-wrap:wrap"><sc-for list="{{ rd.related }}" as="r" hint-placeholder-count="2"><button onClick="{{ r.open }}" style="min-height:44px;padding:0 14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-weight:500">{{ r.title }}</button></sc-for></div>
+                </section>
+              </sc-if>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ sPaths }}">
+            <div style="display:flex;flex-direction:column;gap:18px;animation:blFade .25s ease-out">
+              <sc-if value="{{ pt.empty }}"><div style="padding:36px 24px;border-radius:18px;border:1.5px dashed var(--line);text-align:center;color:var(--ink-2);line-height:1.5">Non ci sono percorsi pubblicati in questo ambiente. I percorsi vengono creati solo con materiali e quiz realmente disponibili.</div></sc-if>
+              <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:14px">
+                <sc-for list="{{ pt.list }}" as="p" hint-placeholder-count="2">
+                  <button onClick="{{ p.open }}" aria-pressed="{{ p.active }}" style="padding:20px;border-radius:18px;background:var(--surface);border:{{ p.border }};text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:10px">
+                    <span style="font-size:12px;font-weight:600;color:var(--ink-3)">{{ p.profile }}</span>
+                    <span style="font:700 17px/1.3 Manrope,sans-serif">{{ p.title }}</span>
+                    <span style="font-size:14px;color:var(--ink-2);line-height:1.45">{{ p.desc }}</span>
+                    <div style="display:flex;align-items:center;gap:10px"><div style="flex:1;height:6px;border-radius:6px;background:var(--surface-2);overflow:hidden"><div style="height:100%;width:{{ p.pct }};background:var(--accent)"></div></div><span style="font-size:13px;font-weight:600">{{ p.done }}/{{ p.total }}</span></div>
+                  </button>
+                </sc-for>
+              </div>
+              <sc-if value="{{ pt.hasDetail }}">
+                <section style="padding:clamp(18px,3vw,28px);border-radius:20px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:16px">
+                  <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center">
+                    <div><h2 style="font:700 21px Manrope,sans-serif">{{ pt.title }}</h2><p style="font-size:14px;color:var(--ink-3)">{{ pt.summary }}</p></div>
+                    <sc-if value="{{ pt.hasResume }}"><button onClick="{{ pt.resume }}" style="min-height:48px;padding:0 18px;border-radius:12px;border:0;background:var(--accent);color:#171717;font-weight:700;cursor:pointer">{{ pt.resumeLabel }}</button></sc-if>
+                  </div>
+                  <ol style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px">
+                    <sc-for list="{{ pt.steps }}" as="s" hint-placeholder-count="5">
+                      <li style="display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:14px;background:{{ s.bg }};border:{{ s.border }};flex-wrap:wrap">
+                        <span aria-hidden="true" style="width:34px;height:34px;flex:none;border-radius:10px;display:grid;place-items:center;font-family:'Material Symbols Rounded';font-size:20px;background:{{ s.iconBg }};color:{{ s.iconColor }}">{{ s.icon }}</span>
+                        <div style="flex:1;min-width:160px"><div style="font-weight:600;text-decoration:{{ s.deco }}">{{ s.n }}. {{ s.title }}</div><div style="font-size:13px;color:var(--ink-3)">{{ s.typeLabel }} · {{ s.statusLabel }}</div></div>
+                        <div style="display:flex;gap:4px;flex-wrap:wrap">
+                          <sc-if value="{{ s.canOpen }}"><button onClick="{{ s.open }}" style="min-height:40px;padding:0 12px;border-radius:9px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-weight:600;font-size:13px">{{ s.openLabel }}</button></sc-if>
+                          <sc-if value="{{ s.canSkip }}"><button onClick="{{ s.skip }}" style="min-height:40px;padding:0 10px;border-radius:9px;border:0;background:transparent;cursor:pointer;font-size:13px;color:var(--ink-2)">{{ s.skipLabel }}</button></sc-if>
+                          <button onClick="{{ s.up }}" disabled="{{ s.first }}" aria-label="Sposta su {{ s.title }}" style="width:40px;height:40px;border-radius:9px;border:1px solid var(--line);background:var(--surface);cursor:pointer;opacity:{{ s.upOpacity }}"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:18px">arrow_upward</span></button>
+                          <button onClick="{{ s.down }}" disabled="{{ s.last }}" aria-label="Sposta giù {{ s.title }}" style="width:40px;height:40px;border-radius:9px;border:1px solid var(--line);background:var(--surface);cursor:pointer;opacity:{{ s.downOpacity }}"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:18px">arrow_downward</span></button>
+                        </div>
+                      </li>
+                    </sc-for>
+                  </ol>
+                  <p style="font-size:13px;color:var(--ink-3)">Una tappa risulta completata quando completi il materiale o il quiz collegato. Puoi saltare tappe e cambiare l'ordine.</p>
+                </section>
+              </sc-if>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ sProgress }}">
+            <div style="display:flex;flex-direction:column;gap:18px;animation:blFade .25s ease-out">
+              <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end">
+                <div style="display:flex;flex-direction:column;gap:6px"><span id="lbl-per" style="font-size:13px;font-weight:600;color:var(--ink-2)">Periodo</span><div role="radiogroup" aria-labelledby="lbl-per" style="display:flex;padding:4px;border-radius:12px;background:var(--surface-2);gap:4px"><sc-for list="{{ pr.periodOpts }}" as="o" hint-placeholder-count="3"><button role="radio" aria-checked="{{ o.active }}" onClick="{{ o.onClick }}" style="min-height:38px;padding:0 12px;border-radius:9px;border:0;cursor:pointer;font-weight:600;font-size:13px;background:{{ o.bg }};box-shadow:{{ o.shadow }}">{{ o.label }}</button></sc-for></div></div>
+                <div style="display:flex;flex-direction:column;gap:6px"><span id="lbl-mod" style="font-size:13px;font-weight:600;color:var(--ink-2)">Modalità</span><div role="radiogroup" aria-labelledby="lbl-mod" style="display:flex;padding:4px;border-radius:12px;background:var(--surface-2);gap:4px"><sc-for list="{{ pr.modeOpts }}" as="o" hint-placeholder-count="3"><button role="radio" aria-checked="{{ o.active }}" onClick="{{ o.onClick }}" style="min-height:38px;padding:0 12px;border-radius:9px;border:0;cursor:pointer;font-weight:600;font-size:13px;background:{{ o.bg }};box-shadow:{{ o.shadow }}">{{ o.label }}</button></sc-for></div></div>
+                <label style="display:flex;flex-direction:column;gap:6px;min-width:200px"><span style="font-size:13px;font-weight:600;color:var(--ink-2)">Materia</span><select value="{{ pr.subject }}" onChange="{{ pr.onSubject }}" style="min-height:46px;padding:0 10px;border-radius:10px;border:1px solid var(--line);background:var(--surface)"><sc-for list="{{ pr.subjectOpts }}" as="o" hint-placeholder-count="4"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select></label>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:12px">
+                <sc-for list="{{ pr.kpis }}" as="k" hint-placeholder-count="4">
+                  <div style="padding:18px;border-radius:16px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;gap:4px"><span style="font-size:13px;color:var(--ink-3)">{{ k.label }}</span><span style="font:800 28px Manrope,sans-serif;letter-spacing:-.02em">{{ k.value }}</span><span style="font-size:12px;color:var(--ink-3)">{{ k.note }}</span></div>
+                </sc-for>
+              </div>
+              <sc-if value="{{ pr.notEnough }}">
+                <section style="padding:24px;border-radius:18px;background:var(--info-soft);color:var(--info);display:flex;gap:14px;align-items:flex-start">
+                  <span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:26px">insights</span>
+                  <div style="display:flex;flex-direction:column;gap:8px"><h2 style="font:700 18px Manrope,sans-serif">Completa altri quiz per ottenere un'analisi attendibile dei tuoi progressi</h2><p style="line-height:1.5">{{ pr.needMsg }}</p><button onClick="{{ pr.startQuiz }}" style="align-self:flex-start;min-height:44px;padding:0 16px;border-radius:10px;border:0;background:var(--accent);color:#171717;font-weight:700;cursor:pointer">Inizia un quiz</button></div>
+                </section>
+              </sc-if>
+              <sc-if value="{{ pr.hasTrend }}">
+                <section style="padding:22px;border-radius:18px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;gap:14px">
+                  <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><h2 style="font:700 18px Manrope,sans-serif">Andamento dei punteggi</h2><div style="display:flex;gap:14px;font-size:13px;color:var(--ink-2)"><span style="display:flex;gap:6px;align-items:center"><span style="width:10px;height:10px;border-radius:50%;background:var(--accent)"></span>Allenamento</span><span style="display:flex;gap:6px;align-items:center"><span style="width:10px;height:10px;border-radius:2px;background:var(--ink)"></span>Simulazione</span><span style="display:flex;gap:6px;align-items:center"><span style="width:14px;border-top:2px dashed var(--accent)"></span>Soglia 21</span></div></div>
+                  <div role="img" aria-label="{{ pr.trendLabel }}" style="position:relative;height:220px;border-left:1px solid var(--line);border-bottom:1px solid var(--line);margin-left:28px">
+                    <span style="position:absolute;left:-28px;top:-6px;font-size:11px;color:var(--ink-3)">30</span><span style="position:absolute;left:-28px;bottom:-6px;font-size:11px;color:var(--ink-3)">0</span><span style="position:absolute;left:-28px;bottom:calc(70% - 6px);font-size:11px;color:var(--accent-text);font-weight:700">21</span>
+                    <div style="position:absolute;left:0;right:0;bottom:70%;border-top:2px dashed var(--accent);opacity:.7"></div>
+                    <svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%;overflow:visible" aria-hidden="true"><polyline points="{{ pr.points }}" fill="none" stroke="var(--ink-3)" stroke-width="1.5" vector-effect="non-scaling-stroke"></polyline></svg>
+                    <sc-for list="{{ pr.dots }}" as="d" hint-placeholder-count="8"><span title="{{ d.title }}" style="position:absolute;left:{{ d.x }};bottom:{{ d.y }};width:12px;height:12px;margin:0 0 -6px -6px;border-radius:{{ d.radius }};background:{{ d.fill }};border:2px solid var(--surface)"></span></sc-for>
+                  </div>
+                </section>
+              </sc-if>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:16px">
+                <sc-if value="{{ pr.hasSubjects }}">
+                  <section style="padding:22px;border-radius:18px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;gap:14px">
+                    <h2 style="font:700 18px Manrope,sans-serif">Risultati per materia</h2>
+                    <sc-for list="{{ pr.subjects }}" as="s" hint-placeholder-count="4">
+                      <div style="display:flex;flex-direction:column;gap:6px">
+                        <div style="display:flex;justify-content:space-between;gap:8px;font-size:14px"><span style="font-weight:600">{{ s.name }}</span><span style="color:var(--ink-2)">{{ s.acc }} · {{ s.given }} risposte</span></div>
+                        <div style="height:8px;border-radius:8px;background:var(--surface-2);overflow:hidden"><div style="height:100%;width:{{ s.pct }};background:{{ s.color }}"></div></div>
+                        <span style="font-size:12px;color:var(--ink-3)">{{ s.readiness }}</span>
+                      </div>
+                    </sc-for>
+                    <p style="font-size:12px;color:var(--ink-3);line-height:1.5">Livello di preparazione (stima): calcolato solo con almeno 20 risposte negli ultimi 30 giorni. Base sotto il 50%, Intermedio 50–74%, Avanzato dal 75%. Affidabilità bassa sotto le 40 risposte. Non è una probabilità di superamento.</p>
+                  </section>
+                </sc-if>
+                <section style="padding:22px;border-radius:18px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;gap:14px">
+                  <h2 style="font:700 18px Manrope,sans-serif">Allenamento e simulazioni</h2>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                    <div style="padding:14px;border-radius:12px;background:var(--info-soft)"><div style="font-size:12px;font-weight:700;color:var(--info)">ALLENAMENTO</div><div style="font:800 22px Manrope,sans-serif;margin-top:4px">{{ pr.trN }} quiz</div><div style="font-size:13px;color:var(--ink-2)">{{ pr.trAcc }} risposte corrette</div></div>
+                    <div style="padding:14px;border-radius:12px;background:var(--accent-soft)"><div style="font-size:12px;font-weight:700;color:var(--accent-text)">SIMULAZIONI</div><div style="font:800 22px Manrope,sans-serif;margin-top:4px">{{ pr.exN }} consegnate</div><div style="font-size:13px;color:var(--ink-2)">Media {{ pr.exMean }} · migliore {{ pr.exBest }}</div></div>
+                  </div>
+                  <h3 style="font:700 15px Manrope,sans-serif;margin-top:6px">Argomenti da ripassare</h3>
+                  <sc-if value="{{ pr.hasWeak }}"><sc-for list="{{ pr.weak }}" as="t" hint-placeholder-count="3"><div style="display:flex;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:10px;background:var(--bg);font-size:14px;flex-wrap:wrap"><span style="font-weight:600">{{ t.name }}</span><span style="color:var(--ink-2)">{{ t.acc }} su {{ t.n }} risposte</span></div></sc-for></sc-if>
+                  <sc-if value="{{ pr.noWeak }}"><p style="font-size:14px;color:var(--ink-2)">{{ pr.weakEmpty }}</p></sc-if>
+                </section>
+              </div>
+              <section style="padding:22px;border-radius:18px;background:#171717;color:#F5F0E6;display:flex;flex-direction:column;gap:14px">
+                <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;align-items:center"><h2 style="font:700 18px Manrope,sans-serif">Impegno: XP e badge</h2><span style="font-size:14px;color:#F47732;font-weight:700">Livello {{ pr.level }} · {{ pr.xp }} XP</span></div>
+                <p style="font-size:13px;color:#D2CABD">Gli XP premiano attività utili allo studio. Non misurano la preparazione e non sono confrontati con altri utenti. Ripetere lo stesso quiz più di due volte in 24 ore non assegna XP.</p>
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,170px),1fr));gap:10px">
+                  <sc-for list="{{ pr.badges }}" as="b" hint-placeholder-count="6"><div style="padding:14px;border-radius:12px;background:#26231F;opacity:{{ b.opacity }};display:flex;flex-direction:column;gap:6px"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:24px;color:{{ b.color }};font-variation-settings:'FILL' 1">workspace_premium</span><span style="font-weight:700;font-size:14px">{{ b.name }}</span><span style="font-size:12px;color:#B8B0A3">{{ b.desc }} {{ b.state }}</span></div></sc-for>
+                </div>
+              </section>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ sSearch }}">
+            <div style="display:flex;flex-direction:column;gap:16px;max-width:860px;animation:blFade .25s ease-out">
+              <label style="position:relative;display:block"><span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Cerca in BandoLab</span>
+                <span aria-hidden="true" style="position:absolute;left:16px;top:50%;transform:translateY(-50%);font-family:'Material Symbols Rounded';font-size:24px;color:var(--ink-3)">search</span>
+                <input type="search" autofocus="{{ true }}" value="{{ se.q }}" onInput="{{ se.onInput }}" placeholder="Cerca quiz, materie, argomenti, profili, enti, materiali" style="width:100%;min-height:56px;padding:0 16px 0 50px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface);font-size:16px">
+              </label>
+              <div role="group" aria-label="Categoria" style="display:flex;gap:8px;flex-wrap:wrap"><sc-for list="{{ se.cats }}" as="c" hint-placeholder-count="6"><button aria-pressed="{{ c.active }}" onClick="{{ c.onClick }}" style="min-height:40px;padding:0 14px;border-radius:999px;cursor:pointer;font-size:14px;font-weight:500;background:{{ c.bg }};border:{{ c.border }};color:var(--ink)">{{ c.label }}</button></sc-for></div>
+              <sc-if value="{{ se.idle }}"><p style="color:var(--ink-3)">La ricerca considera solo contenuti pubblicati e disponibili. Tollera piccoli errori di digitazione.</p></sc-if>
+              <sc-if value="{{ se.none }}"><div role="status" style="padding:32px 24px;border-radius:16px;border:1.5px dashed var(--line);display:flex;flex-direction:column;gap:8px;align-items:center;text-align:center"><h2 style="font:700 18px Manrope,sans-serif">Nessun risultato per «{{ se.q }}»</h2><p style="color:var(--ink-2)">Controlla l'ortografia, usa un termine più generale o rimuovi il filtro di categoria.</p><sc-if value="{{ se.hasCat }}"><button onClick="{{ se.clearCat }}" style="min-height:44px;padding:0 14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-weight:600">Cerca in tutte le categorie</button></sc-if></div></sc-if>
+              <sc-for list="{{ se.groups }}" as="g" hint-placeholder-count="0">
+                <section style="display:flex;flex-direction:column;gap:8px"><h2 style="font:700 14px Manrope,sans-serif;color:var(--ink-3);letter-spacing:.04em">{{ g.label }} · {{ g.count }}</h2>
+                  <sc-for list="{{ g.items }}" as="r" hint-placeholder-count="2"><button onClick="{{ r.onClick }}" style="display:flex;flex-direction:column;gap:2px;padding:14px 16px;border-radius:12px;border:1px solid var(--line);background:var(--surface);cursor:pointer;text-align:left;min-height:56px" style-hover="border-color:var(--ink)"><span style="font-weight:600">{{ r.title }}</span><span style="font-size:13px;color:var(--ink-3)">{{ r.sub }}</span></button></sc-for>
+                </section>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ sNotif }}">
+            <div style="display:flex;flex-direction:column;gap:14px;max-width:760px;animation:blFade .25s ease-out">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><p style="color:var(--ink-2)">{{ nt.summary }}</p><div style="display:flex;gap:8px"><button onClick="{{ nt.markAll }}" disabled="{{ nt.noneUnread }}" style="min-height:40px;padding:0 14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-weight:600;opacity:{{ nt.markAllOpacity }}">Segna tutte come lette</button><button onClick="{{ nt.prefs }}" style="min-height:40px;padding:0 14px;border-radius:10px;border:0;background:transparent;cursor:pointer;color:var(--accent-text);font-weight:600">Preferenze</button></div></div>
+              <sc-if value="{{ nt.empty }}"><div style="padding:32px;border-radius:16px;border:1.5px dashed var(--line);text-align:center;color:var(--ink-2)">Nessuna notifica. Qui riceverai avvisi su obiettivi, progressi e aggiornamenti dei contenuti che segui.</div></sc-if>
+              <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px">
+                <sc-for list="{{ nt.items }}" as="n" hint-placeholder-count="4">
+                  <li style="display:flex;gap:14px;padding:16px;border-radius:14px;background:{{ n.bg }};border:1px solid var(--line);align-items:flex-start">
+                    <span aria-hidden="true" style="width:38px;height:38px;flex:none;border-radius:10px;background:var(--surface-2);display:grid;place-items:center;font-family:'Material Symbols Rounded';font-size:20px">{{ n.icon }}</span>
+                    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="font-weight:700">{{ n.title }}</span><sc-if value="{{ n.unread }}"><span style="padding:2px 6px;border-radius:5px;background:var(--accent);color:#171717;font-size:11px;font-weight:700">NON LETTA</span></sc-if></div><p style="font-size:14px;color:var(--ink-2);line-height:1.45">{{ n.body }}</p><span style="font-size:12px;color:var(--ink-3)">{{ n.time }}</span></div>
+                    <sc-if value="{{ n.unread }}"><button onClick="{{ n.markRead }}" aria-label="Segna come letta: {{ n.title }}" style="min-height:40px;padding:0 12px;border-radius:9px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-size:13px;font-weight:600;flex:none">Segna come letta</button></sc-if>
+                  </li>
+                </sc-for>
+              </ul>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ sSettings }}">
+            <div style="display:grid;grid-template-columns:{{ stg.cols }};gap:24px;align-items:start;animation:blFade .25s ease-out">
+              <nav aria-label="Sezioni delle impostazioni" style="display:flex;flex-direction:{{ stg.tabDir }};gap:4px;overflow-x:auto;padding-bottom:2px">
+                <sc-for list="{{ stg.tabs }}" as="t" hint-placeholder-count="6"><button onClick="{{ t.onClick }}" aria-current="{{ t.current }}" style="display:flex;gap:10px;align-items:center;min-height:44px;padding:0 14px;border-radius:10px;border:0;cursor:pointer;text-align:left;font-weight:600;font-size:14px;white-space:nowrap;background:{{ t.bg }};color:{{ t.color }}"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:20px">{{ t.icon }}</span>{{ t.label }}</button></sc-for>
+              </nav>
+              <section style="padding:clamp(18px,3vw,28px);border-radius:20px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;gap:20px;min-width:0">
+                <sc-if value="{{ stg.tPersonal }}">
+                  <h2 style="font:700 20px Manrope,sans-serif">Dati personali</h2>
+                  <label style="display:flex;flex-direction:column;gap:6px;max-width:420px"><span style="font-size:14px;font-weight:600">Nome visualizzato</span><input value="{{ stg.name }}" onInput="{{ stg.onName }}" style="min-height:46px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg)"></label>
+                  <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:600">E-mail</span><span style="color:var(--ink-2)">{{ stg.email }} · fornita dall'account Google (simulato)</span></div>
+                  <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:600">Ruolo</span><span style="color:var(--ink-2)">{{ stg.role }}</span></div>
+                  <div style="display:flex;gap:10px;flex-wrap:wrap"><button onClick="{{ stg.saveName }}" style="min-height:44px;padding:0 18px;border-radius:10px;border:0;background:var(--accent);color:#171717;font-weight:700;cursor:pointer">Salva</button><button onClick="{{ stg.logout }}" style="min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line);background:transparent;cursor:pointer;font-weight:600;display:flex;gap:6px;align-items:center"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:18px">logout</span>Esci</button><sc-if value="{{ isStaff }}"><a href="BandoLab%20Admin.dc.html" style="min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line);display:flex;align-items:center;text-decoration:none;color:var(--ink);font-weight:600">Area amministrativa</a></sc-if></div>
+                </sc-if>
+                <sc-if value="{{ stg.tStudy }}">
+                  <h2 style="font:700 20px Manrope,sans-serif">Preferenze di studio</h2>
+                  <p style="font-size:14px;color:var(--ink-2);padding:10px 12px;border-radius:10px;background:var(--bg)">Interessi e profili servono solo a personalizzare quiz e suggerimenti: non sono candidature a concorsi.</p>
+                  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:14px">
+                    <sc-for list="{{ stg.selects }}" as="f" hint-placeholder-count="4"><label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:600">{{ f.label }}</span><select value="{{ f.value }}" onChange="{{ f.onChange }}" style="min-height:46px;padding:0 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg)"><sc-for list="{{ f.options }}" as="o" hint-placeholder-count="3"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select></label></sc-for>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:14px;font-weight:600">Profili di interesse</span><div style="display:flex;flex-wrap:wrap;gap:8px"><sc-for list="{{ stg.profiles }}" as="p" hint-placeholder-count="4"><button aria-pressed="{{ p.active }}" onClick="{{ p.onClick }}" style="min-height:40px;padding:0 14px;border-radius:999px;cursor:pointer;font-size:14px;font-weight:500;background:{{ p.bg }};border:{{ p.border }};color:var(--ink)">{{ p.name }}</button></sc-for></div></div>
+                  <label style="display:flex;flex-direction:column;gap:6px;max-width:280px"><span style="font-size:14px;font-weight:600">Data indicativa di riferimento (facoltativa)</span><input type="date" value="{{ stg.examDate }}" onChange="{{ stg.onExamDate }}" style="min-height:46px;padding:0 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg)"></label>
+                </sc-if>
+                <sc-if value="{{ stg.tLook }}">
+                  <h2 style="font:700 20px Manrope,sans-serif">Aspetto</h2>
+                  <div role="radiogroup" aria-label="Tema" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;max-width:440px">
+                    <sc-for list="{{ stg.themes }}" as="t" hint-placeholder-count="2"><button role="radio" aria-checked="{{ t.active }}" onClick="{{ t.onClick }}" style="padding:12px;border-radius:14px;cursor:pointer;border:{{ t.border }};background:var(--bg);display:flex;flex-direction:column;gap:10px;text-align:left"><span style="height:64px;border-radius:10px;background:{{ t.preview }};border:1px solid var(--line);display:flex;align-items:flex-end;padding:8px;gap:6px"><span style="width:30%;height:10px;border-radius:4px;background:#F47732"></span><span style="width:50%;height:10px;border-radius:4px;background:{{ t.bar }}"></span></span><span style="font-weight:600">{{ t.label }}</span></button></sc-for>
+                  </div>
+                  <label style="display:flex;gap:12px;align-items:center;cursor:pointer;min-height:44px"><input type="checkbox" checked="{{ stg.reduceMotion }}" onChange="{{ stg.onReduceMotion }}" style="width:22px;height:22px;accent-color:#F47732"><span><span style="display:block;font-weight:600">Riduci le animazioni</span><span style="font-size:13px;color:var(--ink-3)">Rispetta anche l'impostazione del sistema operativo.</span></span></label>
+                </sc-if>
+                <sc-if value="{{ stg.tNotif }}">
+                  <h2 style="font:700 20px Manrope,sans-serif">Notifiche</h2>
+                  <p style="font-size:14px;color:var(--ink-2)">Al lancio BandoLab usa solo notifiche interne all'app. Nessuna e-mail automatica o messaggio promozionale.</p>
+                  <sc-for list="{{ stg.notifs }}" as="n" hint-placeholder-count="3"><label style="display:flex;gap:12px;align-items:center;cursor:pointer;min-height:44px"><input type="checkbox" checked="{{ n.on }}" onChange="{{ n.onChange }}" style="width:22px;height:22px;accent-color:#F47732"><span><span style="display:block;font-weight:600">{{ n.label }}</span><span style="font-size:13px;color:var(--ink-3)">{{ n.desc }}</span></span></label></sc-for>
+                </sc-if>
+                <sc-if value="{{ stg.tPrivacy }}">
+                  <h2 style="font:700 20px Manrope,sans-serif">Privacy</h2>
+                  <p style="font-size:14px;color:var(--ink-2);line-height:1.55">BandoLab tratta i dati dell'account, le preferenze e i risultati per fornirti il servizio. Nel prototipo tutti i dati sono salvati solo in questo browser.</p>
+                  <dl style="margin:0;display:grid;grid-template-columns:auto 1fr;gap:8px 18px;font-size:14px;padding:16px;border-radius:12px;background:var(--bg)"><sc-for list="{{ stg.summary }}" as="s" hint-placeholder-count="5"><dt style="color:var(--ink-3)">{{ s.k }}</dt><dd style="margin:0;font-weight:600">{{ s.v }}</dd></sc-for></dl>
+                  <div style="display:flex;flex-direction:column;gap:10px;padding:16px;border-radius:12px;border:1px solid var(--line)"><h3 style="font:700 16px Manrope,sans-serif">Esporta i tuoi dati</h3><p style="font-size:14px;color:var(--ink-2)">Funzione dimostrativa: scarica un file JSON con i dati locali di questo prototipo. Non viene inviata alcuna richiesta a un server.</p><button onClick="{{ stg.exportData }}" style="align-self:flex-start;min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--ink);background:transparent;cursor:pointer;font-weight:600">Scarica i dati locali</button></div>
+                  <div style="display:flex;flex-direction:column;gap:10px;padding:16px;border-radius:12px;border:1px solid var(--err)"><h3 style="font:700 16px Manrope,sans-serif;color:var(--err)">Elimina l'account</h3><p style="font-size:14px;color:var(--ink-2)">Funzione dimostrativa: elimina solo i dati locali di questo account in questo browser. In produzione la richiesta sarà gestita dal server.</p><button onClick="{{ stg.askDelete }}" style="align-self:flex-start;min-height:44px;padding:0 16px;border-radius:10px;border:0;background:var(--err);color:var(--surface);cursor:pointer;font-weight:700">Richiedi eliminazione</button></div>
+                </sc-if>
+                <sc-if value="{{ stg.tProto }}">
+                  <h2 style="font:700 20px Manrope,sans-serif">Strumenti del prototipo</h2>
+                  <label style="display:flex;gap:12px;align-items:center;cursor:pointer;min-height:44px"><input type="checkbox" checked="{{ stg.failSave }}" onChange="{{ stg.onFailSave }}" style="width:22px;height:22px;accent-color:#F47732"><span><span style="display:block;font-weight:600">Simula un errore di salvataggio</span><span style="font-size:13px;color:var(--ink-3)">Ogni salvataggio fallirà finché l'opzione è attiva (solo in questa scheda).</span></span></label>
+                  <div style="display:flex;gap:10px;flex-wrap:wrap"><button onClick="{{ stg.resetDemo }}" style="min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line);background:transparent;cursor:pointer;font-weight:600">{{ stg.resetLabel }}</button><a href="BandoLab%20Test.dc.html" style="min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line);display:flex;align-items:center;text-decoration:none;color:var(--ink);font-weight:600">Apri i test automatici</a><button onClick="{{ stg.switchEnv }}" style="min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line);background:transparent;cursor:pointer;font-weight:600">{{ stg.switchEnvLabel }}</button></div>
+                  <h3 style="font:700 16px Manrope,sans-serif">Stato delle integrazioni</h3>
+                  <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px"><sc-for list="{{ stg.integrations }}" as="i" hint-placeholder-count="6"><li style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:12px;border-radius:10px;background:var(--bg)"><span style="font-weight:600;font-size:14px">{{ i.name }}</span><span style="padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;background:{{ i.bg }};color:{{ i.color }};align-self:start">{{ i.status }}</span><span style="grid-column:1/-1;font-size:13px;color:var(--ink-3)">{{ i.note }}</span></li></sc-for></ul>
+                </sc-if>
+              </section>
+            </div>
+          </sc-if>
+        </main>
+      </div>
+    </div>
+
+    <sc-if value="{{ isMobile }}">
+      <nav aria-label="Navigazione principale" style="position:fixed;left:0;right:0;bottom:0;z-index:15;background:var(--surface);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);padding:6px 4px calc(6px + env(safe-area-inset-bottom))">
+        <sc-for list="{{ nav }}" as="n" hint-placeholder-count="5">
+          <button onClick="{{ n.onClick }}" aria-current="{{ n.current }}" style="min-height:56px;border:0;background:transparent;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:{{ n.mColor }};font-size:11px;font-weight:600">
+            <span aria-hidden="true" style="width:52px;height:30px;border-radius:15px;display:grid;place-items:center;background:{{ n.mBg }};font-family:'Material Symbols Rounded';font-size:22px;font-variation-settings:{{ n.fill }}">{{ n.icon }}</span>{{ n.label }}
+          </button>
+        </sc-for>
+      </nav>
+    </sc-if>
+  </sc-if>
+
+  <sc-if value="{{ inRun }}">
+    <div style="min-height:100vh;display:flex;flex-direction:column">
+      <header style="position:sticky;top:0;z-index:9;background:var(--surface);border-bottom:1px solid var(--line)">
+        <div style="max-width:1240px;margin:0 auto;padding:10px clamp(14px,3vw,28px);display:flex;align-items:center;gap:12px;min-height:64px;flex-wrap:wrap">
+          <button onClick="{{ run.exit }}" style="min-height:44px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:transparent;cursor:pointer;font-weight:600;font-size:14px;display:flex;gap:6px;align-items:center"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:18px">arrow_back</span>{{ run.exitLabel }}</button>
+          <div style="display:flex;flex-direction:column;min-width:0;flex:1">
+            <span style="font-size:11px;font-weight:700;letter-spacing:.05em;color:{{ run.modeColor }}">{{ run.modeLabel }}</span>
+            <span style="font:700 15px Manrope,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ run.title }}</span>
+          </div>
+          <sc-if value="{{ run.isExam }}"><div role="timer" aria-label="{{ run.timerAria }}" style="display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:10px;background:{{ run.timerBg }};color:{{ run.timerColor }};font:700 18px ui-monospace,Menlo,monospace"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:20px">timer</span>{{ run.timeLeft }}</div></sc-if>
+          <button onClick="{{ run.askSubmit }}" style="min-height:44px;padding:0 18px;border-radius:10px;border:0;background:var(--accent);color:#171717;font-weight:700;cursor:pointer">{{ cf.submitLabel }}</button>
+        </div>
+        <div role="progressbar" aria-label="Risposte date" aria-valuemin="0" aria-valuemax="{{ run.total }}" aria-valuenow="{{ run.answered }}" style="height:4px;background:var(--surface-2)"><div style="height:100%;width:{{ run.pct }};background:var(--accent);transition:width .25s"></div></div>
+      </header>
+      <div style="flex:1;width:100%;max-width:1240px;margin:0 auto;padding:clamp(16px,3vw,32px);display:grid;grid-template-columns:{{ runCols }};gap:24px;align-items:start">
+        <main style="display:flex;flex-direction:column;gap:16px;min-width:0">
+          <sc-if value="{{ run.hasUnsaved }}"><div role="alert" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:12px 14px;border-radius:12px;background:var(--err-soft);color:var(--err);font-size:14px"><span aria-hidden="true" style="font-family:'Material Symbols Rounded'">cloud_off</span><span style="flex:1">Alcune risposte non sono state salvate. Sono conservate in questa pagina.</span><button onClick="{{ run.retrySave }}" style="min-height:36px;padding:0 12px;border-radius:8px;border:1px solid var(--err);background:transparent;color:var(--err);font-weight:700;cursor:pointer">Riprova</button></div></sc-if>
+          <sc-if value="{{ run.prioritized }}"><p style="font-size:13px;color:var(--info)">Allenamento: le domande sbagliate in passato hanno la precedenza.</p></sc-if>
+          <section style="padding:clamp(20px,4vw,32px);border-radius:20px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:18px;animation:blFade .2s ease-out">
+            <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center">
+              <span style="font:800 15px Manrope,sans-serif">Domanda {{ run.idx }} di {{ run.total }}</span>
+              <div style="display:flex;gap:6px;flex-wrap:wrap"><span style="padding:3px 8px;border-radius:6px;background:var(--surface-2);font-size:12px;font-weight:500">{{ run.subject }}</span><span style="padding:3px 8px;border-radius:6px;background:var(--surface-2);font-size:12px;font-weight:500">{{ run.diff }}</span><span style="padding:3px 8px;border-radius:6px;background:var(--warn-soft);color:var(--warn);font-size:11px;font-weight:700">DEMO</span></div>
+            </div>
+            <h2 id="q-text" style="font:700 clamp(19px,2.4vw,23px)/1.4 Manrope,sans-serif;text-wrap:pretty">{{ run.text }}</h2>
+            <div role="radiogroup" aria-labelledby="q-text" style="display:flex;flex-direction:column;gap:10px">
+              <sc-for list="{{ run.options }}" as="o" hint-placeholder-count="4">
+                <button role="radio" aria-checked="{{ o.checked }}" onClick="{{ o.onClick }}" aria-disabled="{{ o.disabled }}" style="min-height:58px;padding:12px 16px;border-radius:14px;text-align:left;cursor:pointer;display:flex;gap:14px;align-items:center;background:{{ o.bg }};border:{{ o.border }};transition:background .15s,border-color .15s">
+                  <span style="width:32px;height:32px;flex:none;border-radius:9px;display:grid;place-items:center;font-weight:700;font-size:14px;background:{{ o.letterBg }};color:{{ o.letterColor }}">{{ o.letter }}</span>
+                  <span style="flex:1;font-size:16px;line-height:1.4">{{ o.text }}</span>
+                  <sc-if value="{{ o.hasMark }}"><span style="font-size:12px;font-weight:700;white-space:nowrap">{{ o.mark }}</span></sc-if>
+                </button>
+              </sc-for>
+            </div>
+            <sc-if value="{{ run.canReveal }}"><button onClick="{{ run.reveal }}" style="align-self:flex-start;min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--ink);background:transparent;cursor:pointer;font-weight:600">Verifica la risposta</button></sc-if>
+            <sc-if value="{{ run.revealed }}">
+              <div role="status" style="padding:16px;border-radius:14px;background:var(--bg);display:flex;flex-direction:column;gap:8px;animation:blFade .2s ease-out">
+                <sc-if value="{{ run.revOk }}"><span style="font-weight:700;color:var(--ok);display:flex;gap:6px;align-items:center"><span aria-hidden="true" style="font-family:'Material Symbols Rounded'">check_circle</span>Risposta corretta</span></sc-if>
+                <sc-if value="{{ run.revKo }}"><span style="font-weight:700;color:var(--err);display:flex;gap:6px;align-items:center"><span aria-hidden="true" style="font-family:'Material Symbols Rounded'">cancel</span>Risposta errata</span></sc-if>
+                <p style="font-size:15px;line-height:1.55;color:var(--ink-2)">{{ run.explanation }}</p>
+                <span style="font-size:13px;color:var(--ink-3)">Fonte: {{ run.source }} · versione {{ run.version }}</span>
+              </div>
+            </sc-if>
+          </section>
+          <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">
+            <button onClick="{{ run.prev }}" disabled="{{ run.noPrev }}" style="min-height:48px;padding:0 18px;border-radius:12px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-weight:600;opacity:{{ run.prevOpacity }}">← Precedente</button>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button onClick="{{ run.report }}" style="min-height:48px;padding:0 14px;border-radius:12px;border:0;background:transparent;cursor:pointer;color:var(--ink-2);display:flex;gap:6px;align-items:center"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:20px">flag</span>Segnala</button>
+              <sc-if value="{{ run.hasNext }}"><button onClick="{{ run.next }}" style="min-height:48px;padding:0 20px;border-radius:12px;border:0;background:var(--ink);color:var(--bg);cursor:pointer;font-weight:600">{{ run.skipLabel }} →</button></sc-if>
+              <sc-if value="{{ run.isLast }}"><button onClick="{{ run.askSubmit }}" style="min-height:48px;padding:0 20px;border-radius:12px;border:0;background:var(--accent);color:#171717;cursor:pointer;font-weight:700">{{ cf.submitLabel }}</button></sc-if>
+            </div>
+          </div>
+          <p style="font-size:13px;color:var(--ink-3)">Tastiera: 1–4 o A–D per rispondere, frecce ← → per spostarti. Le risposte vengono salvate automaticamente in questo browser.</p>
+        </main>
+        <aside aria-label="Tutte le domande" style="display:flex;flex-direction:column;gap:12px;position:sticky;top:88px">
+          <sc-if value="{{ run.isMobile }}"><button onClick="{{ run.gridToggle }}" aria-expanded="{{ run.showGrid }}" style="min-height:48px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-weight:600">{{ run.gridToggleLabel }}</button></sc-if>
+          <sc-if value="{{ run.showGrid }}">
+            <div style="padding:18px;border-radius:18px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;gap:14px">
+              <div style="display:flex;justify-content:space-between;font-size:14px"><span style="font-weight:700">Domande</span><span style="color:var(--ink-3)">{{ run.answered }}/{{ run.total }} risposte</span></div>
+              <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:6px">
+                <sc-for list="{{ run.grid }}" as="g" hint-placeholder-count="10"><button onClick="{{ g.onClick }}" aria-label="{{ g.label }}" aria-current="{{ g.current }}" style="height:44px;border-radius:10px;cursor:pointer;font-weight:700;font-size:14px;background:{{ g.bg }};color:{{ g.color }};border:{{ g.border }}">{{ g.n }}</button></sc-for>
+              </div>
+              <ul style="list-style:none;margin:0;padding:12px 0 0;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--ink-2)">
+                <li style="display:flex;gap:8px;align-items:center"><span style="width:16px;height:16px;border-radius:4px;background:var(--ink)"></span>Risposta data</li>
+                <li style="display:flex;gap:8px;align-items:center"><span style="width:16px;height:16px;border-radius:4px;border:1px solid var(--line);background:var(--surface)"></span>Senza risposta</li>
+                <li style="display:flex;gap:8px;align-items:center"><span style="width:16px;height:16px;border-radius:4px;border:2px solid var(--accent)"></span>Domanda corrente</li>
+              </ul>
+              <sc-if value="{{ run.hasInterruptions }}"><p style="font-size:12px;color:var(--warn)">Interruzioni registrate: {{ run.interruptions }}</p></sc-if>
+            </div>
+          </sc-if>
+        </aside>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ cf.open }}">
+    <div role="dialog" aria-modal="true" aria-labelledby="cf-t" style="position:fixed;inset:0;z-index:50;background:var(--overlay);display:grid;place-items:center;padding:20px">
+      <div style="max-width:460px;width:100%;padding:28px;border-radius:20px;background:var(--surface);display:flex;flex-direction:column;gap:14px;animation:blFade .18s ease-out">
+        <h2 id="cf-t" style="font:700 21px Manrope,sans-serif">{{ cf.title }}</h2>
+        <p style="color:var(--ink-2);line-height:1.5">{{ cf.msg }}</p>
+        <sc-if value="{{ cf.hasNote }}"><p style="font-size:14px;color:var(--warn)">{{ cf.note }}</p></sc-if>
+        <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">
+          <button onClick="{{ cf.cancel }}" style="min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line);background:transparent;cursor:pointer;font-weight:600">Torna alle domande</button>
+          <button onClick="{{ cf.submit }}" style="min-height:44px;padding:0 18px;border-radius:10px;border:0;background:var(--accent);color:#171717;cursor:pointer;font-weight:700">{{ cf.submitLabel }}</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ rp.open }}">
+    <div role="dialog" aria-modal="true" aria-labelledby="rp-t" style="position:fixed;inset:0;z-index:50;background:var(--overlay);display:grid;place-items:center;padding:20px">
+      <div style="max-width:480px;width:100%;padding:28px;border-radius:20px;background:var(--surface);display:flex;flex-direction:column;gap:14px;animation:blFade .18s ease-out">
+        <h2 id="rp-t" style="font:700 21px Manrope,sans-serif">Segnala la domanda</h2>
+        <p style="font-size:14px;color:var(--ink-2)">La segnalazione arriva al team editoriale. Non modifica il punteggio dei tentativi già completati.</p>
+        <div role="radiogroup" aria-label="Motivo" style="display:flex;flex-wrap:wrap;gap:8px"><sc-for list="{{ rp.reasons }}" as="r" hint-placeholder-count="4"><button role="radio" aria-checked="{{ r.active }}" onClick="{{ r.onClick }}" style="min-height:40px;padding:0 14px;border-radius:999px;cursor:pointer;font-size:14px;background:{{ r.bg }};border:{{ r.border }};color:var(--ink)">{{ r.label }}</button></sc-for></div>
+        <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:600">Descrivi il problema</span><textarea value="{{ rp.text }}" onInput="{{ rp.onText }}" rows="4" aria-invalid="{{ rp.invalid }}" aria-describedby="rp-err" style="padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);resize:vertical"></textarea><sc-if value="{{ rp.invalid }}"><span id="rp-err" style="font-size:13px;color:var(--err)">Scrivi almeno 10 caratteri.</span></sc-if></label>
+        <div style="display:flex;gap:10px;justify-content:flex-end"><button onClick="{{ rp.cancel }}" style="min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line);background:transparent;cursor:pointer;font-weight:600">Annulla</button><button onClick="{{ rp.submit }}" style="min-height:44px;padding:0 18px;border-radius:10px;border:0;background:var(--accent);color:#171717;cursor:pointer;font-weight:700">Invia segnalazione</button></div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ del.open }}">
+    <div role="dialog" aria-modal="true" aria-labelledby="del-t" style="position:fixed;inset:0;z-index:50;background:var(--overlay);display:grid;place-items:center;padding:20px">
+      <div style="max-width:460px;width:100%;padding:28px;border-radius:20px;background:var(--surface);display:flex;flex-direction:column;gap:14px">
+        <h2 id="del-t" style="font:700 21px Manrope,sans-serif;color:var(--err)">Eliminare l'account?</h2>
+        <p style="color:var(--ink-2);line-height:1.5">Nel prototipo verranno eliminati i dati locali di questo account (risultati, preferenze, notifiche) in questo browser e verrai disconnesso. Nessuna richiesta viene inviata a un server.</p>
+        <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:600">Per confermare scrivi ELIMINA</span><input value="{{ del.text }}" onInput="{{ del.onText }}" style="min-height:46px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg)"></label>
+        <div style="display:flex;gap:10px;justify-content:flex-end"><button onClick="{{ del.cancel }}" style="min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line);background:transparent;cursor:pointer;font-weight:600">Annulla</button><button onClick="{{ del.confirm }}" disabled="{{ del.disabled }}" style="min-height:44px;padding:0 18px;border-radius:10px;border:0;background:var(--err);color:var(--surface);cursor:pointer;font-weight:700;opacity:{{ del.opacity }}">Elimina definitivamente</button></div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ ob.open }}">
+    <div role="dialog" aria-modal="true" aria-labelledby="ob-t" style="position:fixed;inset:0;z-index:60;background:var(--overlay);display:grid;place-items:center;padding:20px">
+      <div style="max-width:560px;width:100%;padding:clamp(22px,4vw,36px);border-radius:24px;background:var(--surface);display:flex;flex-direction:column;gap:18px;animation:blFade .2s ease-out">
+        <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;font-weight:700;color:var(--accent-text)">Passo {{ ob.step }} di 3 · facoltativo</span><button onClick="{{ ob.skipAll }}" style="min-height:40px;padding:0 10px;border:0;background:transparent;cursor:pointer;color:var(--ink-2);text-decoration:underline">Salta tutto</button></div>
+        <div style="display:flex;gap:6px"><sc-for list="{{ ob.dots }}" as="d" hint-placeholder-count="3"><span style="flex:1;height:4px;border-radius:4px;background:{{ d }}"></span></sc-for></div>
+        <h2 id="ob-t" style="font:800 26px/1.2 Manrope,sans-serif;letter-spacing:-.02em">{{ ob.title }}</h2>
+        <p style="color:var(--ink-2)">{{ ob.body }}</p>
+        <div role="radiogroup" aria-labelledby="ob-t" style="display:flex;flex-direction:column;gap:8px">
+          <sc-for list="{{ ob.opts }}" as="o" hint-placeholder-count="3"><button role="radio" aria-checked="{{ o.active }}" onClick="{{ o.onClick }}" style="min-height:52px;padding:10px 16px;border-radius:12px;cursor:pointer;text-align:left;font-weight:600;background:{{ o.bg }};border:{{ o.border }};color:var(--ink);display:flex;flex-direction:column;gap:2px">{{ o.label }}<span style="font-size:13px;font-weight:400;color:var(--ink-3)">{{ o.sub }}</span></button></sc-for>
+          <sc-if value="{{ ob.noOpts }}"><p style="padding:16px;border-radius:12px;border:1.5px dashed var(--line);color:var(--ink-2)">Il catalogo non contiene ancora voci per questo passaggio. Potrai sceglierle più tardi dalle impostazioni.</p></sc-if>
+        </div>
+        <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><button onClick="{{ ob.skip }}" style="min-height:46px;padding:0 16px;border-radius:10px;border:1px solid var(--line);background:transparent;cursor:pointer;font-weight:600">Salta questo passaggio</button><button onClick="{{ ob.next }}" style="min-height:46px;padding:0 20px;border-radius:10px;border:0;background:var(--accent);color:#171717;cursor:pointer;font-weight:700">{{ ob.nextLabel }}</button></div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ hasToast }}">
+    <div role="{{ toast.role }}" aria-live="polite" style="position:fixed;left:50%;transform:translateX(-50%);bottom:{{ toastBottom }};z-index:70;max-width:min(560px,calc(100vw - 32px));width:max-content;padding:12px 14px;border-radius:14px;background:{{ toast.bg }};color:{{ toast.color }};box-shadow:0 12px 32px rgba(0,0,0,.25);display:flex;gap:10px;align-items:center;animation:blFade .2s ease-out">
+      <span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:22px">{{ toast.icon }}</span>
+      <span style="font-size:14px;line-height:1.4;flex:1">{{ toast.text }}</span>
+      <sc-if value="{{ toast.hasRetry }}"><button onClick="{{ toast.retry }}" style="min-height:36px;padding:0 12px;border-radius:8px;border:1px solid currentColor;background:transparent;color:inherit;font-weight:700;cursor:pointer">Riprova</button></sc-if>
+      <button onClick="{{ toast.close }}" aria-label="Chiudi" style="width:36px;height:36px;border-radius:8px;border:0;background:transparent;color:inherit;cursor:pointer;display:grid;place-items:center"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:20px">close</span></button>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { ready: false, w: window.innerWidth, screen: 'dashboard', p: {}, side: false, toast: null, now: Date.now(),
+    cfgOpen: false, cfg: null, confirm: false, gridOpen: false, unsaved: null, resultId: null, rFilter: 'all', abandonAsk: false,
+    lib: { area: 'all', profile: 'all', subject: 'all', format: 'all' }, studyTab: 'library', readerId: null, secIdx: 0, tocOpen: false,
+    pathId: null, prog: { period: '30', subject: 'all', mode: 'all' }, q: '', qcat: 'all',
+    setTab: 'personal', delOpen: false, delText: '', nameDraft: null, ob: 0, report: null };
+  componentDidMount() {
+    this.onResize = () => this.setState({ w: window.innerWidth }); window.addEventListener('resize', this.onResize);
+    this.onKey = e => this.key(e); window.addEventListener('keydown', this.onKey);
+    this.onVis = () => { if (document.hidden && this.B && this.B.me()) { const s = this.B.rec().session; if (s && s.mode === 'exam') this.B.logInterruption('App in secondo piano durante la simulazione'); } };
+    document.addEventListener('visibilitychange', this.onVis);
+    const go = () => window.BL ? this.init() : setTimeout(go, 30); go();
+  }
+  componentWillUnmount() { window.removeEventListener('resize', this.onResize); window.removeEventListener('keydown', this.onKey); document.removeEventListener('visibilitychange', this.onVis); clearInterval(this.tick); clearTimeout(this.tt); }
+  init() {
+    const B = this.B = window.BL; B.load();
+    const me = B.me(); if (!me) { this.setState({ ready: true }); return; }
+    const st = { ready: true }; const rec = B.rec();
+    document.documentElement.dataset.motion = rec.prefs.reduceMotion ? 'reduce' : '';
+    const c = B.checkSession();
+    if (c.state === 'expired' && c.attempt) { st.screen = 'results'; st.resultId = c.attempt.id; st.toast = { kind: 'info', text: 'Il tempo della simulazione era scaduto: il tentativo è stato consegnato automaticamente con le risposte salvate. Il tempo non può essere riavviato.' }; }
+    if (c.state === 'active' && c.session.mode === 'exam') { B.logInterruption("Riapertura dell'app con simulazione in corso"); st.toast = { kind: 'info', text: 'Hai una simulazione in corso: il timer ha continuato a scorrere durante la chiusura.' }; }
+    if (!rec.onboarded && me.role === 'user') st.ob = 1;
+    st.cfg = this.defaultCfg(rec);
+    this.setState(st);
+    this.tick = setInterval(() => this.onTick(), 1000);
+  }
+  onTick() { const B = this.B; if (!B || !B.me()) return; const s = B.rec().session; if (s && s.mode === 'exam') { if (Date.now() >= s.deadline) this.finish('timeout'); else this.setState({ now: Date.now() }); } }
+  defaultCfg(rec) { const bank = this.B.bank(); const pr = rec.prefs.profiles[0] || (bank.taxonomy.profiles[0] || {}).id || ''; return { mode: 'training', profile: pr, subjects: [], difficulty: rec.prefs.difficulty || 'mix', count: rec.prefs.quizCount || 10 }; }
+  filterOf(cfg) { const bank = this.B.bank(); const p = bank.taxonomy.profiles.find(x => x.id === cfg.profile); const subjects = cfg.subjects.length ? cfg.subjects : p ? p.subjects : bank.taxonomy.subjects.map(s => s.id); return { subjects, difficulty: cfg.difficulty }; }
+  key(e) {
+    if (this.state.screen !== 'run' || this.state.confirm || this.state.report || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+    const k = e.key.toLowerCase(); const map = { '1': 0, '2': 1, '3': 2, '4': 3, a: 0, b: 1, c: 2, d: 3 };
+    if (k in map) { e.preventDefault(); this.answer(map[k]); }
+    if (e.key === 'ArrowRight') this.moveQ(1); if (e.key === 'ArrowLeft') this.moveQ(-1);
+  }
+  go(screen, extra) { this.setState(Object.assign({ screen, confirm: false, abandonAsk: false }, extra || {})); window.scrollTo(0, 0); }
+  toast(text, kind, retry) { clearTimeout(this.tt); this.setState({ toast: { text, kind: kind || 'ok', retry } }); if (kind !== 'err') this.tt = setTimeout(() => this.setState({ toast: null }), 5000); }
+  check(res, okText, retry) { if (!res.ok) { this.toast(res.why || ('Operazione non salvata: ' + (res.error || 'errore sconosciuto') + '.'), 'err', retry); return false; } if (okText) this.toast(okText); this.forceUpdate(); return true; }
+  startQuiz(cfg) {
+    const B = this.B; if (B.rec().session) { this.toast('Hai già una sessione in corso: riprendila o abbandonala prima di iniziarne una nuova.', 'warn'); this.go('quiz'); return; }
+    const r = B.startSession(cfg);
+    if (!r.ok) { if (r.error === 'insufficient') { this.toast(`Domande approvate insufficienti: ${r.available} disponibili su ${cfg.count} richieste. Modifica la configurazione.`, 'warn'); this.go('quiz', { cfgOpen: true }); return; } this.check(r, null, () => this.startQuiz(cfg)); return; }
+    this.go('run', { unsaved: null, gridOpen: false });
+  }
+  session() { return this.B.rec().session; }
+  answer(i) {
+    const s = this.session(); if (!s) return; const it = s.items[s.current]; if (s.mode === 'training' && s.revealed[it.qid]) return;
+    const answers = Object.assign({}, this.state.unsaved || s.answers, { [it.qid]: i });
+    const r = this.B.saveSession({ answers });
+    if (!r.ok) { this.setState({ unsaved: answers }); this.toast('Risposta non salvata. È conservata in questa pagina: riprova a salvarla.', 'err', () => this.retrySave()); return; }
+    this.setState({ unsaved: null });
+  }
+  retrySave() { const r = this.B.saveSession({ answers: this.state.unsaved }); if (r.ok) { this.setState({ unsaved: null }); this.toast('Risposte salvate.'); } else this.toast('Salvataggio ancora non riuscito. Le risposte restano in questa pagina.', 'err', () => this.retrySave()); }
+  moveQ(d) { const s = this.session(); if (!s) return; const n = Math.max(0, Math.min(s.items.length - 1, s.current + d)); this.B.saveSession({ current: n }); this.forceUpdate(); }
+  jump(n) { this.B.saveSession({ current: n }); this.setState({ gridOpen: false }); }
+  finish(reason) {
+    if (this.submitting) return; this.submitting = true;
+    if (this.state.unsaved) this.B.saveSession({ answers: this.state.unsaved });
+    const r = this.B.finishSession(reason); this.submitting = false;
+    if (!r.ok) { this.check(r, null, () => this.finish(reason)); return; }
+    const xp = r.xp.reduce((a, b) => a + b.amount, 0);
+    this.go('results', { resultId: r.attempt.id, rFilter: 'all', unsaved: null });
+    this.toast(reason === 'timeout' ? 'Tempo scaduto: la simulazione è stata consegnata automaticamente.' : (xp ? `Consegnato. +${xp} XP` : r.xp[0].reason), reason === 'timeout' ? 'info' : 'ok');
+  }
+  openMaterial(mid) {
+    const B = this.B; const rec = B.rec(); const m = B.bank().materials.find(x => x.id === mid); if (!m) return;
+    const r = rec.read[mid]; const idx = r && r.last ? Math.max(0, m.sections.findIndex(s => s.id === r.last)) : 0;
+    this.go('reader', { readerId: mid, secIdx: idx, tocOpen: false }); this.markRead(m, idx);
+  }
+  markRead(m, idx) { const B = this.B, rec = B.rec(); const sec = m.sections[idx]; B.commit(() => { const r = rec.read[m.id] || (rec.read[m.id] = { sections: [], last: null, at: 0 }); if (sec && !r.sections.includes(sec.id)) r.sections.push(sec.id); r.last = sec ? sec.id : null; r.at = Date.now(); }); }
+  setPref(patch, msg) { const rec = this.B.rec(); this.check(this.B.commit(() => { Object.assign(rec.prefs, patch); }), msg || 'Preferenze salvate.', () => this.setPref(patch, msg)); }
+  renderVals2(out, st, B, S, env, bank, rec, T, isMobile) {
+    const me = out.vmMe, chip = out.vmChip; ['vmBank', 'vmRec', 'vmMe', 'vmChip', 'vmSessInfo'].forEach(k => delete out[k]);
+    const seg = on => ({ bg: on ? 'var(--surface)' : 'transparent', shadow: on ? 'var(--shadow)' : 'none' });
+    const fc = n => String(n).replace('.', ',');
+    const scr = st.screen === 'run' && !rec.session ? 'quiz' : st.screen;
+    const pm = B.publishedMaterials(bank);
+    out.runCols = isMobile ? '1fr' : 'minmax(0,1fr) 300px';
+    out.cf = out.cf || { open: false, submitLabel: '' };
+    out.sStudyTabs = ['library', 'paths'].includes(scr);
+    out.studyTabs = [['library', 'Biblioteca'], ['paths', 'Percorsi']].map(([id, label]) => Object.assign({ label, active: scr === id, onClick: () => this.go(id, { studyTab: id }) }, seg(scr === id)));
+    if (scr === 'results') {
+      const done = rec.attempts.filter(a => a.status === 'completed'); const a = done.find(x => x.id === st.resultId) || done[done.length - 1];
+      if (!a) out.res = { missing: true, goQuiz: () => this.go('quiz') };
+      else {
+        const sc = a.score; const rows = a.items.map((it, i) => { const v = B.versionOf(bank, it.qid, it.v) || { options: [] }; const state = it.answer == null ? 'omitted' : it.correct ? 'ok' : 'ko'; const mat = pm.find(m => m.topic === v.topic) || pm.find(m => m.subject === v.subject);
+          return { state, v, n: i + 1, text: v.text, yours: it.answer == null ? 'Nessuna risposta (omessa)' : v.options[it.answer], correct: v.options[v.correct], expl: v.explanation, source: v.source || 'non indicata', meta: `${B.name(bank, 'subjects', v.subject)} · versione v${it.v}`,
+            stateLabel: { ok: 'Corretta', ko: 'Errata', omitted: 'Omessa' }[state], icon: { ok: 'check_circle', ko: 'cancel', omitted: 'remove_circle' }[state], color: { ok: 'var(--ok)', ko: 'var(--err)', omitted: 'var(--ink-3)' }[state],
+            hasMaterial: !!mat, materialTitle: mat ? mat.title : '', openMaterial: mat ? () => this.openMaterial(mat.id) : null, report: () => this.setState({ report: { qid: it.qid, v: it.v, reason: 'Possibile errore', text: '' } }) }; });
+        const fl = { all: () => true, wrong: r => r.state !== 'ok', omitted: r => r.state === 'omitted', ok: r => r.state === 'ok' };
+        const subs = {}; rows.forEach(r => { const k = r.v.subject; subs[k] = subs[k] || { c: 0, n: 0 }; subs[k].n++; if (r.state === 'ok') subs[k].c++; });
+        const review = () => { this.setState({ rFilter: 'wrong' }); const r = B.markReviewed(a.id); if (r.ok && !r.already) this.toast('+5 XP per la revisione degli errori'); setTimeout(() => { const el = document.getElementById('review-list'); if (el) window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 80); }, 50); };
+        const actions = [];
+        if (sc.E + sc.O > 0) actions.push({ icon: 'rule', title: `Rivedi gli errori (${sc.E + sc.O})`, body: 'Risposte errate e omesse con spiegazione e fonte.', onClick: review, bg: 'var(--accent-soft)' });
+        Object.entries(subs).filter(([k, x]) => x.n >= 2 && x.c / x.n < .6).slice(0, 2).forEach(([k, x]) => { const m = pm.find(mm => mm.subject === k); if (m) actions.push({ icon: 'menu_book', title: `Ripassa ${B.name(bank, 'subjects', k)}`, body: `${x.c}/${x.n} corrette in questo quiz. Materiale: «${m.title}».`, onClick: () => this.openMaterial(m.id), bg: 'var(--surface)' }); });
+        actions.push({ icon: 'replay', title: 'Avvia un nuovo quiz', body: a.mode === 'exam' ? 'Una nuova simulazione o un allenamento mirato.' : 'Continua ad allenarti con domande diverse.', onClick: () => this.go('quiz'), bg: 'var(--surface)' });
+        const linked = pm.filter(m => subs[m.subject]); if (linked.length) actions.push({ icon: 'library_books', title: 'Consulta i materiali collegati', body: `${linked.length} materiali per le materie di questo quiz.`, onClick: () => this.go('library', { lib: { area: 'all', entity: 'all', profile: 'all', subject: Object.keys(subs).length === 1 ? Object.keys(subs)[0] : 'all', topic: 'all', format: 'all' } }), bg: 'var(--surface)' });
+        const items = rows.filter(fl[st.rFilter] || fl.all);
+        out.res = { ok: true, title: a.title, modeLabel: a.mode === 'exam' ? 'SIMULAZIONE D\'ESAME' : 'ALLENAMENTO LIBERO', date: B.fmtDateTime(a.finishedAt), display: sc.display, exact: sc.score.toFixed(3).replace('.', ','),
+          outLabel: sc.passed ? 'Sopra la soglia BandoLab' : 'Sotto la soglia BandoLab', outIcon: sc.passed ? 'check_circle' : 'info', outBg: sc.passed ? '#6FD39A' : '#F0C062', hasRoundNote: sc.display === '21,0' && !sc.passed,
+          time: B.fmtDur(a.durationSec), C: sc.C, E: sc.E, O: sc.O, formula: `P = C − 0,5·E − 0,25·O = ${sc.C} − ${fc(.5 * sc.E)} − ${fc(.25 * sc.O)} = ${fc(sc.raw)}  ·  S = 30 × P / N = 30 × ${fc(sc.raw)} / ${sc.N} → ${sc.display}`,
+          hasReason: a.reason === 'timeout' || a.interruptions.length > 0, reason: [a.reason === 'timeout' ? 'Consegnata automaticamente allo scadere del tempo.' : '', a.interruptions.length ? `Interruzioni registrate: ${a.interruptions.length} (${a.interruptions.map(x => x.type).join('; ')}).` : ''].filter(Boolean).join(' '),
+          fewData: sc.N < 10, actions,
+          subjects: Object.entries(subs).map(([k, x]) => ({ name: B.name(bank, 'subjects', k), c: x.c, n: x.n, pct: (x.c / x.n * 100) + '%', color: x.c / x.n >= .75 ? 'var(--ok)' : x.c / x.n >= .5 ? 'var(--accent)' : 'var(--err)' })),
+          filters: [['all', 'Tutte'], ['wrong', 'Da rivedere'], ['omitted', 'Omesse'], ['ok', 'Corrette']].map(([id, label]) => Object.assign({ label, count: rows.filter(fl[id]).length, active: st.rFilter === id, onClick: () => id === 'wrong' ? review() : this.setState({ rFilter: id }) }, seg(st.rFilter === id))),
+          items: items.map(r => Object.assign({}, r, { state: r.stateLabel })), noItems: items.length === 0 };
+      }
+    }
+    if (scr === 'library') {
+      const L = Object.assign({ area: 'all', entity: 'all', profile: 'all', subject: 'all', topic: 'all', format: 'all' }, st.lib);
+      const setL = patch => this.setState({ lib: Object.assign({}, L, patch) });
+      const areaEnt = id => T.entities.filter(e => e.area === id).map(e => e.id);
+      const items = pm.filter(m => (L.area === 'all' || m.entities.some(e => areaEnt(L.area).includes(e))) && (L.entity === 'all' || m.entities.includes(L.entity)) && (L.profile === 'all' || m.profiles.includes(L.profile)) && (L.subject === 'all' || m.subject === L.subject) && (L.topic === 'all' || m.topic === L.topic) && (L.format === 'all' || m.format === L.format));
+      const opt = (all, list) => [{ value: 'all', label: all }].concat(list.map(x => ({ value: x.id, label: x.name })));
+      const ents = L.area === 'all' ? T.entities : T.entities.filter(e => e.area === L.area);
+      const tops = L.subject === 'all' ? T.topics : T.topics.filter(t => t.subject === L.subject);
+      const filtered = Object.values(L).some(v => v !== 'all');
+      out.lib = { filters: [
+          { label: 'Area', value: L.area, options: opt('Tutte le aree', T.areas), onChange: e => setL({ area: e.target.value, entity: 'all' }) },
+          { label: 'Ente', value: L.entity, options: opt('Tutti gli enti', ents), onChange: e => setL({ entity: e.target.value }) },
+          { label: 'Profilo', value: L.profile, options: opt('Tutti i profili', T.profiles), onChange: e => setL({ profile: e.target.value }) },
+          { label: 'Materia', value: L.subject, options: opt('Tutte le materie', T.subjects), onChange: e => setL({ subject: e.target.value, topic: 'all' }) },
+          { label: 'Argomento', value: L.topic, options: opt('Tutti gli argomenti', tops), onChange: e => setL({ topic: e.target.value }) },
+          { label: 'Formato', value: L.format, options: [{ value: 'all', label: 'Tutti i formati' }].concat(Object.entries(B.FORMAT).map(([k, v]) => ({ value: k, label: v }))), onChange: e => setL({ format: e.target.value }) }],
+        countLabel: pm.length ? `${items.length} materiali pubblicati${filtered ? ' con i filtri attivi' : ''}` : '',
+        empty: items.length === 0, canReset: pm.length > 0 && filtered, reset: () => this.setState({ lib: {} }),
+        emptyIcon: pm.length ? 'filter_alt_off' : 'inventory_2', emptyTitle: pm.length ? 'Nessun materiale con questi filtri' : 'Catalogo vuoto',
+        emptyBody: pm.length ? 'Prova a rimuovere uno o più filtri, oppure cerca un argomento dalla ricerca globale.' : 'In questo ambiente non ci sono ancora materiali approvati e pubblicati. Compariranno qui appena il team editoriale li pubblicherà.',
+        items: items.map(m => { const r = rec.read[m.id]; const pct = r && m.sections.length ? r.sections.length / m.sections.length : 0;
+          return { title: m.title, format: B.FORMAT[m.format], icon: m.format === 'scheda' ? 'article' : 'picture_as_pdf', meta: `${B.name(bank, 'subjects', m.subject)} · ${B.name(bank, 'topics', m.topic)} · ${m.minutes} min`, demo: !!m.demo, done: !!rec.completed[m.id], hasProgress: pct > 0, pct: (pct * 100) + '%', progressLabel: `Letto al ${Math.round(pct * 100)}%`, open: () => this.openMaterial(m.id) }; }) };
+    }
+    if (scr === 'reader') {
+      const m = pm.find(x => x.id === st.readerId);
+      if (!m) { out.sReader = false; out.sLibrary = true; out.lib = out.lib || { filters: [], items: [], empty: true, emptyIcon: 'error', emptyTitle: 'Materiale non disponibile', emptyBody: 'Il materiale non è più pubblicato o non esiste.', canReset: false }; }
+      else {
+        const r = rec.read[m.id] || { sections: [] }; const bm = rec.bookmarks[m.id] || []; const idx = Math.min(st.secIdx, Math.max(0, m.sections.length - 1)); const sec = m.sections[idx];
+        const setSec = i => { this.setState({ secIdx: i, tocOpen: false }); this.markRead(m, i); window.scrollTo(0, 0); };
+        const isBm = sec && bm.includes(sec.id); const tpool = B.pool(bank, { topics: [m.topic] }).length; const done = !!rec.completed[m.id];
+        const readPct = m.sections.length ? r.sections.length / m.sections.length : 0;
+        out.rd = { back: () => this.go('library'), title: m.title, meta: `${B.FORMAT[m.format]} · ${B.name(bank, 'subjects', m.subject)} · ${B.name(bank, 'topics', m.topic)}`, source: m.source, lastVerified: B.fmtDate(m.lastVerified), nextReview: B.fmtDate(m.nextReview), demo: !!m.demo,
+          isPdf: m.format !== 'scheda', isScheda: m.format === 'scheda', pdfLabel: m.format === 'pdf-view' ? '[ visualizzatore PDF ]' : '[ file PDF scaricabile ]', pdfMsg: 'Nel prototipo non è stato caricato alcun file PDF. In produzione il documento approvato sarà mostrato qui, con avanzamento di lettura.',
+          readPct: (readPct * 100) + '%', readNow: Math.round(readPct * 100), readLabel: `${r.sections.length} di ${m.sections.length} sezioni lette · una sezione risulta letta quando la apri`,
+          cols: isMobile ? '1fr' : '240px minmax(0,1fr)', tocPos: isMobile ? 'static' : 'sticky', isMobile, tocOpen: st.tocOpen, showToc: !isMobile || st.tocOpen, toggleToc: () => this.setState(s => ({ tocOpen: !s.tocOpen })), secN: idx + 1, secTotal: m.sections.length,
+          toc: m.sections.map((s, i) => { const rd = r.sections.includes(s.id); return { title: s.title, current: i === idx ? 'true' : 'false', bg: i === idx ? 'var(--surface-2)' : 'transparent', weight: i === idx ? 700 : 500, icon: rd ? 'check_circle' : 'radio_button_unchecked', iconColor: rd ? 'var(--ok)' : 'var(--ink-3)', bookmarked: bm.includes(s.id), onClick: () => setSec(i) }; }),
+          secTitle: sec ? sec.title : '', secBody: sec ? sec.body : '', bookmarked: !!isBm, bookmarkFill: isBm ? "'FILL' 1" : "'FILL' 0", bookmarkLabel: isBm ? 'Rimuovi segnalibro' : 'Aggiungi segnalibro',
+          toggleBookmark: () => this.check(B.commit(() => { const l = rec.bookmarks[m.id] || (rec.bookmarks[m.id] = []); const k = l.indexOf(sec.id); if (k >= 0) l.splice(k, 1); else l.push(sec.id); }), isBm ? 'Segnalibro rimosso.' : 'Segnalibro aggiunto.'),
+          prev: () => setSec(idx - 1), next: () => setSec(idx + 1), noPrev: idx === 0, prevOpacity: idx === 0 ? .4 : 1, hasNext: idx < m.sections.length - 1,
+          hasKey: m.keyConcepts.length > 0, keyConcepts: m.keyConcepts,
+          completed: done, complete: () => this.check(B.completeMaterial(m.id), 'Materiale completato. +8 XP', () => B.completeMaterial(m.id)), completeLabel: done ? 'Completato' : 'Segna come completato', completeIcon: done ? 'check_circle' : 'done', completeBg: done ? 'var(--ok-soft)' : 'var(--accent)', completeColor: done ? 'var(--ok)' : '#171717',
+          hasQuiz: tpool > 0, quizLabel: `Quiz sull'argomento (${Math.min(5, tpool)} domande)`, quiz: () => this.startQuiz({ mode: 'training', title: 'Quiz: ' + B.name(bank, 'topics', m.topic), key: 'topic-' + m.topic, filter: { topics: [m.topic] }, count: Math.min(5, tpool) }),
+          hasRelated: m.related.some(id => pm.find(x => x.id === id)), related: m.related.map(id => pm.find(x => x.id === id)).filter(Boolean).map(x => ({ title: x.title, open: () => this.openMaterial(x.id) })) };
+      }
+    }
+    if (scr === 'paths') {
+      const paths = bank.paths; const pid = st.pathId || (paths[0] && paths[0].id); const p = paths.find(x => x.id === pid);
+      const stat = (pp, s) => { if (s.type === 'material' && rec.completed[s.ref]) return 'done'; const pr = rec.paths[pp.id]; return (pr && pr.status[s.id]) || 'todo'; };
+      const ordered = pp => { const pr = rec.paths[pp.id]; const ids = (pr && pr.order) || pp.steps.map(s => s.id); return ids.map(id => pp.steps.find(s => s.id === id)).filter(Boolean); };
+      const setStatus = (pp, sid, v) => this.check(B.commit(() => { const pr = rec.paths[pp.id] || (rec.paths[pp.id] = { order: null, status: {} }); if (v) pr.status[sid] = v; else delete pr.status[sid]; pr.at = Date.now(); }));
+      const move = (pp, i, d) => this.check(B.commit(() => { const pr = rec.paths[pp.id] || (rec.paths[pp.id] = { order: null, status: {} }); const ids = ordered(pp).map(s => s.id); const j = i + d; [ids[i], ids[j]] = [ids[j], ids[i]]; pr.order = ids; }));
+      const openStep = (pp, s) => {
+        if (s.type === 'material') { if (pm.find(m => m.id === s.ref)) this.openMaterial(s.ref); else this.toast('Il materiale di questa tappa non è disponibile.', 'warn'); return; }
+        if (s.type === 'exam') { const z = bank.quizzes.find(q => q.id === s.quiz && q.status === 'published'); if (!z) { this.toast('La simulazione di questa tappa non è pubblicata.', 'warn'); return; } this.startQuiz({ mode: z.mode, title: z.title, key: z.id, filter: z.filter, count: z.count, durationMin: z.durationMin, pathRef: { pid: pp.id, sid: s.id } }); return; }
+        const n = B.pool(bank, s.filter).length; if (n < s.count) { this.toast(`Domande approvate insufficienti per questa tappa: ${n} su ${s.count}.`, 'warn'); return; }
+        this.startQuiz({ mode: 'training', title: s.title, key: 'path-' + pp.id + '-' + s.id, filter: s.filter, count: s.count, pathRef: { pid: pp.id, sid: s.id } }); };
+      out.pt = { empty: paths.length === 0, list: paths.map(pp => { const ss = pp.steps.map(s => stat(pp, s)); const d = ss.filter(x => x === 'done').length; return { title: pp.title, desc: pp.desc, profile: B.name(bank, 'profiles', pp.profile), done: d, total: ss.length, pct: (d / ss.length * 100) + '%', active: pp.id === pid, border: pp.id === pid ? '2px solid var(--accent)' : '1px solid var(--line)', open: () => this.setState({ pathId: pp.id }) }; }), hasDetail: !!p };
+      if (p) { const steps = ordered(p); const ss = steps.map(s => stat(p, s)); const next = steps.find((s, i) => ss[i] === 'todo');
+        Object.assign(out.pt, { title: p.title, summary: `${ss.filter(x => x === 'done').length} di ${steps.length} tappe completate · ${ss.filter(x => x === 'skipped').length} saltate`, hasResume: !!next, resumeLabel: next ? 'Riprendi: ' + next.title : '', resume: next ? () => openStep(p, next) : null,
+          steps: steps.map((s, i) => { const v = ss[i]; return { n: i + 1, title: s.title, typeLabel: { material: 'Materiale', quiz: 'Quiz', exam: 'Simulazione' }[s.type], icon: { material: 'article', quiz: 'quiz', exam: 'timer' }[s.type], statusLabel: { done: 'Completata', skipped: 'Saltata', todo: 'Da fare' }[v],
+            bg: v === 'done' ? 'var(--ok-soft)' : 'var(--bg)', border: next === s ? '2px solid var(--accent)' : '1px solid transparent', iconBg: v === 'done' ? 'var(--ok)' : 'var(--surface-2)', iconColor: v === 'done' ? 'var(--surface)' : 'var(--ink-2)', deco: v === 'skipped' ? 'line-through' : 'none',
+            canOpen: v !== 'skipped', openLabel: v === 'done' ? 'Rivedi' : 'Apri', open: () => openStep(p, s), canSkip: v !== 'done', skipLabel: v === 'skipped' ? 'Ripristina' : 'Salta', skip: () => setStatus(p, s.id, v === 'skipped' ? null : 'skipped'),
+            first: i === 0, last: i === steps.length - 1, upOpacity: i === 0 ? .35 : 1, downOpacity: i === steps.length - 1 ? .35 : 1, up: () => move(p, i, -1), down: () => move(p, i, 1) }; }) }); }
+    }
+    if (scr === 'progress') {
+      const P = st.prog; const s = B.stats(rec, bank, { period: P.period, subject: P.subject, mode: P.mode }); const setP = patch => this.setState({ prog: Object.assign({}, P, patch) });
+      const n = s.attempts.length; const xp = B.xp(rec); const lv = B.level(xp);
+      out.pr = { periodOpts: [['7', '7 giorni'], ['30', '30 giorni'], ['all', 'Tutto']].map(([id, label]) => Object.assign({ label, active: P.period === id, onClick: () => setP({ period: id }) }, seg(P.period === id))),
+        modeOpts: [['all', 'Tutte'], ['training', 'Allenamento'], ['exam', 'Simulazione']].map(([id, label]) => Object.assign({ label, active: P.mode === id, onClick: () => setP({ mode: id }) }, seg(P.mode === id))),
+        subject: P.subject, subjectOpts: [{ value: 'all', label: 'Tutte le materie' }].concat(T.subjects.map(x => ({ value: x.id, label: x.name }))), onSubject: e => setP({ subject: e.target.value }),
+        kpis: [{ label: 'Quiz completati', value: s.nAttempts, note: 'Dato osservato' }, { label: 'Risposte date', value: s.nGiven, note: `su ${s.nAnswers} domande` }, { label: 'Risposte corrette', value: s.accuracy != null ? B.pct(s.accuracy) : '—', note: 'Dato osservato' }, { label: 'Media simulazioni', value: s.exam.mean != null ? B.fmt1(s.exam.mean) : '—', note: s.exam.n ? `${s.exam.n} simulazioni nel periodo` : 'Nessuna simulazione nel periodo' }],
+        notEnough: !s.enough, needMsg: `Nel periodo selezionato ci sono ${s.nGiven} risposte. Andamento per materia e argomenti da ripassare compaiono da ${B.MIN_ANSWERS} risposte: ne mancano ${Math.max(0, B.MIN_ANSWERS - s.nGiven)}.`, startQuiz: () => this.go('quiz'),
+        hasTrend: s.enough && n >= 2, trendLabel: `Andamento di ${n} punteggi, da ${n ? s.attempts[0].score.display : ''} a ${n ? s.attempts[n - 1].score.display : ''}`,
+        points: s.attempts.map((a, i) => `${n > 1 ? i / (n - 1) * 100 : 50},${100 - a.score.score / 30 * 100}`).join(' '),
+        dots: s.attempts.map((a, i) => ({ x: (n > 1 ? i / (n - 1) * 100 : 50) + '%', y: (a.score.score / 30 * 100) + '%', fill: a.mode === 'exam' ? 'var(--ink)' : 'var(--accent)', radius: a.mode === 'exam' ? '3px' : '50%', title: `${B.fmtDate(a.finishedAt)} · ${a.title}: ${a.score.display}/30` })),
+        hasSubjects: s.enough && s.bySubject.length > 0,
+        subjects: s.bySubject.map(x => ({ name: x.name, given: x.given, acc: x.acc != null ? B.pct(x.acc) : '—', pct: ((x.acc || 0) * 100) + '%', color: x.acc >= .75 ? 'var(--ok)' : x.acc >= .5 ? 'var(--accent)' : 'var(--err)', readiness: x.readiness ? `Livello stimato: ${x.readiness.level} · affidabilità ${x.readiness.reliable} (${x.readiness.n} risposte recenti)` : 'Dati insufficienti per stimare un livello' })),
+        trN: s.training.n, trAcc: s.training.acc != null ? B.pct(s.training.acc) : '—', exN: s.exam.n, exMean: s.exam.mean != null ? B.fmt1(s.exam.mean) : '—', exBest: s.exam.best != null ? B.fmt1(s.exam.best) : '—',
+        hasWeak: s.enough && s.weakTopics.length > 0, noWeak: !(s.enough && s.weakTopics.length > 0), weak: s.weakTopics.map(t => ({ name: t.name, acc: B.pct(t.acc), n: t.n })),
+        weakEmpty: s.enough ? 'Nessun argomento con meno del 60% di risposte corrette nel periodo.' : 'Servono più risposte per individuare gli argomenti da ripassare.',
+        xp, level: lv.level, badges: B.badges(rec).map(b => ({ name: b.name, desc: b.desc, state: b.earned ? '· Ottenuto' : '· Da ottenere', opacity: b.earned ? 1 : .5, color: b.earned ? '#F47732' : '#6A635A' })) };
+    }
+    if (scr === 'search') {
+      const groups = B.search(bank, st.q, st.qcat);
+      const target = t => { if (t.screen === 'quiz') this.go('quiz', { p: { quiz: t.quiz } }); else if (t.screen === 'reader') this.openMaterial(t.material); else this.go('library', { lib: { area: t.area || 'all', entity: 'all', profile: t.profile || 'all', subject: t.subject || 'all', topic: 'all', format: 'all' } }); };
+      out.se = { q: st.q, onInput: e => this.setState({ q: e.target.value }), idle: !st.q.trim(), none: !!st.q.trim() && groups.length === 0, hasCat: st.qcat !== 'all', clearCat: () => this.setState({ qcat: 'all' }),
+        cats: [['all', 'Tutto'], ['quiz', 'Quiz'], ['topics', 'Materie e argomenti'], ['profiles', 'Profili'], ['entities', 'Enti'], ['materials', 'Materiali']].map(([id, label]) => Object.assign({ label, active: st.qcat === id, onClick: () => this.setState({ qcat: id }) }, chip(st.qcat === id))),
+        groups: groups.map(g => ({ label: g.label.toUpperCase(), count: g.items.length, items: g.items.map(i => ({ title: i.title, sub: i.sub, onClick: () => target(i.target) })) })) };
+    }
+    if (scr === 'notifications') {
+      const un = rec.notifications.filter(n => !n.read).length;
+      out.nt = { summary: un ? `${un} non lette su ${rec.notifications.length}` : 'Tutte le notifiche sono state lette.', noneUnread: un === 0, markAllOpacity: un ? 1 : .45, empty: rec.notifications.length === 0, prefs: () => this.go('settings', { setTab: 'notif' }),
+        markAll: () => this.check(B.commit(() => rec.notifications.forEach(n => { n.read = true; })), 'Notifiche segnate come lette.'),
+        items: rec.notifications.map(n => ({ title: n.title, body: n.body, time: B.fmtDateTime(n.at), unread: !n.read, bg: n.read ? 'var(--surface)' : 'var(--accent-soft)', icon: { goal: 'flag', progress: 'trending_up', content: 'article' }[n.type] || 'notifications', markRead: () => this.check(B.commit(() => { const x = rec.notifications.find(y => y.id === n.id); if (x) x.read = true; })) })) };
+    }
+    if (scr === 'settings') {
+      const pf = rec.prefs; const tab = st.setTab;
+      const sel = (label, value, options, key, cast) => ({ label, value: String(value == null ? '' : value), options, onChange: e => this.setPref({ [key]: cast ? cast(e.target.value) : e.target.value }) });
+      const intColor = { Implementato: ['var(--ok-soft)', 'var(--ok)'], Simulato: ['var(--warn-soft)', 'var(--warn)'], Predisposto: ['var(--info-soft)', 'var(--info)'], 'Da sviluppare': ['var(--surface-2)', 'var(--ink-2)'] };
+      out.stg = { cols: isMobile ? '1fr' : '230px minmax(0,1fr)', tabDir: isMobile ? 'row' : 'column',
+        tabs: [['personal', 'Dati personali', 'person'], ['study', 'Preferenze di studio', 'tune'], ['look', 'Aspetto', 'palette'], ['notif', 'Notifiche', 'notifications'], ['privacy', 'Privacy', 'shield'], ['proto', 'Prototipo', 'science']].map(([id, label, icon]) => ({ label, icon, current: tab === id ? 'page' : 'false', bg: tab === id ? 'var(--surface)' : 'transparent', color: tab === id ? 'var(--ink)' : 'var(--ink-2)', onClick: () => this.setState({ setTab: id }) })),
+        tPersonal: tab === 'personal', tStudy: tab === 'study', tLook: tab === 'look', tNotif: tab === 'notif', tPrivacy: tab === 'privacy', tProto: tab === 'proto',
+        name: st.nameDraft != null ? st.nameDraft : me.name, onName: e => this.setState({ nameDraft: e.target.value }), email: me.email, role: B.ROLES[me.role],
+        saveName: () => { const v = (st.nameDraft != null ? st.nameDraft : me.name).trim(); if (v.length < 2) { this.toast('Il nome deve contenere almeno 2 caratteri.', 'warn'); return; } if (this.check(B.commit(s => { s.users.find(u => u.id === me.id).name = v; }), 'Nome salvato.')) this.setState({ nameDraft: null }); },
+        logout: () => { B.logout(); location.href = 'BandoLab%20Landing.dc.html'; },
+        selects: [sel('Area di interesse', pf.area || '', [{ value: '', label: 'Nessuna' }].concat(T.areas.map(a => ({ value: a.id, label: a.name }))), 'area', v => v || null),
+          sel('Obiettivo giornaliero', pf.perDay || '', [{ value: '', label: 'Nessun obiettivo' }, { value: '10', label: '10 risposte' }, { value: '20', label: '20 risposte' }, { value: '30', label: '30 risposte' }, { value: '50', label: '50 risposte' }], 'perDay', v => v ? +v : null),
+          sel('Domande nel quiz rapido', pf.quizCount, ['5', '10', '15', '20'].map(v => ({ value: v, label: v + ' domande' })), 'quizCount', v => +v),
+          sel('Difficoltà preferita', pf.difficulty, [['mix', 'Mista'], ['1', 'Base'], ['2', 'Intermedia'], ['3', 'Avanzata']].map(([value, label]) => ({ value, label })), 'difficulty'),
+          sel('Spiegazioni in allenamento', pf.explain, [{ value: 'after', label: 'Dopo ogni risposta' }, { value: 'end', label: 'Solo alla fine' }], 'explain')],
+        profiles: T.profiles.map(p => { const on = pf.profiles.includes(p.id); return Object.assign({ name: p.name, active: on, onClick: () => this.setPref({ profiles: on ? pf.profiles.filter(x => x !== p.id) : pf.profiles.concat(p.id) }) }, { bg: on ? 'var(--accent-soft)' : 'var(--surface)', border: on ? '1.5px solid var(--accent)' : '1.5px solid var(--line)' }); }),
+        examDate: pf.examDate || '', onExamDate: e => this.setPref({ examDate: e.target.value }),
+        themes: [['light', 'Chiaro', '#F5F0E6', '#171717'], ['dark', 'Scuro', '#121110', '#F5F0E6']].map(([id, label, preview, bar]) => ({ label, preview, bar, active: S.theme === id, border: S.theme === id ? '2px solid var(--accent)' : '2px solid var(--line)', onClick: () => { const r = B.commit(s => { s.theme = id; }); B.applyTheme(); this.check(r, 'Tema salvato.'); } })),
+        reduceMotion: !!pf.reduceMotion, onReduceMotion: e => { const v = e.target.checked; document.documentElement.dataset.motion = v ? 'reduce' : ''; this.setPref({ reduceMotion: v }); },
+        notifs: [['goals', 'Obiettivi di studio', 'Promemoria gentili sul tuo obiettivo giornaliero.'], ['progress', 'Attività e progressi', 'Quiz completati, badge, livelli.'], ['content', 'Aggiornamenti dei contenuti', 'Materiali aggiornati e segnalazioni gestite.']].map(([k, label, desc]) => ({ label, desc, on: pf.notif[k] !== false, onChange: e => this.setPref({ notif: Object.assign({}, pf.notif, { [k]: e.target.checked }) }) })),
+        summary: [['Account', me.email], ['Ambiente', env === 'demo' ? 'Demo' : 'Reale'], ['Tentativi salvati', String(rec.attempts.length)], ['Materiali consultati', String(Object.keys(rec.read).length)], ['Notifiche', String(rec.notifications.length)], ['Segnalazioni inviate', String(S.reports.filter(r => r.by === me.id).length)]].map(([k, v]) => ({ k, v })),
+        exportData: () => { const data = { generato: new Date().toISOString(), nota: 'Esportazione locale del prototipo BandoLab', utente: { nome: me.name, email: me.email, ruolo: me.role }, ambiente: env, dati: rec }; const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })); const a = document.createElement('a'); a.href = url; a.download = 'bandolab-dati-' + me.id + '.json'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000); this.toast('File generato con i dati locali di questo browser. Nessuna richiesta inviata al server.', 'info'); },
+        askDelete: () => this.setState({ delOpen: true, delText: '' }),
+        failSave: !!B.debug().failSave, onFailSave: e => { B.setDebug({ failSave: e.target.checked }); this.forceUpdate(); },
+        resetLabel: st.resetAsk ? 'Conferma: ripristina tutti i dati demo' : 'Ripristina i dati demo', resetDemo: () => { if (!st.resetAsk) { this.setState({ resetAsk: true }); return; } B.reset(); location.href = 'BandoLab%20Landing.dc.html'; },
+        switchEnvLabel: env === 'demo' ? "Passa all'ambiente reale" : "Passa all'ambiente demo", switchEnv: () => { const r = B.login(me.id, env === 'demo' ? 'real' : 'demo'); if (r.ok) location.reload(); else this.check(r); },
+        integrations: B.INTEGRATIONS.map(i => ({ name: i.name, status: i.status, note: i.note, bg: intColor[i.status][0], color: intColor[i.status][1] })) };
+    }
+    const R = st.report;
+    out.rp = R ? { open: true, text: R.text, invalid: !!R.tried && R.text.trim().length < 10, onText: e => this.setState({ report: Object.assign({}, R, { text: e.target.value }) }), cancel: () => this.setState({ report: null }),
+      reasons: ['Possibile errore', 'Testo poco chiaro', 'Fonte non aggiornata', 'Duplicato'].map(r => Object.assign({ label: r, active: R.reason === r, onClick: () => this.setState({ report: Object.assign({}, R, { reason: r }) }) }, chip(R.reason === r))),
+      submit: () => { if (R.text.trim().length < 10) { this.setState({ report: Object.assign({}, R, { tried: true }) }); return; } if (this.sending) return; this.sending = true; const r = B.report(R.qid, R.v, R.reason, R.text.trim()); this.sending = false; if (this.check(r, 'Segnalazione inviata al team editoriale.')) this.setState({ report: null }); } } : { open: false };
+    out.del = st.delOpen ? { open: true, text: st.delText, onText: e => this.setState({ delText: e.target.value }), cancel: () => this.setState({ delOpen: false }), disabled: st.delText !== 'ELIMINA', opacity: st.delText === 'ELIMINA' ? 1 : .45,
+      confirm: () => { if (st.delText !== 'ELIMINA') return; const r = B.commit(s => { delete s.recs[me.id + '@demo']; delete s.recs[me.id + '@real']; s.reports.forEach(x => { if (x.by === me.id) x.by = 'utente-eliminato'; }); s.auth = null; }); if (r.ok) location.href = 'BandoLab%20Landing.dc.html'; else this.check(r); } } : { open: false };
+    if (st.ob) {
+      const step = st.ob; const sel = st.obSel || {}; const areaEnt = T.entities.filter(e => !sel.area || e.area === sel.area).map(e => e.id);
+      const opts = step === 1 ? T.areas.map(a => ({ id: a.id, label: a.name, sub: T.entities.filter(e => e.area === a.id).map(e => e.name).join(' · ') || 'Nessun ente pubblicato' }))
+        : step === 2 ? T.profiles.filter(p => p.entities.some(e => areaEnt.includes(e))).map(p => ({ id: p.id, label: p.name, sub: p.subjects.map(s => B.name(bank, 'subjects', s)).join(', ') }))
+        : [10, 20, 30].map(n => ({ id: n, label: `${n} risposte al giorno`, sub: n === 10 ? 'Circa 10 minuti' : n === 20 ? 'Circa 20 minuti' : 'Circa mezz\'ora' }));
+      const key = ['', 'area', 'profile', 'perDay'][step];
+      const finish = patch => { const r = B.commit(() => { Object.assign(rec.prefs, patch); rec.onboarded = true; }); if (this.check(r, Object.keys(patch).length ? 'Preferenze salvate. Puoi cambiarle dalle impostazioni.' : null)) this.setState({ ob: 0, obSel: null, cfg: this.defaultCfg(rec) }); };
+      const collect = s2 => { const p = {}; if (s2.area) p.area = s2.area; if (s2.profile) p.profiles = [s2.profile]; if (s2.perDay) p.perDay = s2.perDay; return p; };
+      const advance = s2 => step < 3 ? this.setState({ ob: step + 1, obSel: s2 }) : finish(collect(s2));
+      out.ob = { open: true, step, dots: [1, 2, 3].map(i => i <= step ? 'var(--accent)' : 'var(--surface-2)'),
+        title: ['', "Quale area ti interessa?", 'Quale profilo stai preparando?', 'Quanto vuoi studiare ogni giorno?'][step], body: ['', 'Usiamo questa scelta per proporti quiz e materiali pertinenti.', 'Scegli dal catalogo disponibile. Non è una candidatura.', "Un obiettivo realistico aiuta a mantenere costanza. Puoi cambiarlo quando vuoi."][step],
+        opts: opts.map(o => Object.assign({ label: o.label, sub: o.sub, active: sel[key] === o.id, onClick: () => this.setState({ obSel: Object.assign({}, sel, { [key]: o.id }) }) }, chip(sel[key] === o.id))), noOpts: opts.length === 0,
+        skip: () => { const s2 = Object.assign({}, sel); delete s2[key]; advance(s2); }, next: () => advance(sel), nextLabel: step < 3 ? 'Continua' : 'Vai alla dashboard', skipAll: () => finish(collect(sel)) };
+    } else out.ob = { open: false };
+    const t = st.toast;
+    out.hasToast = !!t; out.toastBottom = isMobile ? '92px' : '24px';
+    if (t) out.toast = { text: t.text, role: t.kind === 'err' ? 'alert' : 'status', bg: t.kind === 'err' ? 'var(--err)' : t.kind === 'warn' ? 'var(--warn)' : '#171717', color: t.kind === 'err' || t.kind === 'warn' ? 'var(--surface)' : '#F5F0E6', icon: { err: 'error', warn: 'warning', info: 'info', ok: 'check_circle' }[t.kind], hasRetry: !!t.retry, retry: () => { const f = t.retry; this.setState({ toast: null }); f(); }, close: () => this.setState({ toast: null }) };
+    return out;
+  }
+  renderVals() {
+    const st = this.state, B = this.B;
+    const isMobile = st.w < 760, isTablet = st.w >= 760 && st.w < 1100;
+    const out = { notReady: !st.ready, isMobile };
+    if (!st.ready) return out;
+    const me = B.me();
+    if (!me) return Object.assign(out, { needAuth: true, goLogin: () => { location.href = 'BandoLab%20Landing.dc.html'; } });
+    const S = B.state(), env = B.env(), bank = B.bank(), rec = B.rec(), T = bank.taxonomy;
+    const sess = rec.session; const scr = st.screen === 'run' && !sess ? 'quiz' : st.screen;
+    const expanded = st.side && !isTablet && !isMobile;
+    const group = { library: 'study', reader: 'study', paths: 'study', results: 'quiz', run: 'quiz' }[scr] || scr;
+    const unread = rec.notifications.filter(n => !n.read).length;
+    const mk = ([id, label, icon]) => { const on = group === id; return { id, label, icon, ariaLabel: id === 'notifications' && unread ? `${label}, ${unread} non lette` : label, current: on ? 'page' : 'false', showLabel: expanded, bg: on ? '#F47732' : 'transparent', color: on ? '#171717' : 'var(--side-ink-2)', mColor: on ? 'var(--accent-text)' : 'var(--ink-3)', mBg: on ? 'var(--accent-soft)' : 'transparent', fill: on ? "'FILL' 1" : "'FILL' 0", hasBadge: id === 'notifications' && unread > 0, badge: String(unread), onClick: () => this.go(id === 'study' ? (st.studyTab === 'paths' ? 'paths' : 'library') : id) }; };
+    const titles = { dashboard: 'Dashboard', quiz: 'Quiz e allenamento', run: 'Quiz', results: 'Risultati', library: 'Studia', reader: 'Studia', paths: 'Studia', progress: 'Progressi', search: 'Ricerca', notifications: 'Notifiche', settings: 'Profilo e impostazioni' };
+    const isDark = S.theme === 'dark';
+    Object.assign(out, {
+      showShell: scr !== 'run', inRun: scr === 'run', showSidebar: !isMobile, sideExpanded: expanded, canExpand: !isTablet, sideW: expanded ? '236px' : '76px',
+      toggleSide: () => this.setState(s => ({ side: !s.side })), sideToggleLabel: expanded ? 'Comprimi la barra laterale' : 'Espandi la barra laterale', sideToggleIcon: expanded ? 'left_panel_close' : 'left_panel_open',
+      nav: [['dashboard', 'Dashboard', 'space_dashboard'], ['quiz', 'Quiz', 'quiz'], ['study', 'Studia', 'menu_book'], ['progress', 'Progressi', 'monitoring'], ['settings', 'Profilo', 'person']].map(mk),
+      nav2: [['search', 'Ricerca', 'search'], ['notifications', 'Notifiche', 'notifications']].map(mk),
+      isStaff: me.role !== 'user', title: titles[scr] || 'BandoLab', mainPadBottom: isMobile ? '104px' : '48px',
+      envLabel: env === 'demo' ? 'DEMO' : 'REALE', envTitle: env === 'demo' ? 'Ambiente demo: dati sintetici, non ufficiali e non verificati' : 'Ambiente reale: solo contenuti pubblicati', envBg: env === 'demo' ? 'var(--warn-soft)' : 'var(--ok-soft)', envColor: env === 'demo' ? 'var(--warn)' : 'var(--ok)',
+      unread, hasUnread: unread > 0, notifAria: unread ? `Notifiche, ${unread} non lette` : 'Notifiche',
+      openSearch: () => this.go('search'), openNotif: () => this.go('notifications'), openSettings: () => this.go('settings'), goProgress: () => this.go('progress'), goLibrary: () => this.go('library'),
+      user: { name: me.name, initials: me.name.split(' ').map(x => x[0]).join('') }, showUserName: st.w >= 1100,
+      themeIcon: isDark ? 'light_mode' : 'dark_mode', themeLabel: isDark ? 'Passa al tema chiaro' : 'Passa al tema scuro',
+      toggleTheme: () => { const r = B.commit(s => { s.theme = s.theme === 'dark' ? 'light' : 'dark'; }); B.applyTheme(); this.check(r); },
+      resume: () => this.go('run'),
+      sDash: scr === 'dashboard', sQuiz: scr === 'quiz', sResults: scr === 'results', sLibrary: scr === 'library', sReader: scr === 'reader', sPaths: scr === 'paths', sProgress: scr === 'progress', sSearch: scr === 'search', sNotif: scr === 'notifications', sSettings: scr === 'settings'
+    });
+    const done = rec.attempts.filter(a => a.status === 'completed');
+    const cfg = st.cfg || this.defaultCfg(rec);
+    const quickCfg = () => { const p = T.profiles.find(x => x.id === cfg.profile); return { mode: 'training', title: 'Allenamento rapido' + (p ? ' — ' + p.name : ''), key: 'quick-' + (cfg.profile || 'all'), filter: this.filterOf(Object.assign({}, cfg, { subjects: [] })), count: rec.prefs.quizCount || 10 }; };
+    const sessInfo = s => s ? (s.mode === 'exam' ? `Simulazione · ${Object.keys(s.answers).length}/${s.items.length} risposte · tempo residuo ${B.fmtDur((s.deadline - st.now) / 1000)}` : `Allenamento · ${Object.keys(s.answers).length}/${s.items.length} risposte · riprendi quando vuoi`) : '';
+    const chip = (on) => ({ bg: on ? 'var(--accent-soft)' : 'var(--surface)', border: on ? '1.5px solid var(--accent)' : '1.5px solid var(--line)' });
+    if (scr === 'dashboard') {
+      const isNew = done.length === 0; const stats = B.stats(rec, bank, { period: '30' });
+      const goal = rec.prefs.perDay || 20, today = B.todayAnswers(rec), streak = B.streak(rec), xp = B.xp(rec), lv = B.level(xp);
+      const hour = new Date().getHours(); const hi = hour < 13 ? 'Buongiorno' : hour < 18 ? 'Buon pomeriggio' : 'Buonasera';
+      const prof = T.profiles.find(p => p.id === rec.prefs.profiles[0]); const area = T.areas.find(a => a.id === rec.prefs.area);
+      const pm = B.publishedMaterials(bank);
+      const lastE = Object.entries(rec.read).sort((a, b) => b[1].at - a[1].at)[0]; const lm = lastE && pm.find(m => m.id === lastE[0]);
+      const wt = stats.weakTopics; let sug;
+      if (stats.enough && wt[0]) { const m = pm.find(x => x.topic === wt[0].id) || pm.find(x => x.subject === wt[0].subject); sug = { kind: 'SUGGERIMENTO BASATO SUI TUOI RISULTATI', title: `Ripassa «${wt[0].name}»`, body: `Negli ultimi 30 giorni hai risposto correttamente al ${B.pct(wt[0].acc)} delle ${wt[0].n} domande su questo argomento.` + (m ? ` C'è un materiale collegato: «${m.title}».` : ''), label: m ? 'Apri il materiale' : 'Allenati sull\'argomento', action: m ? () => this.openMaterial(m.id) : () => this.startQuiz({ mode: 'training', title: 'Ripasso — ' + wt[0].name, key: 'topic-' + wt[0].id, filter: { topics: [wt[0].id] }, count: Math.min(5, B.pool(bank, { topics: [wt[0].id] }).length) }) }; }
+      else if (!isNew) sug = { kind: 'SUGGERIMENTO', title: 'Continua ad allenarti con regolarità', body: `Per individuare gli argomenti da ripassare servono almeno ${B.MIN_ANSWERS} risposte negli ultimi 30 giorni. Ora ne hai ${stats.nGiven}.`, label: 'Avvio rapido', action: () => this.startQuiz(quickCfg()) };
+      else sug = { kind: 'SUGGERIMENTO', title: 'Inizia da un quiz breve', body: 'Dopo i primi quiz potrai vedere quali argomenti ripassare.', label: '', action: null };
+      const checklist = [['Scegli la tua area di interesse', !!rec.prefs.area, 'Scegli', () => window.scrollTo(0, 400)], ['Imposta un obiettivo di studio', !!rec.prefs.perDay, 'Imposta', () => window.scrollTo(0, 400)], ['Completa il primo quiz', done.length > 0, 'Inizia', () => this.startQuiz(quickCfg())], ['Consulta il primo materiale', Object.keys(rec.read).length > 0, 'Apri', () => this.go('library')]].map(([label, ok, al, action]) => ({ label, todo: !ok, actionLabel: al, action, icon: ok ? 'check_circle' : 'radio_button_unchecked', color: ok ? 'var(--ok)' : 'var(--ink-3)', fill: ok ? "'FILL' 1" : "'FILL' 0", deco: ok ? 'line-through' : 'none', srState: ok ? ' (completato)' : ' (da fare)' }));
+      out.dash = { isNew, isRegular: !isNew, hasSession: !!sess, sessionTitle: sess ? sess.title : '', sessionInfo: sessInfo(sess),
+        greeting: isNew ? `Benvenuta in BandoLab, ${me.name.split(' ')[0]}` : `${hi}, ${me.name.split(' ')[0]}`,
+        sub: isNew ? 'Qui troverai i tuoi progressi dopo i primi quiz. Nessun dato è stato ancora raccolto.' : [prof && prof.name, area && area.name].filter(Boolean).join(' · ') || 'Imposta area e profilo dalle impostazioni',
+        startQuick: () => this.startQuiz(quickCfg()),
+        checklist, checkDone: checklist.filter(c => !c.todo).length,
+        areaOpts: T.areas.map(a => Object.assign({ label: a.name, active: rec.prefs.area === a.id, onClick: () => this.setPref({ area: a.id }, 'Area salvata.') }, chip(rec.prefs.area === a.id))),
+        goalOpts: [10, 20, 30].map(n => Object.assign({ label: n + ' risposte al giorno', active: rec.prefs.perDay === n, onClick: () => this.setPref({ perDay: n }, 'Obiettivo salvato.') }, chip(rec.prefs.perDay === n))),
+        materials: pm.slice(0, 3).map(m => ({ title: m.title, meta: B.FORMAT[m.format] + ' · ' + B.name(bank, 'subjects', m.subject), open: () => this.openMaterial(m.id) })), noMaterials: pm.length === 0,
+        today, goal, goalNow: Math.min(100, Math.round(today / goal * 100)), goalPct: Math.min(100, today / goal * 100) + '%',
+        goalMsg: today >= goal ? 'Obiettivo raggiunto. Ogni risposta in più è un extra.' : today === 0 ? 'Un quiz breve è un buon modo per cominciare.' : `Mancano ${goal - today} risposte.`,
+        streak: streak.days, streakUnit: streak.days === 1 ? 'giorno' : 'giorni', streakMsg: streak.days === 0 ? 'Una nuova serie parte dalla prossima attività.' : streak.today ? 'Hai già studiato oggi.' : 'Studia oggi per estendere la serie.',
+        level: lv.level, xp, xpInto: lv.into, xpPct: (lv.pct * 100) + '%',
+        nQuiz: stats.nAttempts, acc: stats.accuracy != null ? B.pct(stats.accuracy) : '—', examMean: stats.exam.mean != null ? B.fmt1(stats.exam.mean) : '—',
+        bars: done.slice(-10).map(a => ({ h: Math.max(4, a.score.score / 30 * 74) + 'px', color: a.mode === 'exam' ? 'var(--ink)' : 'var(--accent)', label: `${a.title}: ${a.score.display}/30` })),
+        recent: done.slice(-4).reverse().map(a => ({ title: a.title, sub: (a.mode === 'exam' ? 'Simulazione' : 'Allenamento') + ' · ' + B.rel(a.finishedAt), score: a.score.display, icon: a.mode === 'exam' ? 'timer' : 'quiz', onClick: () => this.go('results', { resultId: a.id, rFilter: 'all' }) })),
+        sugKind: sug.kind, sugTitle: sug.title, sugBody: sug.body, hasSugAction: !!sug.action, sugAction: sug.action, sugActionLabel: sug.label,
+        hasWeak: stats.enough && wt.length > 0, noWeak: !(stats.enough && wt.length > 0), weak: wt.slice(0, 3).map(t => ({ name: t.name, acc: B.pct(t.acc), n: t.n, onClick: () => this.go('progress') })),
+        weakEmpty: stats.enough ? 'Nessun argomento sotto il 60% negli ultimi 30 giorni.' : `Completa altri quiz per ottenere un'analisi attendibile: servono almeno ${B.MIN_ANSWERS} risposte (ora ${stats.nGiven}).`,
+        hasLast: !!lm, noLast: !lm, lastTitle: lm ? lm.title : '', lastMeta: lm ? B.name(bank, 'subjects', lm.subject) + ' · letto ' + B.rel(rec.read[lm.id].at) : '', lastPct: lm && lm.sections.length ? (rec.read[lm.id].sections.length / lm.sections.length * 100) + '%' : '0%', lastOpen: lm ? () => this.openMaterial(lm.id) : null };
+    }
+    if (scr === 'quiz') {
+      const f = this.filterOf(cfg); const plan = B.plan(bank, f, cfg.count); const prof = T.profiles.find(p => p.id === cfg.profile);
+      const profSubs = prof ? prof.subjects : T.subjects.map(s => s.id);
+      const setCfg = patch => this.setState({ cfg: Object.assign({}, cfg, patch) });
+      const dur = Math.max(5, Math.round(cfg.count * 1.25));
+      const quick = quickCfg();
+      out.qz = { hasSession: !!sess, sessionTitle: sess ? sess.title : '', sessionInfo: sessInfo(sess), abandonLabel: st.abandonAsk ? 'Conferma abbandono' : 'Abbandona',
+        abandon: () => { if (!st.abandonAsk) { this.setState({ abandonAsk: true }); return; } if (this.check(B.abandonSession(), 'Sessione abbandonata. Il tentativo è registrato come interrotto e non entra nelle statistiche.')) this.setState({ abandonAsk: false }); },
+        quickLabel: `${quick.count} domande · ${prof ? prof.name : 'Tutti i profili'}`, quickDetail: `Allenamento libero, difficoltà ${cfg.difficulty === 'mix' ? 'mista' : B.DIFF[cfg.difficulty].toLowerCase()}. Parametri dalle tue preferenze.`,
+        startQuick: () => this.startQuiz(quick), openCfg: () => this.setState({ cfgOpen: true }),
+        ready: B.publishedQuizzes(bank).map(z => ({ title: z.title, modeLabel: z.mode === 'exam' ? 'SIMULAZIONE' : 'ALLENAMENTO', modeBg: z.mode === 'exam' ? 'var(--accent-soft)' : 'var(--info-soft)', modeColor: z.mode === 'exam' ? 'var(--accent-text)' : 'var(--info)', border: st.p.quiz === z.id ? '2px solid var(--accent)' : '1px solid var(--line)', meta: `${z.count} domande` + (z.durationMin ? ` · ${z.durationMin} minuti` : ' · senza timer'), start: () => this.startQuiz({ mode: z.mode, title: z.title, key: z.id, filter: z.filter, count: z.count, durationMin: z.durationMin }) })),
+        noReady: B.publishedQuizzes(bank).length === 0,
+        cfgOpen: st.cfgOpen, toggleCfg: () => this.setState(s => ({ cfgOpen: !s.cfgOpen })), chevron: st.cfgOpen ? 'rotate(180deg)' : 'none',
+        modeOpts: [['training', 'Allenamento'], ['exam', 'Simulazione']].map(([id, label]) => ({ label, active: cfg.mode === id, bg: cfg.mode === id ? 'var(--surface)' : 'transparent', shadow: cfg.mode === id ? 'var(--shadow)' : 'none', onClick: () => setCfg({ mode: id }) })),
+        profile: cfg.profile, profileOpts: [{ value: '', label: 'Tutti i profili' }].concat(T.profiles.map(p => ({ value: p.id, label: p.name }))), onProfile: e => setCfg({ profile: e.target.value, subjects: [] }),
+        count: String(cfg.count), countOpts: ['5', '10', '15', '20', '30', '40'], onCount: e => setCfg({ count: +e.target.value }),
+        subjects: profSubs.map(id => { const on = cfg.subjects.includes(id); return Object.assign({ name: B.name(bank, 'subjects', id), count: B.pool(bank, { subjects: [id], difficulty: cfg.difficulty }).length, active: on, onClick: () => setCfg({ subjects: on ? cfg.subjects.filter(x => x !== id) : cfg.subjects.concat(id) }) }, chip(on)); }),
+        diffOpts: [['mix', 'Mista'], ['1', 'Base'], ['2', 'Intermedia'], ['3', 'Avanzata']].map(([id, label]) => Object.assign({ label, active: String(cfg.difficulty) === id, onClick: () => setCfg({ difficulty: id }) }, chip(String(cfg.difficulty) === id))),
+        rows: plan.rows, durationLabel: cfg.mode === 'exam' ? `Durata simulazione: ${dur} minuti` : 'Nessun timer',
+        insufficient: !plan.enough, insufficientMsg: `Ci sono ${plan.available} domande approvate per questa configurazione, ne servono ${cfg.count}. Riduci il numero di domande o amplia materie e difficoltà.`, startOpacity: plan.enough ? 1 : .45,
+        startLabel: cfg.mode === 'exam' ? 'Avvia la simulazione' : "Avvia l'allenamento",
+        startCfg: () => this.startQuiz({ mode: cfg.mode, title: (cfg.mode === 'exam' ? 'Simulazione personalizzata' : 'Allenamento personalizzato'), key: 'cfg-' + JSON.stringify(f) + cfg.count, filter: f, count: cfg.count, durationMin: cfg.mode === 'exam' ? dur : null }) };
+    }
+    if (scr === 'run' && sess) {
+      const s = sess; const it = s.items[s.current]; const v = B.versionOf(bank, it.qid, it.v) || {};
+      const answers = st.unsaved || s.answers; const a = answers[it.qid]; const training = s.mode === 'training'; const rev = training && !!s.revealed[it.qid];
+      const remaining = s.deadline ? (s.deadline - st.now) / 1000 : 0; const answered = s.items.filter(x => answers[x.qid] != null).length;
+      const explainAfter = rec.prefs.explain !== 'end';
+      out.run = { title: s.title, isExam: !training, modeLabel: training ? 'ALLENAMENTO' : 'SIMULAZIONE', modeBg: training ? 'var(--info-soft)' : 'var(--accent-soft)', modeColor: training ? 'var(--info)' : 'var(--accent-text)',
+        timeLeft: B.fmtDur(remaining), timerBg: remaining < 120 ? 'var(--err-soft)' : 'var(--surface-2)', timerColor: remaining < 120 ? 'var(--err)' : 'var(--ink)', timerAria: `Tempo residuo ${Math.floor(remaining / 60)} minuti`,
+        idx: s.current + 1, total: s.items.length, answered, pct: (answered / s.items.length * 100) + '%',
+        subject: B.name(bank, 'subjects', v.subject) + ' · ' + B.name(bank, 'topics', v.topic), diff: B.DIFF[v.difficulty] || '', version: 'v' + it.v, text: v.text,
+        options: (v.options || []).map((t, i) => { const on = a === i; let bg = 'var(--surface)', border = '2px solid var(--line)', mark = '', lb = 'var(--surface-2)', lc = 'var(--ink-2)';
+          if (on) { bg = 'var(--accent-soft)'; border = '2px solid var(--accent)'; lb = 'var(--accent)'; lc = '#171717'; }
+          if (rev && i === v.correct) { bg = 'var(--ok-soft)'; border = '2px solid var(--ok)'; mark = 'Risposta corretta'; lb = 'var(--ok)'; lc = 'var(--surface)'; }
+          else if (rev && on) { bg = 'var(--err-soft)'; border = '2px solid var(--err)'; mark = 'La tua risposta'; lb = 'var(--err)'; lc = 'var(--surface)'; }
+          return { letter: 'ABCD'[i], text: t, checked: on, onClick: () => this.answer(i), bg, border, letterBg: lb, letterColor: lc, mark, hasMark: !!mark, disabled: rev }; }),
+        canReveal: training && explainAfter && a != null && !rev, reveal: () => { const r = B.saveSession({ revealed: Object.assign({}, s.revealed, { [it.qid]: true }) }); this.check(r); },
+        revealed: rev, revOk: rev && a === v.correct, revKo: rev && a !== v.correct, explanation: v.explanation, source: v.source, sourceUrl: v.sourceUrl, hasUrl: !!v.sourceUrl,
+        prev: () => this.moveQ(-1), next: () => this.moveQ(1), hasPrev: s.current > 0, noPrev: s.current === 0, prevOpacity: s.current === 0 ? .4 : 1, hasNext: s.current < s.items.length - 1, isLast: s.current === s.items.length - 1,
+        skipLabel: a == null ? 'Salta' : 'Successiva',
+        grid: s.items.map((x, i) => { const ans = answers[x.qid] != null, cur = i === s.current; const vv = B.versionOf(bank, x.qid, x.v); const rv = training && s.revealed[x.qid]; const ok = rv && vv && answers[x.qid] === vv.correct;
+          return { n: i + 1, onClick: () => this.jump(i), current: cur ? 'step' : 'false', label: `Domanda ${i + 1}: ${ans ? 'risposta data' : 'non risposta'}${rv ? (ok ? ', corretta' : ', errata') : ''}${cur ? ', corrente' : ''}`,
+            bg: rv ? (ok ? 'var(--ok-soft)' : 'var(--err-soft)') : ans ? 'var(--ink)' : 'var(--surface)', color: rv ? (ok ? 'var(--ok)' : 'var(--err)') : ans ? 'var(--bg)' : 'var(--ink)', border: cur ? '2px solid var(--accent)' : '1px solid var(--line)', outline: cur ? '2px solid var(--accent)' : 'none' }; }),
+        showGrid: !isMobile || st.gridOpen, gridToggle: () => this.setState(s2 => ({ gridOpen: !s2.gridOpen })), gridToggleLabel: st.gridOpen ? 'Nascondi domande' : `Tutte le domande (${answered}/${s.items.length})`, isMobile,
+        askSubmit: () => this.setState({ confirm: true }), exit: () => this.go('quiz'), exitLabel: training ? 'Salva ed esci' : 'Esci (il timer continua)',
+        report: () => this.setState({ report: { qid: it.qid, v: it.v, reason: 'Possibile errore', text: '' } }),
+        hasUnsaved: !!st.unsaved, retrySave: () => this.retrySave(), prioritized: !!s.prioritized && training,
+        interruptions: s.interruptions.length, hasInterruptions: !training && s.interruptions.length > 0 };
+      const missing = s.items.length - answered;
+      out.cf = { open: st.confirm, title: training ? "Concludere l'allenamento?" : 'Consegnare la simulazione?', msg: missing ? `Restano ${missing} domande senza risposta: verranno considerate omesse (−0,25 ciascuna).` : 'Hai risposto a tutte le domande.', note: training ? '' : 'Dopo la consegna non potrai modificare le risposte.', hasNote: !training, cancel: () => this.setState({ confirm: false }), submit: () => this.finish('submitted'), submitLabel: training ? 'Concludi' : 'Consegna' };
+    }
+    out.vmBank = bank; out.vmRec = rec; out.vmMe = me; out.vmChip = chip; out.vmSessInfo = sessInfo;
+    return this.renderVals2 ? this.renderVals2(out, st, B, S, env, bank, rec, T, isMobile) : out;
+  }
+}
+</script>
+</body>
+</html>

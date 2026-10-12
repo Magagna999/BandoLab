@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<title>BandoLab — Preparati meglio. Un quiz alla volta.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..24,400..600,0..1,0&display=block" rel="stylesheet">
+<script src="bandolab-core.js"></script>
+<style>
+:root{--bg:#F5F0E6;--surface:#FFFDF9;--surface-2:#EDE6D8;--ink:#171717;--ink-2:#45403A;--ink-3:#655E55;--line:#E2D9C9;--accent:#F47732;--accent-hover:#E2621C;--accent-soft:#FDE6D6;--accent-text:#A3440E;--side:#171717;--side-ink:#F5F0E6;--side-ink-2:#B8B0A3;--ok:#1F7A4A;--ok-soft:#DDF0E4;--err:#B3261E;--err-soft:#F9E0DC;--warn:#7E5300;--warn-soft:#F7E9C6;--info:#24578A;--info-soft:#DDE8F4;--shadow:0 1px 2px rgba(23,23,23,.05),0 8px 28px rgba(23,23,23,.06);--overlay:rgba(23,23,23,.45)}
+[data-theme="dark"]{--bg:#121110;--surface:#1C1A18;--surface-2:#26231F;--ink:#F5F0E6;--ink-2:#D2CABD;--ink-3:#A59D90;--line:#34302B;--accent:#F47732;--accent-hover:#FF8B4D;--accent-soft:#3B2416;--accent-text:#FF9B5E;--side:#0B0A09;--side-ink:#F5F0E6;--side-ink-2:#9E968A;--ok:#6FD39A;--ok-soft:#14301F;--err:#FF8F85;--err-soft:#3A1A17;--warn:#F0C062;--warn-soft:#332810;--info:#8FBDF0;--info-soft:#142538;--shadow:0 1px 2px rgba(0,0,0,.4);--overlay:rgba(0,0,0,.6)}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4,p{margin:0}
+a{color:var(--accent-text)}
+a:hover{color:var(--ink)}
+button,input,select,textarea{font:inherit;color:inherit}
+summary{cursor:pointer;list-style:none}
+summary::-webkit-details-marker{display:none}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+@keyframes blFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+</style>
+</helmet>
+<div style="min-height:100vh;background:var(--bg);color:var(--ink)">
+  <header style="position:sticky;top:0;z-index:20;background:color-mix(in oklab,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)">
+    <div style="max-width:1200px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:24px">
+      <a href="#top" onClick="{{ goHome }}" aria-label="BandoLab, torna alla home" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink)">
+        <span style="width:34px;height:34px;border-radius:10px;background:#171717;position:relative;display:grid;place-items:center;flex:none;box-shadow:inset 0 0 0 1px rgba(245,240,230,.14)">
+          <span style="font:800 19px Manrope,sans-serif;color:#F5F0E6;letter-spacing:-.04em">B</span>
+          <span style="position:absolute;right:-4px;top:-4px;width:14px;height:14px;border-radius:5px;background:#F47732;display:grid;place-items:center;font-family:'Material Symbols Rounded';font-size:12px;color:#171717;font-variation-settings:'wght' 700">check</span>
+        </span>
+        <span style="font:800 20px Manrope,sans-serif;letter-spacing:-.03em">Bando<span style="color:var(--accent-text)">Lab</span></span>
+      </a>
+      <sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">
+        <nav aria-label="Principale" style="display:flex;gap:4px;margin-left:12px">
+          <a href="#come-funziona" onClick="{{ goSection }}" style="padding:8px 12px;border-radius:8px;color:var(--ink-2);text-decoration:none;font-weight:500;font-size:15px" style-hover="background:var(--surface-2);color:var(--ink)">Come funziona</a>
+          <a href="#concorsi" onClick="{{ goSection }}" style="padding:8px 12px;border-radius:8px;color:var(--ink-2);text-decoration:none;font-weight:500;font-size:15px" style-hover="background:var(--surface-2);color:var(--ink)">Concorsi</a>
+        </nav>
+        <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+          <sc-if value="{{ loggedIn }}">
+            <a href="{{ appHref }}" style="padding:10px 16px;border-radius:10px;background:var(--accent);color:#171717;font-weight:600;text-decoration:none;font-size:15px" style-hover="background:var(--accent-hover);color:#171717">Vai alla dashboard</a>
+          </sc-if>
+          <sc-if value="{{ loggedOut }}" hint-placeholder-val="{{ true }}">
+            <button onClick="{{ openLogin }}" style="padding:10px 14px;border-radius:10px;background:transparent;border:0;font-weight:600;cursor:pointer;font-size:15px" style-hover="background:var(--surface-2)">Accedi</button>
+            <button onClick="{{ openLogin }}" style="padding:10px 16px;border-radius:10px;background:var(--accent);border:0;color:#171717;font-weight:600;cursor:pointer;font-size:15px" style-hover="background:var(--accent-hover)">Inizia gratis</button>
+          </sc-if>
+        </div>
+      </sc-if>
+      <sc-if value="{{ narrow }}">
+        <button onClick="{{ toggleMenu }}" aria-expanded="{{ menuOpen }}" aria-controls="menu-mobile" aria-label="Apri il menu" style="margin-left:auto;width:44px;height:44px;border-radius:10px;border:1px solid var(--line);background:var(--surface);cursor:pointer;display:grid;place-items:center"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:24px">{{ menuIcon }}</span></button>
+      </sc-if>
+    </div>
+    <sc-if value="{{ showMobileMenu }}">
+      <nav id="menu-mobile" aria-label="Menu" style="border-top:1px solid var(--line);padding:12px 24px 20px;display:flex;flex-direction:column;gap:4px;animation:blFade .18s ease-out">
+        <a href="#come-funziona" onClick="{{ goSection }}" style="padding:12px;border-radius:8px;color:var(--ink);text-decoration:none;font-weight:500">Come funziona</a>
+        <a href="#concorsi" onClick="{{ goSection }}" style="padding:12px;border-radius:8px;color:var(--ink);text-decoration:none;font-weight:500">Concorsi</a>
+        <button onClick="{{ openLogin }}" style="padding:12px;border-radius:8px;border:0;background:transparent;text-align:left;font-weight:500;cursor:pointer">Accedi</button>
+        <button onClick="{{ openLogin }}" style="margin-top:8px;min-height:48px;border-radius:10px;border:0;background:var(--accent);color:#171717;font-weight:600;cursor:pointer">Inizia gratis</button>
+      </nav>
+    </sc-if>
+  </header>
+
+  <sc-if value="{{ vHome }}" hint-placeholder-val="{{ true }}">
+    <main id="top">
+      <section style="max-width:1200px;margin:0 auto;padding:clamp(40px,7vw,88px) 24px 72px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:56px;align-items:center">
+        <div style="display:flex;flex-direction:column;gap:24px;animation:blFade .4s ease-out">
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <span style="padding:6px 12px;border-radius:999px;background:var(--accent-soft);color:var(--accent-text);font-size:13px;font-weight:600">Gratuito al lancio</span>
+            <span style="padding:6px 12px;border-radius:999px;border:1px solid var(--line);color:var(--ink-2);font-size:13px;font-weight:500">Concorsi pubblici italiani</span>
+          </div>
+          <h1 style="font:800 clamp(40px,6vw,68px)/1.02 Manrope,sans-serif;letter-spacing:-.035em;text-wrap:balance">Preparati meglio. <span style="color:var(--accent-text)">Un quiz alla volta.</span></h1>
+          <p style="font-size:19px;line-height:1.55;color:var(--ink-2);max-width:520px;text-wrap:pretty">Allenati con quiz mirati, individua gli argomenti da ripassare e costruisci un metodo di studio adatto ai tuoi obiettivi.</p>
+          <div style="display:flex;gap:12px;flex-wrap:wrap">
+            <button onClick="{{ openLogin }}" style="min-height:52px;padding:0 24px;border-radius:12px;border:0;background:var(--accent);color:#171717;font-weight:700;font-size:16px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:transform .15s" style-hover="background:var(--accent-hover);transform:translateY(-1px)">Inizia gratis<span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:20px">arrow_forward</span></button>
+            <button onClick="{{ startDemo }}" style="min-height:52px;padding:0 22px;border-radius:12px;border:1px solid var(--ink);background:transparent;font-weight:600;font-size:16px;cursor:pointer;display:flex;align-items:center;gap:8px" style-hover="background:var(--ink);color:var(--bg)"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:20px">play_arrow</span>Prova un quiz demo</button>
+          </div>
+          <p style="font-size:14px;color:var(--ink-3)">Il quiz demo non richiede un account e il risultato non viene salvato.</p>
+        </div>
+        <sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">
+          <div aria-label="Anteprima della dashboard con dati dimostrativi" role="img" style="position:relative;animation:blFade .5s ease-out">
+            <div style="position:absolute;inset:24px -16px -16px 24px;border-radius:24px;background:var(--accent);opacity:.9"></div>
+            <div style="position:relative;display:grid;grid-template-columns:56px 1fr;border-radius:20px;overflow:hidden;background:var(--surface);border:1px solid var(--line);box-shadow:0 30px 60px -20px rgba(23,23,23,.35)">
+              <div style="background:#171717;padding:14px 0;display:flex;flex-direction:column;align-items:center;gap:14px">
+                <span style="width:28px;height:28px;border-radius:8px;background:#F5F0E6;color:#171717;display:grid;place-items:center;font:800 15px Manrope,sans-serif">B</span>
+                <span style="margin-top:8px;width:36px;height:36px;border-radius:10px;background:#F47732;color:#171717;display:grid;place-items:center;font-family:'Material Symbols Rounded';font-size:20px">space_dashboard</span>
+                <span style="font-family:'Material Symbols Rounded';font-size:20px;color:#B8B0A3">quiz</span>
+                <span style="font-family:'Material Symbols Rounded';font-size:20px;color:#B8B0A3">menu_book</span>
+                <span style="font-family:'Material Symbols Rounded';font-size:20px;color:#B8B0A3">monitoring</span>
+                <span style="font-family:'Material Symbols Rounded';font-size:20px;color:#B8B0A3">person</span>
+              </div>
+              <div style="padding:20px;display:flex;flex-direction:column;gap:14px;min-width:0">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+                  <div><div style="font:700 17px Manrope,sans-serif">Buongiorno, Marco</div><div style="font-size:12px;color:var(--ink-3)">Istruttore amministrativo · Enti locali</div></div>
+                  <span style="padding:4px 8px;border-radius:6px;background:var(--warn-soft);color:var(--warn);font-size:11px;font-weight:700;letter-spacing:.04em">DATI DIMOSTRATIVI</span>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+                  <div style="padding:12px;border-radius:12px;background:var(--bg)"><div style="font-size:11px;color:var(--ink-3)">Obiettivo di oggi</div><div style="font:700 18px Manrope,sans-serif;margin:4px 0 6px">12/20</div><div style="height:5px;border-radius:5px;background:var(--line)"><div style="width:60%;height:100%;border-radius:5px;background:#F47732"></div></div></div>
+                  <div style="padding:12px;border-radius:12px;background:var(--bg)"><div style="font-size:11px;color:var(--ink-3)">Serie attiva</div><div style="font:700 18px Manrope,sans-serif;margin-top:4px">3 giorni</div></div>
+                  <div style="padding:12px;border-radius:12px;background:var(--bg)"><div style="font-size:11px;color:var(--ink-3)">Media simulazioni</div><div style="font:700 18px Manrope,sans-serif;margin-top:4px">19,4<span style="font-size:12px;color:var(--ink-3)">/30</span></div></div>
+                </div>
+                <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:10px">
+                  <div style="padding:12px;border-radius:12px;border:1px solid var(--line)">
+                    <div style="font-size:12px;font-weight:600;margin-bottom:8px">Attività recente</div>
+                    <div style="display:flex;flex-direction:column;gap:8px;font-size:12px">
+                      <div style="display:flex;justify-content:space-between"><span>Simulazione breve</span><span style="font-weight:600">20,5</span></div>
+                      <div style="display:flex;justify-content:space-between"><span>Procedimento amm.</span><span style="font-weight:600">24,0</span></div>
+                      <div style="display:flex;justify-content:space-between"><span>Organi del comune</span><span style="font-weight:600">16,5</span></div>
+                    </div>
+                  </div>
+                  <div style="padding:12px;border-radius:12px;background:var(--accent-soft)">
+                    <div style="font-size:11px;font-weight:700;color:var(--accent-text);letter-spacing:.04em">SUGGERIMENTO</div>
+                    <div style="font-size:12px;margin:6px 0 10px;line-height:1.4">Ripassa «Organi del comune»: 48% di risposte corrette su 23.</div>
+                    <span style="display:inline-block;padding:7px 10px;border-radius:8px;background:#171717;color:#F5F0E6;font-size:12px;font-weight:600">Inizia un quiz</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+      </section>
+
+      <section id="come-funziona" style="background:var(--surface);border-block:1px solid var(--line)">
+        <div style="max-width:1200px;margin:0 auto;padding:80px 24px;display:flex;flex-direction:column;gap:40px">
+          <div style="display:flex;flex-direction:column;gap:12px;max-width:640px">
+            <span style="font-size:13px;font-weight:700;letter-spacing:.08em;color:var(--accent-text)">COME FUNZIONA</span>
+            <h2 style="font:800 clamp(30px,4vw,44px)/1.1 Manrope,sans-serif;letter-spacing:-.03em;text-wrap:balance">Un metodo in tre movimenti, ripetibile ogni giorno.</h2>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:20px">
+            <article style="padding:28px;border-radius:20px;background:var(--bg);display:flex;flex-direction:column;gap:14px">
+              <span style="font:800 15px Manrope,sans-serif;color:var(--accent-text)">01</span>
+              <h3 style="font:800 26px Manrope,sans-serif;letter-spacing:-.02em">Allenati</h3>
+              <p style="color:var(--ink-2);line-height:1.55">Quiz e simulazioni per verificare la preparazione. In allenamento vedi subito la spiegazione; in simulazione lavori con timer e penalità, come in un esame.</p>
+            </article>
+            <article style="padding:28px;border-radius:20px;background:var(--bg);display:flex;flex-direction:column;gap:14px">
+              <span style="font:800 15px Manrope,sans-serif;color:var(--accent-text)">02</span>
+              <h3 style="font:800 26px Manrope,sans-serif;letter-spacing:-.02em">Studia</h3>
+              <p style="color:var(--ink-2);line-height:1.55">Materiali organizzati per materia e argomento, con indice, segnalibri e concetti chiave. Ogni scheda porta a un quiz sullo stesso tema.</p>
+            </article>
+            <article style="padding:28px;border-radius:20px;background:#171717;color:#F5F0E6;display:flex;flex-direction:column;gap:14px">
+              <span style="font:800 15px Manrope,sans-serif;color:#F47732">03</span>
+              <h3 style="font:800 26px Manrope,sans-serif;letter-spacing:-.02em">Migliora</h3>
+              <p style="color:#D2CABD;line-height:1.55">Progressi, revisione degli errori e suggerimenti basati sui tuoi risultati. Le analisi compaiono solo quando ci sono abbastanza risposte per essere attendibili.</p>
+            </article>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:20px;padding:28px;border-radius:20px;border:1px solid var(--line)">
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <h3 style="font:700 20px Manrope,sans-serif">Regole di punteggio trasparenti</h3>
+              <p style="color:var(--ink-2);line-height:1.55;font-size:15px">Il punteggio è normalizzato in trentesimi. La soglia di 21/30 è una regola adottata da BandoLab per orientarti: non è una soglia valida per tutti i concorsi pubblici.</p>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+              <div style="padding:14px;border-radius:12px;background:var(--ok-soft);color:var(--ok)"><div style="font:800 22px Manrope,sans-serif">+1</div><div style="font-size:13px;font-weight:600">Corretta</div></div>
+              <div style="padding:14px;border-radius:12px;background:var(--err-soft);color:var(--err)"><div style="font:800 22px Manrope,sans-serif">−0,5</div><div style="font-size:13px;font-weight:600">Errata</div></div>
+              <div style="padding:14px;border-radius:12px;background:var(--surface-2);color:var(--ink-2)"><div style="font:800 22px Manrope,sans-serif">−0,25</div><div style="font-size:13px;font-weight:600">Omessa</div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section style="max-width:1200px;margin:0 auto;padding:80px 24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:40px;align-items:start">
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <span style="font-size:13px;font-weight:700;letter-spacing:.08em;color:var(--accent-text)">GRATUITO AL LANCIO</span>
+          <h2 style="font:800 clamp(30px,4vw,44px)/1.1 Manrope,sans-serif;letter-spacing:-.03em">Tutto quello che c'è, senza costi.</h2>
+          <p style="color:var(--ink-2);line-height:1.6;font-size:17px">BandoLab parte gratuito: al lancio non ci sono piani a pagamento né funzioni bloccate. Se in futuro cambierà qualcosa, lo comunicheremo in anticipo e con chiarezza.</p>
+        </div>
+        <ul style="list-style:none;margin:0;padding:0;display:grid;gap:10px">
+          <li style="display:flex;gap:12px;align-items:flex-start;padding:16px;border-radius:14px;background:var(--surface);border:1px solid var(--line)"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';color:var(--ok);font-size:22px">check_circle</span><span>Quiz di allenamento e simulazioni d'esame illimitati sul catalogo pubblicato</span></li>
+          <li style="display:flex;gap:12px;align-items:flex-start;padding:16px;border-radius:14px;background:var(--surface);border:1px solid var(--line)"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';color:var(--ok);font-size:22px">check_circle</span><span>Revisione completa delle risposte con spiegazioni e fonti</span></li>
+          <li style="display:flex;gap:12px;align-items:flex-start;padding:16px;border-radius:14px;background:var(--surface);border:1px solid var(--line)"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';color:var(--ok);font-size:22px">check_circle</span><span>Biblioteca di materiali e percorsi di studio</span></li>
+          <li style="display:flex;gap:12px;align-items:flex-start;padding:16px;border-radius:14px;background:var(--surface);border:1px solid var(--line)"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';color:var(--ok);font-size:22px">check_circle</span><span>Statistiche personali, obiettivi e badge</span></li>
+        </ul>
+      </section>
+
+      <section id="concorsi" style="background:var(--surface);border-block:1px solid var(--line)">
+        <div style="max-width:1200px;margin:0 auto;padding:80px 24px;display:flex;flex-direction:column;gap:28px">
+          <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-end;justify-content:space-between">
+            <div style="display:flex;flex-direction:column;gap:12px;max-width:620px">
+              <span style="font-size:13px;font-weight:700;letter-spacing:.08em;color:var(--accent-text)">CONCORSI</span>
+              <h2 style="font:800 clamp(30px,4vw,44px)/1.1 Manrope,sans-serif;letter-spacing:-.03em">Il catalogo, per area, ente e profilo.</h2>
+            </div>
+            <div role="tablist" aria-label="Catalogo" style="display:flex;padding:4px;border-radius:12px;background:var(--surface-2);gap:4px">
+              <sc-for list="{{ catTabs }}" as="t" hint-placeholder-count="2">
+                <button role="tab" aria-selected="{{ t.active }}" onClick="{{ t.onClick }}" style="min-height:40px;padding:0 14px;border-radius:9px;border:0;cursor:pointer;font-weight:600;font-size:14px;background:{{ t.bg }};box-shadow:{{ t.shadow }}">{{ t.label }}</button>
+              </sc-for>
+            </div>
+          </div>
+          <sc-if value="{{ catReal }}" hint-placeholder-val="{{ true }}">
+            <div style="padding:48px 28px;border-radius:20px;border:1.5px dashed var(--line);display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px">
+              <span aria-hidden="true" style="width:56px;height:56px;border-radius:16px;background:var(--surface-2);display:grid;place-items:center;font-family:'Material Symbols Rounded';font-size:28px;color:var(--ink-3)">inventory_2</span>
+              <h3 style="font:700 22px Manrope,sans-serif">Nessun contenuto pubblicato, per ora</h3>
+              <p style="color:var(--ink-2);max-width:560px;line-height:1.55">Il catalogo mostra soltanto quiz e materiali approvati dal team editoriale. Le prime aree saranno pubblicate dopo la revisione delle fonti. Nel frattempo puoi esplorare l'ambiente dimostrativo.</p>
+              <button onClick="{{ showDemoCat }}" style="min-height:44px;padding:0 18px;border-radius:10px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-weight:600" style-hover="background:var(--surface-2)">Mostra il catalogo dimostrativo</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{ catDemo }}">
+            <div style="display:flex;flex-direction:column;gap:16px">
+              <p style="display:flex;gap:8px;align-items:center;padding:12px 14px;border-radius:12px;background:var(--warn-soft);color:var(--warn);font-size:14px;font-weight:500"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:20px">science</span>Enti, profili e contenuti di questo elenco sono dimostrativi: non rappresentano concorsi reali o bandi attivi.</p>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:16px">
+                <sc-for list="{{ catalog }}" as="a" hint-placeholder-count="2">
+                  <div style="padding:24px;border-radius:18px;background:var(--bg);display:flex;flex-direction:column;gap:16px">
+                    <h3 style="font:700 20px Manrope,sans-serif">{{ a.name }}</h3>
+                    <sc-for list="{{ a.entities }}" as="e" hint-placeholder-count="2">
+                      <div style="padding:14px;border-radius:12px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;gap:10px">
+                        <div style="font-weight:600">{{ e.name }}</div>
+                        <sc-for list="{{ e.profiles }}" as="p" hint-placeholder-count="1">
+                          <div style="display:flex;flex-direction:column;gap:6px">
+                            <div style="font-size:14px;color:var(--ink-2)">{{ p.name }}</div>
+                            <div style="display:flex;flex-wrap:wrap;gap:6px">
+                              <sc-for list="{{ p.subjects }}" as="s" hint-placeholder-count="3"><span style="padding:4px 8px;border-radius:6px;background:var(--surface-2);font-size:12px;font-weight:500">{{ s }}</span></sc-for>
+                            </div>
+                          </div>
+                        </sc-for>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+      </section>
+
+      <section style="max-width:1200px;margin:0 auto;padding:80px 24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:48px;align-items:center">
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <span style="font-size:13px;font-weight:700;letter-spacing:.08em;color:var(--accent-text)">AFFIDABILITÀ</span>
+          <h2 style="font:800 clamp(30px,4vw,44px)/1.1 Manrope,sans-serif;letter-spacing:-.03em">Ogni domanda ha una fonte, una data, una revisione.</h2>
+          <p style="color:var(--ink-2);line-height:1.6;font-size:17px">I contenuti vengono scritti da un editor, controllati da un revisore diverso e pubblicati solo dopo l'approvazione. Ogni domanda indica la fonte e la data dell'ultima verifica; alla scadenza viene rimessa in revisione.</p>
+          <ol style="list-style:none;margin:8px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+            <li style="padding:8px 12px;border-radius:8px;background:var(--surface-2);font-size:14px;font-weight:600">Bozza</li><li aria-hidden="true" style="color:var(--ink-3)">→</li>
+            <li style="padding:8px 12px;border-radius:8px;background:var(--info-soft);color:var(--info);font-size:14px;font-weight:600">In revisione</li><li aria-hidden="true" style="color:var(--ink-3)">→</li>
+            <li style="padding:8px 12px;border-radius:8px;background:var(--ok-soft);color:var(--ok);font-size:14px;font-weight:600">Approvato</li><li aria-hidden="true" style="color:var(--ink-3)">→</li>
+            <li style="padding:8px 12px;border-radius:8px;background:#171717;color:#F5F0E6;font-size:14px;font-weight:600">Pubblicato</li>
+          </ol>
+        </div>
+        <article style="padding:28px;border-radius:20px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:16px">
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <span style="padding:4px 8px;border-radius:6px;background:var(--warn-soft);color:var(--warn);font-size:11px;font-weight:700;letter-spacing:.04em">ESEMPIO DIMOSTRATIVO</span>
+            <span style="padding:4px 8px;border-radius:6px;background:var(--surface-2);font-size:12px;font-weight:500">Diritto amministrativo · Procedimento</span>
+          </div>
+          <p style="font:600 18px/1.4 Manrope,sans-serif">Se la legge o un regolamento non prevedono un termine diverso, entro quanti giorni deve concludersi un procedimento amministrativo?</p>
+          <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;background:var(--ok-soft);color:var(--ok);font-weight:600"><span aria-hidden="true" style="font-family:'Material Symbols Rounded'">check_circle</span>30 giorni · risposta corretta</div>
+          <p style="color:var(--ink-2);line-height:1.55;font-size:15px">L'art. 2 della L. 241/1990 fissa in 30 giorni il termine generale, salvo diversa previsione di legge o regolamento.</p>
+          <dl style="margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 16px;font-size:14px;padding-top:14px;border-top:1px solid var(--line)">
+            <dt style="color:var(--ink-3)">Fonte</dt><dd style="margin:0">L. 241/1990, art. 2</dd>
+            <dt style="color:var(--ink-3)">Verifica</dt><dd style="margin:0">Non verificata: contenuto dimostrativo</dd>
+          </dl>
+        </article>
+      </section>
+
+      <section style="background:var(--surface);border-block:1px solid var(--line)">
+        <div style="max-width:860px;margin:0 auto;padding:80px 24px;display:flex;flex-direction:column;gap:28px">
+          <h2 style="font:800 clamp(28px,4vw,40px)/1.1 Manrope,sans-serif;letter-spacing:-.03em">Domande frequenti</h2>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <sc-for list="{{ faq }}" as="f" hint-placeholder-count="5">
+              <details style="border-radius:14px;background:var(--bg);padding:0 20px">
+                <summary style="padding:18px 0;font-weight:600;font-size:16px;display:flex;justify-content:space-between;gap:16px">{{ f.q }}<span aria-hidden="true" style="font-family:'Material Symbols Rounded';color:var(--ink-3)">expand_more</span></summary>
+                <p style="padding:0 0 18px;color:var(--ink-2);line-height:1.6">{{ f.a }}</p>
+              </details>
+            </sc-for>
+          </div>
+        </div>
+      </section>
+
+      <section style="max-width:1200px;margin:0 auto;padding:80px 24px">
+        <div style="padding:clamp(32px,6vw,64px);border-radius:28px;background:#171717;color:#F5F0E6;display:flex;flex-wrap:wrap;gap:28px;align-items:center;justify-content:space-between">
+          <div style="display:flex;flex-direction:column;gap:12px;max-width:560px">
+            <h2 style="font:800 clamp(30px,4vw,46px)/1.05 Manrope,sans-serif;letter-spacing:-.03em">Preparati con metodo. <span style="color:#F47732">Migliora a ogni quiz.</span></h2>
+            <p style="color:#D2CABD;font-size:17px">Accedi con Google e scegli la tua area. Ci vogliono pochi secondi.</p>
+          </div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap">
+            <button onClick="{{ openLogin }}" style="min-height:52px;padding:0 24px;border-radius:12px;border:0;background:#F47732;color:#171717;font-weight:700;font-size:16px;cursor:pointer" style-hover="background:#FF8B4D">Inizia gratis</button>
+            <button onClick="{{ startDemo }}" style="min-height:52px;padding:0 22px;border-radius:12px;border:1px solid #6A635A;background:transparent;color:#F5F0E6;font-weight:600;font-size:16px;cursor:pointer" style-hover="border-color:#F5F0E6">Prova un quiz demo</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </sc-if>
+
+  <sc-if value="{{ vDemo }}">
+    <main style="max-width:860px;margin:0 auto;padding:32px 20px 64px;display:flex;flex-direction:column;gap:20px;animation:blFade .25s ease-out">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <span style="font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--warn)">QUIZ DEMO · DOMANDE DIMOSTRATIVE, NON UFFICIALI</span>
+          <h1 style="font:800 26px Manrope,sans-serif;letter-spacing:-.02em">Domanda {{ demo.n }} di {{ demo.total }}</h1>
+        </div>
+        <button onClick="{{ goHome }}" style="min-height:44px;padding:0 14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-weight:500">Esci dalla demo</button>
+      </div>
+      <div role="progressbar" aria-label="Risposte date" aria-valuemin="0" aria-valuemax="{{ demo.total }}" aria-valuenow="{{ demo.answered }}" style="height:6px;border-radius:6px;background:var(--surface-2);overflow:hidden"><div style="height:100%;width:{{ demo.pct }};background:var(--accent);transition:width .25s"></div></div>
+      <nav aria-label="Domande" style="display:flex;gap:8px;flex-wrap:wrap">
+        <sc-for list="{{ demo.pills }}" as="p" hint-placeholder-count="5">
+          <button onClick="{{ p.onClick }}" aria-label="{{ p.label }}" aria-current="{{ p.current }}" style="width:44px;height:44px;border-radius:10px;cursor:pointer;font-weight:700;background:{{ p.bg }};color:{{ p.color }};border:{{ p.border }}">{{ p.n }}</button>
+        </sc-for>
+      </nav>
+      <section style="padding:clamp(20px,4vw,32px);border-radius:20px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:20px">
+        <span style="font-size:13px;font-weight:600;color:var(--ink-3)">{{ demo.subject }}</span>
+        <h2 id="demo-q" style="font:700 clamp(19px,2.6vw,23px)/1.4 Manrope,sans-serif;text-wrap:pretty">{{ demo.text }}</h2>
+        <div role="radiogroup" aria-labelledby="demo-q" style="display:flex;flex-direction:column;gap:10px">
+          <sc-for list="{{ demo.options }}" as="o" hint-placeholder-count="4">
+            <button role="radio" aria-checked="{{ o.checked }}" onClick="{{ o.onClick }}" style="min-height:56px;padding:12px 16px;border-radius:14px;text-align:left;cursor:pointer;display:flex;gap:14px;align-items:center;background:{{ o.bg }};border:{{ o.border }};transition:background .15s,border-color .15s" style-hover="border-color:var(--ink)">
+              <span style="width:30px;height:30px;flex:none;border-radius:8px;display:grid;place-items:center;font-weight:700;font-size:14px;background:{{ o.letterBg }};color:{{ o.letterColor }}">{{ o.letter }}</span>
+              <span style="font-size:16px;line-height:1.4">{{ o.text }}</span>
+            </button>
+          </sc-for>
+        </div>
+      </section>
+      <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap">
+        <button onClick="{{ demo.prev }}" disabled="{{ demo.noPrev }}" style="min-height:48px;padding:0 18px;border-radius:12px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-weight:600;opacity:{{ demo.prevOpacity }}">Precedente</button>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <sc-if value="{{ demo.hasNext }}" hint-placeholder-val="{{ true }}"><button onClick="{{ demo.next }}" style="min-height:48px;padding:0 20px;border-radius:12px;border:0;background:var(--ink);color:var(--bg);cursor:pointer;font-weight:600">Successiva</button></sc-if>
+          <button onClick="{{ demo.askFinish }}" style="min-height:48px;padding:0 20px;border-radius:12px;border:0;background:var(--accent);color:#171717;cursor:pointer;font-weight:700" style-hover="background:var(--accent-hover)">Concludi la demo</button>
+        </div>
+      </div>
+      <p style="font-size:14px;color:var(--ink-3)">Puoi cambiare le risposte fino alla conclusione. Tastiera: tasti 1–4 per rispondere, frecce per spostarti.</p>
+      <sc-if value="{{ demo.confirm }}">
+        <div role="dialog" aria-modal="true" aria-labelledby="dc-t" style="position:fixed;inset:0;z-index:50;background:var(--overlay);display:grid;place-items:center;padding:20px">
+          <div style="max-width:440px;width:100%;padding:28px;border-radius:20px;background:var(--surface);display:flex;flex-direction:column;gap:14px;animation:blFade .18s ease-out">
+            <h2 id="dc-t" style="font:700 21px Manrope,sans-serif">Concludere la demo?</h2>
+            <p style="color:var(--ink-2);line-height:1.5">{{ demo.missingMsg }}</p>
+            <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">
+              <button onClick="{{ demo.cancelFinish }}" style="min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line);background:transparent;cursor:pointer;font-weight:600">Torna al quiz</button>
+              <button onClick="{{ demo.finish }}" style="min-height:44px;padding:0 16px;border-radius:10px;border:0;background:var(--accent);color:#171717;cursor:pointer;font-weight:700">Concludi</button>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+    </main>
+  </sc-if>
+
+  <sc-if value="{{ vResult }}">
+    <main style="max-width:860px;margin:0 auto;padding:32px 20px 64px;display:flex;flex-direction:column;gap:24px;animation:blFade .25s ease-out">
+      <section style="padding:clamp(24px,5vw,40px);border-radius:24px;background:#171717;color:#F5F0E6;display:flex;flex-direction:column;gap:20px">
+        <span style="font-size:12px;font-weight:700;letter-spacing:.06em;color:#F0C062">RISULTATO DEMO · NON SALVATO</span>
+        <div style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap">
+          <div style="font:800 clamp(56px,10vw,84px)/1 Manrope,sans-serif;letter-spacing:-.04em">{{ res.display }}<span style="font-size:.4em;color:#B8B0A3">/30</span></div>
+          <span style="padding:8px 12px;border-radius:10px;font-weight:700;background:{{ res.badgeBg }};color:#171717">{{ res.outcome }}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px">
+          <div style="padding:14px;border-radius:12px;background:#26231F"><div style="font:800 24px Manrope,sans-serif">{{ res.C }}</div><div style="font-size:13px;color:#D2CABD">Corrette (+1)</div></div>
+          <div style="padding:14px;border-radius:12px;background:#26231F"><div style="font:800 24px Manrope,sans-serif">{{ res.E }}</div><div style="font-size:13px;color:#D2CABD">Errate (−0,5)</div></div>
+          <div style="padding:14px;border-radius:12px;background:#26231F"><div style="font:800 24px Manrope,sans-serif">{{ res.O }}</div><div style="font-size:13px;color:#D2CABD">Omesse (−0,25)</div></div>
+        </div>
+        <p style="font-size:14px;color:#D2CABD;line-height:1.5">Esito calcolato con la soglia BandoLab di 21/30, una regola della piattaforma e non una soglia universale dei concorsi. Con 5 domande il risultato è solo indicativo.</p>
+      </section>
+      <section style="padding:24px;border-radius:20px;background:var(--accent-soft);display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between">
+        <div style="display:flex;flex-direction:column;gap:4px;max-width:480px"><h2 style="font:700 20px Manrope,sans-serif">Vuoi continuare con metodo?</h2><p style="color:var(--ink-2)">Con un account salvi i progressi, ripassi gli errori e accedi a simulazioni e materiali.</p></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button onClick="{{ openLogin }}" style="min-height:48px;padding:0 20px;border-radius:12px;border:0;background:var(--accent);color:#171717;cursor:pointer;font-weight:700">Crea un account gratis</button>
+          <button onClick="{{ startDemo }}" style="min-height:48px;padding:0 18px;border-radius:12px;border:1px solid var(--ink);background:transparent;cursor:pointer;font-weight:600">Ripeti la demo</button>
+        </div>
+      </section>
+      <h2 style="font:700 22px Manrope,sans-serif">Le tue risposte</h2>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <sc-for list="{{ res.items }}" as="it" hint-placeholder-count="5">
+          <article style="padding:20px;border-radius:16px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;gap:8px;align-items:center;font-size:13px;font-weight:700;color:{{ it.color }}"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:20px">{{ it.icon }}</span>{{ it.n }}. {{ it.state }}</div>
+            <p style="font:600 16px/1.45 Manrope,sans-serif">{{ it.text }}</p>
+            <div style="display:grid;gap:4px;font-size:14px"><span><span style="color:var(--ink-3)">La tua risposta: </span>{{ it.yours }}</span><span><span style="color:var(--ink-3)">Risposta corretta: </span><strong>{{ it.correct }}</strong></span></div>
+            <p style="font-size:14px;color:var(--ink-2);line-height:1.55;padding-top:10px;border-top:1px solid var(--line)">{{ it.expl }} <span style="color:var(--ink-3)">Fonte: {{ it.source }}.</span></p>
+          </article>
+        </sc-for>
+      </div>
+    </main>
+  </sc-if>
+
+  <sc-if value="{{ vLogin }}">
+    <main style="min-height:calc(100vh - 70px);display:grid;place-items:center;padding:32px 20px">
+      <div style="max-width:480px;width:100%;padding:clamp(24px,5vw,40px);border-radius:24px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:20px;animation:blFade .25s ease-out">
+        <sc-if value="{{ loginStep1 }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <h1 style="font:800 28px Manrope,sans-serif;letter-spacing:-.02em">Accedi a BandoLab</h1>
+            <p style="color:var(--ink-2);line-height:1.5">Un solo account per quiz, materiali e progressi. Gratuito al lancio.</p>
+          </div>
+          <button onClick="{{ googleStep }}" style="min-height:52px;border-radius:12px;border:1px solid var(--line);background:var(--bg);cursor:pointer;font-weight:600;font-size:16px;display:flex;align-items:center;justify-content:center;gap:12px" style-hover="border-color:var(--ink)">
+            <span aria-hidden="true" style="width:22px;height:22px;border-radius:50%;background:#FFFFFF;border:1px solid var(--line);display:grid;place-items:center;font:700 13px Inter,sans-serif;color:#4285F4">G</span>Continua con Google
+          </button>
+          <p style="display:flex;gap:10px;padding:12px 14px;border-radius:12px;background:var(--info-soft);color:var(--info);font-size:14px;line-height:1.45"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:20px">info</span>Prototipo: l'accesso con Google è simulato. Nessun dato viene inviato a Google e i dati restano in questo browser.</p>
+          <button onClick="{{ goHome }}" style="align-self:center;min-height:44px;padding:0 12px;border:0;background:transparent;cursor:pointer;color:var(--ink-2);text-decoration:underline">Torna alla home</button>
+        </sc-if>
+        <sc-if value="{{ loginStep2 }}">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <span style="font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--info)">ACCOUNT GOOGLE SIMULATO</span>
+            <h1 style="font:800 24px Manrope,sans-serif;letter-spacing:-.02em">Scegli un account di prova</h1>
+            <p style="color:var(--ink-2);font-size:15px">Ogni account ha un ruolo diverso, così puoi testare tutti i flussi.</p>
+          </div>
+          <fieldset style="border:0;padding:0;margin:0;display:flex;flex-direction:column;gap:8px">
+            <legend style="font-size:14px;font-weight:600;margin-bottom:8px">Ambiente</legend>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <sc-for list="{{ envOpts }}" as="e" hint-placeholder-count="2">
+                <button role="radio" aria-checked="{{ e.active }}" onClick="{{ e.onClick }}" style="padding:12px;border-radius:12px;text-align:left;cursor:pointer;background:{{ e.bg }};border:{{ e.border }};display:flex;flex-direction:column;gap:2px"><span style="font-weight:700">{{ e.label }}</span><span style="font-size:12px;color:var(--ink-3)">{{ e.desc }}</span></button>
+              </sc-for>
+            </div>
+          </fieldset>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <sc-for list="{{ personas }}" as="p" hint-placeholder-count="6">
+              <button onClick="{{ p.onClick }}" disabled="{{ p.busy }}" style="padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--bg);cursor:pointer;display:flex;align-items:center;gap:12px;text-align:left" style-hover="border-color:var(--ink)">
+                <span aria-hidden="true" style="width:38px;height:38px;flex:none;border-radius:50%;background:{{ p.color }};color:#171717;display:grid;place-items:center;font-weight:700;font-size:14px">{{ p.initials }}</span>
+                <span style="display:flex;flex-direction:column;min-width:0;flex:1"><span style="font-weight:600">{{ p.name }}</span><span style="font-size:13px;color:var(--ink-3)">{{ p.email }}</span></span>
+                <span style="padding:4px 8px;border-radius:6px;background:var(--surface-2);font-size:12px;font-weight:600;flex:none">{{ p.persona }}</span>
+              </button>
+            </sc-for>
+          </div>
+          <sc-if value="{{ hasLoginError }}"><p role="alert" style="padding:12px;border-radius:10px;background:var(--err-soft);color:var(--err);font-size:14px">{{ loginError }}</p></sc-if>
+          <button onClick="{{ backStep1 }}" style="align-self:center;min-height:44px;padding:0 12px;border:0;background:transparent;cursor:pointer;color:var(--ink-2);text-decoration:underline">Indietro</button>
+        </sc-if>
+      </div>
+    </main>
+  </sc-if>
+
+  <sc-if value="{{ vLegal }}">
+    <main style="max-width:760px;margin:0 auto;padding:48px 20px 80px;display:flex;flex-direction:column;gap:18px">
+      <button onClick="{{ goHome }}" style="align-self:flex-start;min-height:44px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);cursor:pointer">← Home</button>
+      <h1 style="font:800 34px Manrope,sans-serif;letter-spacing:-.02em">{{ legal.title }}</h1>
+      <p style="padding:14px;border-radius:12px;background:var(--warn-soft);color:var(--warn);line-height:1.5">Pagina predisposta. Il testo definitivo, il titolare del trattamento e i recapiti saranno inseriti dopo la revisione legale. Questo contenuto non costituisce consulenza legale.</p>
+      <sc-for list="{{ legal.sections }}" as="s" hint-placeholder-count="3">
+        <section style="display:flex;flex-direction:column;gap:6px"><h2 style="font:700 19px Manrope,sans-serif">{{ s.h }}</h2><p style="color:var(--ink-2);line-height:1.6">{{ s.p }}</p></section>
+      </sc-for>
+    </main>
+  </sc-if>
+
+  <footer style="border-top:1px solid var(--line);background:var(--bg)">
+    <div style="max-width:1200px;margin:0 auto;padding:40px 24px;display:flex;flex-wrap:wrap;gap:24px;justify-content:space-between;align-items:flex-start">
+      <div style="display:flex;flex-direction:column;gap:8px;max-width:360px">
+        <span style="font:800 18px Manrope,sans-serif">Bando<span style="color:var(--accent-text)">Lab</span></span>
+        <p style="font-size:14px;color:var(--ink-3);line-height:1.5">Preparati con metodo. Migliora a ogni quiz. BandoLab non è affiliata ad alcuna amministrazione pubblica.</p>
+      </div>
+      <nav aria-label="Informazioni legali" style="display:flex;gap:6px;flex-wrap:wrap">
+        <button onClick="{{ openPrivacy }}" style="min-height:44px;padding:0 12px;border:0;background:transparent;cursor:pointer;color:var(--ink-2);font-size:14px" style-hover="color:var(--ink)">Privacy</button>
+        <button onClick="{{ openTerms }}" style="min-height:44px;padding:0 12px;border:0;background:transparent;cursor:pointer;color:var(--ink-2);font-size:14px" style-hover="color:var(--ink)">Termini</button>
+        <button onClick="{{ openContacts }}" style="min-height:44px;padding:0 12px;border:0;background:transparent;cursor:pointer;color:var(--ink-2);font-size:14px" style-hover="color:var(--ink)">Contatti</button>
+        <button onClick="{{ toggleTheme }}" aria-label="Cambia tema" style="min-height:44px;padding:0 12px;border:0;background:transparent;cursor:pointer;color:var(--ink-2);font-size:14px;display:flex;align-items:center;gap:6px"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:18px">contrast</span>Tema</button>
+      </nav>
+    </div>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { ready: false, w: typeof window !== 'undefined' ? window.innerWidth : 1200, view: 'home', menu: false, cat: 'real', idx: 0, ans: {}, confirm: false, loginStep: 1, env: 'demo', legal: 'privacy', loginError: '' };
+  componentDidMount() {
+    this.onResize = () => this.setState({ w: window.innerWidth });
+    window.addEventListener('resize', this.onResize);
+    this.onKey = e => {
+      if (this.state.view !== 'demo' || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+      const k = e.key.toLowerCase(); const map = { '1': 0, '2': 1, '3': 2, '4': 3, a: 0, b: 1, c: 2, d: 3 };
+      if (k in map) this.pick(map[k]);
+      if (e.key === 'ArrowRight') this.move(1); if (e.key === 'ArrowLeft') this.move(-1);
+    };
+    window.addEventListener('keydown', this.onKey);
+    const go = () => window.BL ? this.setState({ ready: true }) : setTimeout(go, 30); go();
+  }
+  componentWillUnmount() { window.removeEventListener('resize', this.onResize); window.removeEventListener('keydown', this.onKey); }
+  qs() { const B = window.BL; const bank = B.bank('demo'); return B.DEMO_QUIZ_IDS.map(id => { const q = bank.questions.find(x => x.id === id); return Object.assign({ id }, B.live(q)); }); }
+  pick(i) { const q = this.qs()[this.state.idx]; this.setState(s => ({ ans: Object.assign({}, s.ans, { [q.id]: i }) })); }
+  move(d) { this.setState(s => ({ idx: Math.max(0, Math.min(4, s.idx + d)) })); }
+  view(v, extra) { this.setState(Object.assign({ view: v, menu: false }, extra || {})); window.scrollTo(0, 0); }
+  renderVals() {
+    const B = window.BL; const st = this.state; const wide = st.w >= 900;
+    const S = st.ready ? B.state() : null; const me = st.ready ? B.me() : null;
+    const appHref = me && me.role !== 'user' ? 'BandoLab%20Admin.dc.html' : 'BandoLab%20App.dc.html';
+    const openLogin = () => { if (me) { location.href = appHref; return; } this.view('login', { loginStep: 1 }); };
+    const goSection = e => { if (st.view !== 'home') { e.preventDefault(); const h = e.currentTarget.getAttribute('href'); this.view('home'); setTimeout(() => { const el = document.querySelector(h); if (el) window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 70); }, 60); } this.setState({ menu: false }); };
+    const legalData = {
+      privacy: { title: 'Informativa privacy', sections: [{ h: 'Dati trattati', p: "Nome, indirizzo e-mail forniti dall'accesso con Google, preferenze di studio e risultati dei quiz." }, { h: 'Finalità', p: 'Fornire il servizio, salvare i progressi e migliorare i contenuti. Nessuna profilazione pubblicitaria.' }, { h: 'Diritti', p: "Puoi consultare, esportare ed eliminare i tuoi dati dalle impostazioni del profilo. I recapiti del titolare saranno indicati qui." }] },
+      terms: { title: 'Termini di servizio', sections: [{ h: 'Servizio', p: 'BandoLab offre strumenti di preparazione. I risultati non garantiscono il superamento di alcun concorso.' }, { h: 'Contenuti', p: 'I contenuti sono revisionati, ma vanno sempre confrontati con i bandi e le fonti normative ufficiali.' }, { h: 'Gratuità', p: 'Il servizio è gratuito al lancio. Eventuali modifiche saranno comunicate in anticipo.' }] },
+      contacts: { title: 'Contatti', sections: [{ h: 'Recapiti', p: 'I recapiti ufficiali saranno pubblicati prima del lancio.' }, { h: 'Segnalazioni sui contenuti', p: "Dall'interno dell'app puoi segnalare ogni domanda con il pulsante «Segnala»." }] } };
+    const out = {
+      wide, narrow: !wide, menuOpen: st.menu, showMobileMenu: !wide && st.menu, menuIcon: st.menu ? 'close' : 'menu', toggleMenu: () => this.setState(s => ({ menu: !s.menu })),
+      loggedIn: !!me, loggedOut: !me, appHref, openLogin, goSection,
+      goHome: e => { if (e && e.preventDefault) e.preventDefault(); this.view('home'); },
+      startDemo: () => this.view('demo', { idx: 0, ans: {}, confirm: false }),
+      vHome: st.view === 'home', vDemo: st.view === 'demo' && st.ready, vResult: st.view === 'result' && st.ready, vLogin: st.view === 'login' && st.ready, vLegal: st.view === 'legal',
+      catTabs: [['real', 'Pubblicato'], ['demo', 'Ambiente demo']].map(([id, label]) => ({ label, active: st.cat === id, bg: st.cat === id ? 'var(--surface)' : 'transparent', shadow: st.cat === id ? 'var(--shadow)' : 'none', onClick: () => this.setState({ cat: id }) })),
+      catReal: st.cat === 'real' || !st.ready, catDemo: st.cat === 'demo' && st.ready, showDemoCat: () => this.setState({ cat: 'demo' }),
+      faq: [
+        { q: 'BandoLab è gratuito?', a: 'Sì, è gratuito al lancio. Non ci sono piani a pagamento né funzioni bloccate. Eventuali cambiamenti futuri saranno comunicati in anticipo.' },
+        { q: 'Le domande sono ufficiali?', a: "No. Le domande sono preparate dal team editoriale sulla base delle fonti normative indicate e non sono quesiti ufficiali di alcun concorso. Ogni domanda riporta fonte e data dell'ultima verifica." },
+        { q: 'Cosa significa la soglia di 21/30?', a: 'È una regola adottata da BandoLab per dare un riferimento costante. Ogni concorso ha le proprie regole: consulta sempre il bando.' },
+        { q: "Qual è la differenza tra allenamento e simulazione?", a: "L'allenamento non ha timer e mostra la soluzione dopo ogni risposta. La simulazione ha timer e penalità e mostra la correzione solo dopo la consegna. Le statistiche sono separate." },
+        { q: 'Posso calcolare la probabilità di superare un concorso?', a: 'No. BandoLab mostra i tuoi risultati osservati e indica quando i dati sono insufficienti, ma non stima probabilità di superamento.' }],
+      openPrivacy: () => this.view('legal', { legal: 'privacy' }), openTerms: () => this.view('legal', { legal: 'terms' }), openContacts: () => this.view('legal', { legal: 'contacts' }),
+      legal: legalData[st.legal],
+      toggleTheme: () => { if (!st.ready) return; B.commit(s => { s.theme = s.theme === 'dark' ? 'light' : 'dark'; }); B.applyTheme(); this.forceUpdate(); },
+      loginStep1: st.loginStep === 1, loginStep2: st.loginStep === 2, googleStep: () => this.setState({ loginStep: 2 }), backStep1: () => this.setState({ loginStep: 1 }),
+      hasLoginError: !!st.loginError, loginError: st.loginError
+    };
+    if (!st.ready) return out;
+    const bank = B.bank('demo');
+    out.catalog = bank.taxonomy.areas.map(a => ({ name: a.name, entities: bank.taxonomy.entities.filter(e => e.area === a.id).map(e => ({ name: e.name, profiles: bank.taxonomy.profiles.filter(p => p.entities.includes(e.id)).map(p => ({ name: p.name, subjects: p.subjects.map(s => B.name(bank, 'subjects', s)) })) })) }));
+    out.envOpts = [['demo', 'Demo', 'Dati dimostrativi completi'], ['real', 'Reale', 'Solo contenuti pubblicati']].map(([id, label, desc]) => ({ label, desc, active: st.env === id, bg: st.env === id ? 'var(--accent-soft)' : 'var(--bg)', border: st.env === id ? '2px solid var(--accent)' : '2px solid var(--line)', onClick: () => this.setState({ env: id }) }));
+    const colors = ['#F47732', '#F0C062', '#8FBDF0', '#6FD39A', '#D2CABD', '#FF9B5E'];
+    out.personas = S.users.map((u, i) => ({ name: u.name, email: u.email, persona: u.persona + (u.role !== 'user' ? '' : ''), initials: u.name.split(' ').map(x => x[0]).join(''), color: colors[i % colors.length], busy: false,
+      onClick: () => { const r = B.login(u.id, st.env); if (!r.ok) { this.setState({ loginError: 'Accesso non salvato: ' + r.error + '. Riprova.' }); return; } location.href = u.role === 'user' ? 'BandoLab%20App.dc.html' : 'BandoLab%20Admin.dc.html'; } }));
+    const qs = this.qs(); const q = qs[st.idx]; const answered = qs.filter(x => st.ans[x.id] != null).length;
+    out.demo = { n: st.idx + 1, total: qs.length, answered, pct: (answered / qs.length * 100) + '%', subject: B.name(bank, 'subjects', q.subject) + ' · ' + B.name(bank, 'topics', q.topic), text: q.text,
+      options: q.options.map((t, i) => { const on = st.ans[q.id] === i; return { letter: 'ABCD'[i], text: t, checked: on, onClick: () => this.pick(i), bg: on ? 'var(--accent-soft)' : 'var(--bg)', border: on ? '2px solid var(--accent)' : '2px solid transparent', letterBg: on ? 'var(--accent)' : 'var(--surface-2)', letterColor: on ? '#171717' : 'var(--ink-2)' }; }),
+      pills: qs.map((x, i) => { const cur = i === st.idx, done = st.ans[x.id] != null; return { n: i + 1, current: cur ? 'step' : 'false', label: `Domanda ${i + 1}, ${done ? 'risposta data' : 'senza risposta'}${cur ? ', corrente' : ''}`, onClick: () => this.setState({ idx: i }), bg: done ? 'var(--ink)' : 'var(--surface)', color: done ? 'var(--bg)' : 'var(--ink)', border: cur ? '2px solid var(--accent)' : '1px solid var(--line)' }; }),
+      prev: () => this.move(-1), next: () => this.move(1), noPrev: st.idx === 0, prevOpacity: st.idx === 0 ? .45 : 1, hasNext: st.idx < qs.length - 1,
+      confirm: st.confirm, askFinish: () => this.setState({ confirm: true }), cancelFinish: () => this.setState({ confirm: false }),
+      missingMsg: answered === qs.length ? 'Hai risposto a tutte le domande. Dopo la conclusione vedrai correzioni e spiegazioni.' : `Restano ${qs.length - answered} domande senza risposta: verranno considerate omesse (−0,25 ciascuna).`,
+      finish: () => this.view('result', { confirm: false }) };
+    if (st.view === 'result') {
+      const items = qs.map(x => { const a = st.ans[x.id]; return { qid: x.id, answer: a == null ? null : a, correct: a === x.correct }; });
+      const r = B.scoreItems(items);
+      out.res = { display: r.display, C: r.C, E: r.E, O: r.O, outcome: r.passed ? 'Sopra la soglia BandoLab' : 'Sotto la soglia BandoLab', badgeBg: r.passed ? '#6FD39A' : '#F0C062',
+        items: qs.map((x, i) => { const a = st.ans[x.id]; const st2 = a == null ? 'omitted' : a === x.correct ? 'ok' : 'ko'; return { n: i + 1, text: x.text, yours: a == null ? 'Nessuna risposta' : x.options[a], correct: x.options[x.correct], expl: x.explanation, source: x.source, state: { ok: 'Corretta', ko: 'Errata', omitted: 'Omessa' }[st2], icon: { ok: 'check_circle', ko: 'cancel', omitted: 'remove_circle' }[st2], color: { ok: 'var(--ok)', ko: 'var(--err)', omitted: 'var(--ink-3)' }[st2] }; }) };
+    }
+    return out;
+  }
+}
+</script>
+</body>
+</html>
