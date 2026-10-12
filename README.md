@@ -1,41 +1,53 @@
-# BandoLab — Database e API
+# BandoLab — prototipo interattivo
 
-Schema per PostgreSQL / Supabase in `schema.sql`. Corrisponde ai modelli di `bandolab-core.js`.
+Prototipo ad alta fedeltà. **Non è pronto per la produzione.** Tutti i dati vivono nel `localStorage` del browser.
 
-## Principi
-- **Ambienti separati**: ogni tabella di contenuto ha la colonna `env` (`demo` | `real`) nella chiave primaria. I dati demo non possono finire nel reale.
-- **ID stabili**: le associazioni usano ID (`s-amm`, `q01`…), mai i nomi visualizzati.
-- **Versioni**: `questions` punta a `current_version`; le modifiche creano righe nuove in `question_versions`. `attempt_items` conserva la versione usata.
-- **Nessuna eliminazione automatica**: sospensione (`suspended`) e consolidamento (`merged_into`) invece di `DELETE`.
-- **Permessi lato server**: RLS sulle letture, funzioni RPC `security definer` per le transizioni.
-- **Punteggio**: `compute_score()` replica `BL.computeScore` (stessa formula, soglia 21 sul valore non arrotondato).
+## Come esplorarlo
+1. `BandoLab Landing.dc.html` — landing, quiz demo senza account, pagine legali predisposte.
+2. «Inizia gratis» → accesso Google **simulato** → scegli ambiente (Demo / Reale) e account di prova:
+   - Giulia Neri — nuovo utente (onboarding, dashboard vuota)
+   - Marco Esposito — utente abituale (3 settimane di dati sintetici)
+   - Sara Conti / Luca Ferri — editor · Paolo Ricci — revisore · Elena Marino — amministratore
+3. `BandoLab App.dc.html` — area utente. `BandoLab Admin.dc.html` — area editoriale (il ruolo si cambia dall'intestazione).
+4. `BandoLab Test.dc.html` — test automatici (punteggio + 25 scenari). Ripristinano i dati al termine.
+5. Profilo → Prototipo: simula errore di salvataggio, ripristina dati demo, cambia ambiente, stato integrazioni.
 
-## Funzioni RPC da implementare
-| Funzione | Ruolo | Sostituisce nel core |
-|---|---|---|
-| `start_session(cfg)` | utente | `BL.startSession` — sceglie le domande pubblicate, fissa le versioni e la `deadline` |
-| `save_session(id, answers, current)` | utente | `BL.saveSession` — rifiuta salvataggi dopo la `deadline` |
-| `finish_session(id, reason)` | utente | `BL.finishSession` — calcola il punteggio con `compute_score`, assegna XP, idempotente |
-| `log_interruption(id, type)` | utente | `BL.logInterruption` |
-| `abandon_session(id)` | utente | `BL.abandonSession` |
-| `complete_material(mid)` | utente | `BL.completeMaterial` |
-| `create_report(qid, v, reason, text)` | utente | `BL.report` |
-| `create_question()` | editor, admin | `BL.createQuestion` |
-| `update_draft(qid, fields)` | editor, admin | `BL.updateDraft` |
-| `transition(qid, action, note)` | per azione | `BL.transition` — submit, approve, changes, reject, publish, newVersion, suspend, unsuspend, verify, reopen |
-| `material_transition(mid, action)` | per azione | `BL.materialTransition` |
-| `set_quiz_status(zid, status)` | reviewer, admin | pubblicazione quiz con i controlli di `BL.quizChecks` |
-| `decide_duplicate(a, b, decision, note)` | reviewer, admin | `BL.decideDuplicate` |
-| `tax_edit(kind, id, patch)` | admin | `BL.taxEdit` |
-| `set_role(uid, role)` | admin | `BL.setRole` |
-| `export_my_data()` | utente | esportazione dati (GDPR) |
-| `request_account_deletion()` | utente | eliminazione account (GDPR) |
+## Architettura
+- `bandolab-core.js` — logica condivisa, indipendente dalla UI:
+  punteggio (`computeScore`, unica funzione), modelli dati con ID stabili, tassonomia, banca domande con versioni,
+  store con commit/rollback, sessioni (timer basato su scadenza), statistiche, gamification, ricerca fuzzy,
+  permessi per ruolo, workflow editoriale, segnalazioni, duplicati, controlli di pubblicazione quiz.
+- Quattro Design Component (`.dc.html`): Landing, App, Admin, Test. Solo presentazione e stato di interfaccia.
+- Ambienti `demo` e `real` separati in `state.data` e nei record utente (`uid@env`).
 
-Ogni RPC che modifica contenuti scrive una riga in `audit_log`.
+## Stato delle funzioni
+**Implementate (nel browser):** punteggio e test; quiz demo; allenamento e simulazione; timer con consegna automatica e
+ripresa dopo ricarica; revisione risposte; biblioteca, lettore con segnalibri e avanzamento; percorsi (salta, riordina,
+riprendi); progressi con filtri e soglie di affidabilità; XP/livelli/badge con anti-ripetizione; ricerca; notifiche in-app;
+preferenze e tema chiaro/scuro persistenti; onboarding saltabile; workflow Bozza → Revisione → Approvato → Pubblicato;
+versionamento; segnalazioni e sospensione; verifiche normative; duplicati; tassonomia; ruoli; cronologia.
 
-## Passi per il collegamento
-1. Crea un progetto Supabase, esegui `schema.sql`.
-2. Attiva il provider Google in Authentication (client ID e secret da Google Cloud).
-3. Popola la tassonomia dell'ambiente `real` solo con contenuti revisionati.
-4. In `bandolab-core.js` sostituisci `BL.commit` e le funzioni elencate con chiamate a `supabase.rpc(...)`.
-5. Aggiungi test end-to-end sui flussi elencati in `BandoLab Test.dc.html`.
+**Simulate:** accesso Google, persistenza, permessi (solo client), protezione del timer, esportazione (scarica i dati locali),
+eliminazione account (dati locali), notifiche.
+
+**Predisposte non collegate:** lettore/download PDF (nessun file caricato).
+
+**Da sviluppare (richiedono backend/credenziali):** OAuth Google reale, database, API con autorizzazione server-side,
+sessioni d'esame validate dal server, audit log immutabile, export/cancellazione GDPR reali, storage PDF.
+
+## Database
+Schema PostgreSQL/Supabase e funzioni API previste: vedi `db/schema.sql` e `db/README.md`. Non ancora collegato.
+
+## Limiti noti
+- Dati e permessi manipolabili dal browser: nessuna sicurezza reale.
+- Il timer resiste alla ricarica ma non a modifiche di `localStorage` o dell'orologio di sistema.
+- Domande e materiali demo sono sintetici, non ufficiali e non verificati.
+- Accessibilità progettata (ruoli ARIA, focus visibile, tastiera nel quiz, riduzione animazioni) ma non certificata WCAG 2.2 AA.
+- TypeScript non utilizzato: l'ambiente esegue JavaScript nel browser senza build. I modelli sono documentati nel core.
+
+## Roadmap verso una prima versione reale
+1. Repository React + TypeScript (Vite), tipi derivati dai modelli del core; porting di `bandolab-core` in moduli testati (Vitest).
+2. Backend (es. Postgres + API) con OAuth Google, ruoli imposti lato server, RLS/policy per ambiente.
+3. Sessioni d'esame con scadenza firmata dal server e registrazione delle interruzioni.
+4. Workflow editoriale e audit log lato server; storage PDF.
+5. Popolamento del catalogo reale solo con contenuti revisionati; test end-to-end e audit di accessibilità.

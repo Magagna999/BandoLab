@@ -383,7 +383,7 @@ button:disabled{cursor:not-allowed}
 <script type="text/x-dc" data-dc-script>
 class Component extends DCLogic {
   state = { ready: false, w: window.innerWidth, sec: 'overview', qid: null, form: null, dirty: false, errors: {}, note: '', toast: null, ql: { q: '', status: 'all', subject: 'all' }, rTab: 'open', taxKind: 'subjects', taxEdits: {}, taxNew: '', taxParent: '', hq: '', suspendAsk: null };
-  componentDidMount() { this.onResize = () => this.setState({ w: window.innerWidth }); window.addEventListener('resize', this.onResize); const go = () => window.BL ? (window.BL.load(), this.setState({ ready: true })) : setTimeout(go, 30); go(); }
+  componentDidMount() { this.onResize = () => this.setState({ w: window.innerWidth }); window.addEventListener('resize', this.onResize); const go = () => window.BL ? (this.B = window.BL, window.BL.load(), this.setState({ ready: true })) : setTimeout(go, 30); go(); }
   componentWillUnmount() { window.removeEventListener('resize', this.onResize); clearTimeout(this.tt); }
   toast(text, kind) { clearTimeout(this.tt); this.setState({ toast: { text, kind: kind || 'ok' } }); this.tt = setTimeout(() => this.setState({ toast: null }), kind === 'err' ? 8000 : 4500); }
   done(r, ok) { if (!r.ok) { this.toast(r.why || ('Non salvato: ' + r.error), 'err'); if (r.errors) this.setState({ errors: r.errors }); return false; } if (ok) this.toast(ok); this.forceUpdate(); return true; }
