@@ -531,6 +531,7 @@ BL.materialTransition = (actor, mid, action) => {
   const m = BL.bank('demo').materials.find(x => x.id === mid); const need = { submit: 'm.edit', approve: 'm.review', publish: 'm.review', unpublish: 'm.review' }[action];
   const c = BL.can(actor, need, ['approve'].includes(action) ? m : null); if (!c.ok) return c;
   const ok = { submit: ['draft'], approve: ['review'], publish: ['approved'], unpublish: ['published'] }[action]; if (!ok.includes(m.status)) return { ok: false, why: 'Transizione non consentita dallo stato attuale.' };
+  if (action === 'submit' || action === 'publish') { const e = BL.validateMaterial(m, !!BL.getFile(m.id) || !!m.demo && m.format !== 'scheda' && !m.createdAt); if (Object.keys(e).length) return { ok: false, why: 'Completa i campi obbligatori del materiale: ' + Object.values(e).join(' '), errors: e }; }
   return BL.commit(s => { m.status = { submit: 'review', approve: 'approved', publish: 'published', unpublish: 'draft' }[action]; audit(s, actor, mid, 1, 'Materiale: ' + { submit: 'invio in revisione', approve: 'approvazione', publish: 'pubblicazione', unpublish: 'ritiro dalla pubblicazione' }[action]); });
 };
 BL.report = (qid, v, reason, text) => { const s = BL.state(); return BL.commit(() => { s.reports.unshift({ id: 'r' + Date.now(), qid, v, by: s.auth.uid, reason, text, at: Date.now(), status: 'open', priority: 'media', assignee: null, log: [] }); BL.notify(BL.rec(), 'content', 'Segnalazione inviata', 'La segnalazione è in coda di revisione. Riceverai un avviso quando verrà gestita.'); }); };
@@ -563,6 +564,57 @@ BL.taxEdit = (actor, kind, id, patch) => { const c = BL.can(actor, 'tax.edit'); 
 BL.setRole = (actor, uid, role) => { const c = BL.can(actor, 'users.edit'); if (!c.ok) return c; const s = BL.state(); if (uid === actor.id && role !== 'admin' && s.users.filter(u => u.role === 'admin').length <= 1) return { ok: false, why: "Non puoi rimuovere il ruolo dall'unico amministratore." }; return BL.commit(st => { st.users.find(u => u.id === uid).role = role; audit(st, actor, uid, null, 'Ruolo modificato: ' + BL.ROLES[role]); }); };
 BL.userName = uid => { const u = BL.state().users.find(x => x.id === uid); return u ? u.name : uid || '—'; };
 
+/* ---------- MATERIALI: CREAZIONE, IMPORTAZIONE, FILE ---------- */
+const FILES_KEY = 'bandolab.files.v1';
+BL.MAX_FILE = 3 * 1024 * 1024;
+const readFiles = () => { try { return JSON.parse(localStorage.getItem(FILES_KEY) || '{}'); } catch (e) { return {}; } };
+BL.getFile = mid => readFiles()[mid] || null;
+BL.storeFile = (mid, file) => { const all = readFiles(); all[mid] = file; try { localStorage.setItem(FILES_KEY, JSON.stringify(all)); return { ok: true }; } catch (e) { return { ok: false, error: 'Spazio del browser insufficiente per salvare il file (limite del prototipo).' }; } };
+BL.removeFile = mid => { const all = readFiles(); delete all[mid]; localStorage.setItem(FILES_KEY, JSON.stringify(all)); };
+BL.validateMaterial = (m, hasFile) => {
+  const e = {};
+  if (!m.title || m.title.trim().length < 4) e.title = 'Inserisci un titolo (almeno 4 caratteri).';
+  if (!m.subject) e.subject = 'Seleziona la materia.'; if (!m.topic) e.topic = "Seleziona l'argomento.";
+  if (!m.source || !m.source.trim()) e.source = 'Indica la fonte.';
+  if (!m.lastVerified) e.lastVerified = "Indica la data dell'ultima verifica.";
+  if (!m.nextReview) e.nextReview = 'Indica la data della prossima revisione.'; else if (m.lastVerified && m.nextReview <= m.lastVerified) e.nextReview = "Deve essere successiva all'ultima verifica.";
+  if (m.format === 'scheda' && !m.sections.some(s => s.title.trim() && s.body.trim().length >= 20)) e.sections = 'Aggiungi almeno una sezione con titolo e testo (20 caratteri).';
+  if (m.format !== 'scheda' && !hasFile) e.file = 'Carica il file PDF.';
+  return e;
+};
+BL.createMaterial = actor => { const c = BL.can(actor, 'm.edit'); if (!c.ok) return c; const id = 'm' + Date.now().toString(36);
+  return BL.commit(s => { BL.bank('demo').materials.unshift({ id, title: '', subject: '', topic: '', format: 'scheda', minutes: 5, source: '', keyConcepts: [], related: [], sections: [], status: 'draft', demo: true, author: actor.id, lastVerified: todayISO(), nextReview: addDays(todayISO(), 365), profiles: [], entities: [], createdAt: Date.now() }); audit(s, actor, id, 1, 'Materiale: creazione bozza'); return { id }; }); };
+BL.updateMaterial = (actor, mid, fields) => {
+  const c = BL.can(actor, 'm.edit'); if (!c.ok) return c; const bank = BL.bank('demo'); const m = bank.materials.find(x => x.id === mid);
+  if (!m) return { ok: false, why: 'Materiale non trovato.' }; if (m.status !== 'draft') return { ok: false, why: 'Solo i materiali in bozza sono modificabili. Ritira il materiale per modificarlo.' };
+  return BL.commit(() => { Object.assign(m, fields); m.sections = (m.sections || []).map((s, i) => ({ id: s.id || mid + '-s' + (i + 1) + '-' + Date.now().toString(36), title: s.title, body: s.body })); Object.assign(m, derive(bank.taxonomy, m.subject)); m.updatedAt = Date.now(); m.updatedBy = actor.id; });
+};
+/* Testo strutturato: "# Titolo", "## Sezione", elenco "- " sotto "## Concetti chiave" */
+BL.parseText = text => {
+  const out = { title: '', sections: [], keyConcepts: [] }; let cur = null, inKey = false;
+  String(text || '').replace(/\r/g, '').split('\n').forEach(raw => { const line = raw.trim();
+    if (/^#\s+/.test(line) && !/^##/.test(line)) { if (!out.title) out.title = line.replace(/^#\s+/, ''); return; }
+    if (/^##+\s+/.test(line)) { const t = line.replace(/^##+\s+/, ''); inKey = /^concetti chiave/i.test(t); if (!inKey) { cur = { title: t, body: '' }; out.sections.push(cur); } return; }
+    if (inKey) { if (/^[-*•]\s+/.test(line)) out.keyConcepts.push(line.replace(/^[-*•]\s+/, '')); return; }
+    if (!line) { if (cur && cur.body && !cur.body.endsWith('\n\n')) cur.body += '\n\n'; return; }
+    if (!cur) { cur = { title: 'Introduzione', body: '' }; out.sections.push(cur); }
+    cur.body += (cur.body && !cur.body.endsWith('\n') ? ' ' : '') + line; });
+  out.sections.forEach(s => { s.body = s.body.trim(); });
+  out.sections = out.sections.filter(s => s.title || s.body);
+  return out;
+};
+const loadJSZip = () => window.JSZip ? Promise.resolve(window.JSZip) : new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js'; sc.onload = () => res(window.JSZip); sc.onerror = () => rej(new Error('Impossibile caricare il lettore DOCX (connessione assente?).')); document.head.appendChild(sc); });
+/* DOCX: gli stili Titolo 1 / Heading 1 diventano il titolo, Titolo 2 / Heading 2 le sezioni */
+BL.parseDocx = async buf => {
+  const JSZip = await loadJSZip(); const zip = await JSZip.loadAsync(buf); const f = zip.file('word/document.xml'); if (!f) throw new Error('File DOCX non valido.');
+  const doc = new DOMParser().parseFromString(await f.async('string'), 'application/xml'); const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+  const lines = [...doc.getElementsByTagNameNS(W, 'p')].map(p => { const st = p.getElementsByTagNameNS(W, 'pStyle')[0]; const style = st ? (st.getAttributeNS(W, 'val') || st.getAttribute('w:val') || '') : ''; const isList = p.getElementsByTagNameNS(W, 'numPr').length > 0;
+    const txt = [...p.getElementsByTagNameNS(W, 't')].map(t => t.textContent).join('');
+    if (/^(heading|titolo)1$|^title$/i.test(style.replace(/\s/g, ''))) return '# ' + txt; if (/^(heading|titolo)[2-6]$/i.test(style.replace(/\s/g, ''))) return '## ' + txt; return (isList ? '- ' : '') + txt; });
+  return BL.parseText(lines.join('\n'));
+};
+BL.readFileAsDataURL = file => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(new Error('Lettura del file non riuscita.')); r.readAsDataURL(file); });
+
 /* ---------- INTEGRAZIONI ---------- */
 BL.INTEGRATIONS = [
   { name: 'Calcolo del punteggio e test', status: 'Implementato', note: 'Funzione unica computeScore con 10 test eseguibili.' },
@@ -574,7 +626,8 @@ BL.INTEGRATIONS = [
   { name: 'Esportazione dati', status: 'Simulato', note: 'Scarica i dati locali del prototipo; non esiste una richiesta al server.' },
   { name: 'Eliminazione account', status: 'Simulato', note: 'Elimina solo i dati locali di questo browser.' },
   { name: 'Notifiche in-app', status: 'Simulato', note: 'Generate da eventi locali; nessun servizio persistente.' },
-  { name: 'Lettore PDF', status: 'Predisposto', note: 'Nessun file PDF caricato nel prototipo.' },
+  { name: 'Importazione materiali (testo, DOCX, PDF)', status: 'Implementato', note: 'Analisi nel browser. I PDF (max 3 MB) sono salvati in locale; in produzione andranno su uno storage.' },
+  { name: 'Lettore PDF', status: 'Implementato', note: 'Visualizza e scarica i PDF caricati. I PDF demo preesistenti non hanno file.' },
   { name: 'Database, API, audit server-side', status: 'Da sviluppare', note: 'Interfacce dati pronte per essere sostituite da servizi remoti.' }];
 
 window.BL = BL;

@@ -470,7 +470,13 @@ button,input,select,textarea{font:inherit;color:inherit}
                 <p style="font-size:13px;color:var(--ink-3)">Fonte: {{ rd.source }} · Ultima verifica: {{ rd.lastVerified }} · Prossima revisione: {{ rd.nextReview }}</p>
                 <sc-if value="{{ rd.demo }}"><p style="font-size:13px;padding:8px 12px;border-radius:8px;background:var(--warn-soft);color:var(--warn);align-self:flex-start">Contenuto dimostrativo: non ufficiale e non verificato.</p></sc-if>
               </header>
-              <sc-if value="{{ rd.isPdf }}">
+              <sc-if value="{{ rd.hasFile }}">
+                <div style="display:flex;flex-direction:column;gap:12px">
+                  <sc-if value="{{ rd.isPdfView }}"><iframe src="{{ rd.fileData }}" title="{{ rd.title }}" style="width:100%;height:min(78vh,900px);border:1px solid var(--line);border-radius:14px;background:var(--surface)"></iframe></sc-if>
+                  <a href="{{ rd.fileData }}" download="{{ rd.fileName }}" style="align-self:flex-start;min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--ink);display:flex;gap:6px;align-items:center;text-decoration:none;color:var(--ink);font-weight:600"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:18px">download</span>Scarica {{ rd.fileName }}</a>
+                </div>
+              </sc-if>
+              <sc-if value="{{ rd.isPdfNoFile }}">
                 <div style="padding:40px 24px;border-radius:18px;background:repeating-linear-gradient(45deg,var(--surface),var(--surface) 12px,var(--surface-2) 12px,var(--surface-2) 24px);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;min-height:320px;justify-content:center">
                   <span style="font:600 13px ui-monospace,Menlo,monospace;color:var(--ink-2)">{{ rd.pdfLabel }}</span>
                   <p style="max-width:440px;color:var(--ink-2);line-height:1.5">{{ rd.pdfMsg }}</p>
@@ -497,7 +503,7 @@ button,input,select,textarea{font:inherit;color:inherit}
                       <h3 style="font:700 24px/1.25 Manrope,sans-serif">{{ rd.secTitle }}</h3>
                       <button onClick="{{ rd.toggleBookmark }}" aria-pressed="{{ rd.bookmarked }}" aria-label="{{ rd.bookmarkLabel }}" title="{{ rd.bookmarkLabel }}" style="width:44px;height:44px;flex:none;border-radius:10px;border:1px solid var(--line);background:var(--surface);cursor:pointer;display:grid;place-items:center"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:22px;color:var(--accent-text);font-variation-settings:{{ rd.bookmarkFill }}">bookmark</span></button>
                     </div>
-                    <p style="font-size:18px;line-height:1.75;color:var(--ink);text-wrap:pretty">{{ rd.secBody }}</p>
+                    <p style="font-size:18px;line-height:1.75;color:var(--ink);text-wrap:pretty;white-space:pre-line">{{ rd.secBody }}</p>
                     <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;padding-top:16px;border-top:1px solid var(--line)">
                       <button onClick="{{ rd.prev }}" disabled="{{ rd.noPrev }}" style="min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-weight:600;opacity:{{ rd.prevOpacity }}">← Sezione precedente</button>
                       <sc-if value="{{ rd.hasNext }}"><button onClick="{{ rd.next }}" style="min-height:44px;padding:0 16px;border-radius:10px;border:0;background:var(--ink);color:var(--bg);cursor:pointer;font-weight:600">Sezione successiva →</button></sc-if>
@@ -1005,7 +1011,7 @@ class Component extends DCLogic {
         const isBm = sec && bm.includes(sec.id); const tpool = B.pool(bank, { topics: [m.topic] }).length; const done = !!rec.completed[m.id];
         const readPct = m.sections.length ? r.sections.length / m.sections.length : 0;
         out.rd = { back: () => this.go('library'), title: m.title, meta: `${B.FORMAT[m.format]} · ${B.name(bank, 'subjects', m.subject)} · ${B.name(bank, 'topics', m.topic)}`, source: m.source, lastVerified: B.fmtDate(m.lastVerified), nextReview: B.fmtDate(m.nextReview), demo: !!m.demo,
-          isPdf: m.format !== 'scheda', isScheda: m.format === 'scheda', pdfLabel: m.format === 'pdf-view' ? '[ visualizzatore PDF ]' : '[ file PDF scaricabile ]', pdfMsg: 'Nel prototipo non è stato caricato alcun file PDF. In produzione il documento approvato sarà mostrato qui, con avanzamento di lettura.',
+          isPdf: m.format !== 'scheda', isScheda: m.format === 'scheda', hasFile: m.format !== 'scheda' && !!B.getFile(m.id), isPdfNoFile: m.format !== 'scheda' && !B.getFile(m.id), isPdfView: m.format === 'pdf-view', fileData: (B.getFile(m.id) || {}).data || '', fileName: (B.getFile(m.id) || {}).name || '', pdfLabel: m.format === 'pdf-view' ? '[ visualizzatore PDF ]' : '[ file PDF scaricabile ]', pdfMsg: 'Nel prototipo non è stato caricato alcun file PDF. In produzione il documento approvato sarà mostrato qui, con avanzamento di lettura.',
           readPct: (readPct * 100) + '%', readNow: Math.round(readPct * 100), readLabel: `${r.sections.length} di ${m.sections.length} sezioni lette · una sezione risulta letta quando la apri`,
           cols: isMobile ? '1fr' : '240px minmax(0,1fr)', tocPos: isMobile ? 'static' : 'sticky', isMobile, tocOpen: st.tocOpen, showToc: !isMobile || st.tocOpen, toggleToc: () => this.setState(s => ({ tocOpen: !s.tocOpen })), secN: idx + 1, secTotal: m.sections.length,
           toc: m.sections.map((s, i) => { const rd = r.sections.includes(s.id); return { title: s.title, current: i === idx ? 'true' : 'false', bg: i === idx ? 'var(--surface-2)' : 'transparent', weight: i === idx ? 700 : 500, icon: rd ? 'check_circle' : 'radio_button_unchecked', iconColor: rd ? 'var(--ok)' : 'var(--ink-3)', bookmarked: bm.includes(s.id), onClick: () => setSec(i) }; }),

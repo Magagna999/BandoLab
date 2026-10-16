@@ -35,6 +35,7 @@ button:disabled{cursor:not-allowed}
         <span aria-hidden="true" style="width:56px;height:56px;border-radius:16px;background:var(--err-soft);color:var(--err);display:grid;place-items:center;font-family:'Material Symbols Rounded';font-size:28px">block</span>
         <h1 style="font:800 24px Manrope,sans-serif">Permesso insufficiente</h1>
         <p style="color:var(--ink-2);line-height:1.5">{{ deniedMsg }}</p>
+        <div style="display:flex;flex-direction:column;gap:8px;width:100%"><span style="font-size:13px;font-weight:600;color:var(--ink-3)">Accesso rapido con un account demo (simulato)</span><sc-for list="{{ quickLogins }}" as="q" hint-placeholder-count="4"><button onClick="{{ q.onClick }}" style="min-height:46px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:var(--bg);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;font-weight:600" style-hover="border-color:var(--ink)"><span>{{ q.name }}</span><span style="padding:3px 8px;border-radius:6px;background:{{ q.bg }};color:{{ q.color }};font-size:12px;font-weight:700">{{ q.role }}</span></button></sc-for></div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center"><a href="BandoLab%20Landing.dc.html" style="min-height:46px;padding:0 18px;border-radius:12px;background:var(--accent);color:#171717;display:flex;align-items:center;text-decoration:none;font-weight:700">Accedi con un ruolo editoriale</a><sc-if value="{{ deniedUser }}"><a href="BandoLab%20App.dc.html" style="min-height:46px;padding:0 18px;border-radius:12px;border:1px solid var(--line);display:flex;align-items:center;text-decoration:none;color:var(--ink);font-weight:600">Torna all'app</a></sc-if></div>
       </div>
     </main>
@@ -67,10 +68,24 @@ button:disabled{cursor:not-allowed}
             <h1 style="font:800 20px Manrope,sans-serif;letter-spacing:-.02em">{{ title }}</h1>
             <span style="padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;letter-spacing:.05em;background:var(--warn-soft);color:var(--warn)">DEMO</span>
             <div style="margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-              <sc-if value="{{ narrow }}"><label style="display:flex;align-items:center;gap:6px"><span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Sezione</span><select value="{{ section }}" onChange="{{ onSection }}" style="min-height:42px;padding:0 10px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-weight:600"><sc-for list="{{ nav }}" as="n" hint-placeholder-count="10"><option value="{{ n.id }}">{{ n.label }}</option></sc-for></select></label></sc-if>
+              
               <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-2)"><span>Simula ruolo</span><select value="{{ meId }}" onChange="{{ onRole }}" style="min-height:42px;padding:0 10px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-weight:600;color:var(--ink)"><sc-for list="{{ staff }}" as="u" hint-placeholder-count="4"><option value="{{ u.id }}">{{ u.label }}</option></sc-for></select></label>
               <button onClick="{{ toggleTheme }}" aria-label="Cambia tema" style="width:42px;height:42px;border-radius:10px;border:1px solid var(--line);background:var(--surface);cursor:pointer;display:grid;place-items:center"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:20px">contrast</span></button>
             </div>
+          </div>
+          <sc-if value="{{ narrow }}">
+            <nav aria-label="Sezioni amministrative" style="display:flex;gap:6px;overflow-x:auto;padding:0 clamp(14px,3vw,28px) 10px;scrollbar-width:thin">
+              <sc-for list="{{ nav }}" as="n" hint-placeholder-count="10">
+                <button onClick="{{ n.onClick }}" aria-current="{{ n.current }}" style="flex:none;display:flex;align-items:center;gap:6px;min-height:40px;padding:0 12px;border-radius:999px;border:1px solid {{ n.chipBorder }};background:{{ n.chipBg }};color:{{ n.chipColor }};cursor:pointer;font-weight:600;font-size:13px;white-space:nowrap">
+                  <span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:18px">{{ n.icon }}</span>{{ n.label }}
+                  <sc-if value="{{ n.hasCount }}"><span style="min-width:20px;height:18px;padding:0 5px;border-radius:9px;background:{{ n.countBg }};color:{{ n.countColor }};font-size:11px;font-weight:700;display:grid;place-items:center">{{ n.count }}</span></sc-if>
+                </button>
+              </sc-for>
+              <a href="BandoLab%20App.dc.html" style="flex:none;display:flex;align-items:center;gap:6px;min-height:40px;padding:0 12px;border-radius:999px;border:1px dashed var(--line);color:var(--ink-2);text-decoration:none;font-weight:600;font-size:13px;white-space:nowrap"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:18px">open_in_new</span>App utente</a>
+              <button onClick="{{ logout }}" style="flex:none;display:flex;align-items:center;gap:6px;min-height:40px;padding:0 12px;border-radius:999px;border:1px dashed var(--line);background:transparent;color:var(--ink-2);cursor:pointer;font-weight:600;font-size:13px;white-space:nowrap"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:18px">logout</span>Esci</button>
+            </nav>
+          </sc-if>
+          <div style="display:none">
           </div>
           <p style="padding:0 clamp(14px,3vw,28px) 10px;font-size:12px;color:var(--ink-3)">I permessi sono verificati solo in questo browser. In produzione ogni azione dovrà essere autorizzata dal backend.</p>
         </header>
@@ -260,13 +275,92 @@ button:disabled{cursor:not-allowed}
             </div>
           </sc-if>
 
+          <sc-if value="{{ sMatEditor }}">
+            <div style="display:flex;flex-direction:column;gap:16px;animation:blFade .2s ease-out">
+              <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                <button onClick="{{ me2.back }}" style="min-height:40px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);cursor:pointer;display:flex;gap:6px;align-items:center"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:18px">arrow_back</span>Materiali</button>
+                <span style="font:700 14px ui-monospace,Menlo,monospace">{{ me2.id }}</span>
+                <span style="padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700;background:{{ me2.sBg }};color:{{ me2.sColor }}">{{ me2.status }}</span>
+                <sc-if value="{{ me2.dirty }}"><span style="font-size:13px;color:var(--warn)">Modifiche non salvate</span></sc-if>
+              </div>
+              <sc-if value="{{ me2.readOnly }}"><p style="font-size:14px;padding:12px 14px;border-radius:12px;background:var(--bg);color:var(--ink-2)">{{ me2.readOnlyMsg }}</p></sc-if>
+              <sc-if value="{{ me2.hasErrors }}"><div role="alert" style="padding:12px 14px;border-radius:12px;background:var(--err-soft);color:var(--err);font-size:14px">Completa i campi evidenziati prima dell'invio in revisione.</div></sc-if>
+              <sc-if value="{{ me2.editable }}">
+                <section style="padding:20px;border-radius:18px;background:var(--accent-soft);display:flex;flex-direction:column;gap:12px">
+                  <div style="display:flex;gap:10px;align-items:center"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:24px;color:var(--accent-text)">upload_file</span><h2 style="font:700 18px Manrope,sans-serif">Importa da file</h2></div>
+                  <p style="font-size:14px;color:var(--ink-2);line-height:1.55">Formati accettati: <strong>.docx</strong> (gli stili Titolo 1 e Titolo 2 diventano titolo e sezioni), <strong>.txt / .md</strong> (righe «# Titolo», «## Sezione», elenco «- » sotto «## Concetti chiave») e <strong>.pdf</strong> fino a 3 MB, salvato come PDF consultabile. L'importazione riempie la bozza: controlla il risultato prima di salvare.</p>
+                  <label style="position:relative;align-self:flex-start;display:flex;gap:10px;align-items:center" style-focus-within="outline:2px solid var(--accent);outline-offset:2px;border-radius:10px">
+                    <span style="min-height:44px;padding:0 16px;border-radius:10px;background:var(--ink);color:var(--bg);font-weight:700;display:flex;align-items:center;gap:6px;cursor:pointer"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:20px">folder_open</span>Scegli un file da importare</span>
+                    <input type="file" accept=".docx,.txt,.md,.pdf,application/pdf" onChange="{{ me2.onImport }}" aria-label="Scegli un file da importare" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer">
+                  </label>
+                  <sc-if value="{{ me2.importing }}"><p role="status" style="font-size:14px">Analisi del file in corso…</p></sc-if>
+                  <sc-if value="{{ me2.hasImportMsg }}"><p role="status" style="font-size:14px;padding:10px 12px;border-radius:10px;background:{{ me2.importBg }};color:{{ me2.importColor }}">{{ me2.importMsg }}</p></sc-if>
+                  <details style="font-size:13px;color:var(--ink-2)"><summary style="cursor:pointer;font-weight:600">Esempio di file di testo</summary><pre style="margin:8px 0 0;padding:12px;border-radius:10px;background:var(--surface);font:12px/1.5 ui-monospace,Menlo,monospace;white-space:pre-wrap"># Il diritto di accesso
+## Accesso documentale
+Spetta a chi ha un interesse diretto, concreto e attuale…
+## Accesso civico generalizzato
+Consente a chiunque di richiedere dati e documenti…
+## Concetti chiave
+- Interesse diretto, concreto e attuale
+- Silenzio rigetto dopo 30 giorni</pre></details>
+                </section>
+              </sc-if>
+              <section style="padding:clamp(16px,3vw,24px);border-radius:18px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;gap:14px">
+                <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:600">Titolo *</span><input value="{{ mf.title }}" onInput="{{ mf.on.title }}" readOnly="{{ me2.readOnly }}" style="min-height:44px;padding:0 12px;border-radius:10px;border:{{ mer.titleB }};background:var(--bg);font-size:16px;font-weight:600"><sc-if value="{{ mer.titleBad }}"><span style="font-size:13px;color:var(--err)">{{ mer.title }}</span></sc-if></label>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:12px">
+                  <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:600">Formato</span><select value="{{ mf.format }}" onChange="{{ mf.on.format }}" disabled="{{ me2.readOnly }}" style="min-height:42px;padding:0 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg)"><option value="scheda">Scheda online</option><option value="pdf-view">PDF consultabile</option><option value="pdf-download">PDF scaricabile</option></select></label>
+                  <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:600">Materia *</span><select value="{{ mf.subject }}" onChange="{{ mf.on.subject }}" disabled="{{ me2.readOnly }}" style="min-height:42px;padding:0 10px;border-radius:10px;border:{{ mer.subjectB }};background:var(--bg)"><sc-for list="{{ mf.subjectOpts }}" as="o" hint-placeholder-count="6"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select><sc-if value="{{ mer.subjectBad }}"><span style="font-size:13px;color:var(--err)">{{ mer.subject }}</span></sc-if></label>
+                  <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:600">Argomento *</span><select value="{{ mf.topic }}" onChange="{{ mf.on.topic }}" disabled="{{ me2.readOnly }}" style="min-height:42px;padding:0 10px;border-radius:10px;border:{{ mer.topicB }};background:var(--bg)"><sc-for list="{{ mf.topicOpts }}" as="o" hint-placeholder-count="4"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select><sc-if value="{{ mer.topicBad }}"><span style="font-size:13px;color:var(--err)">{{ mer.topic }}</span></sc-if></label>
+                  <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:600">Minuti di lettura</span><input type="number" min="1" max="240" value="{{ mf.minutes }}" onInput="{{ mf.on.minutes }}" readOnly="{{ me2.readOnly }}" style="min-height:42px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg)"></label>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:12px">
+                  <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:600">Fonte *</span><input value="{{ mf.source }}" onInput="{{ mf.on.source }}" readOnly="{{ me2.readOnly }}" placeholder="Es. L. 241/1990" style="min-height:42px;padding:0 12px;border-radius:10px;border:{{ mer.sourceB }};background:var(--bg)"><sc-if value="{{ mer.sourceBad }}"><span style="font-size:13px;color:var(--err)">{{ mer.source }}</span></sc-if></label>
+                  <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:600">Ultima verifica *</span><input type="date" value="{{ mf.lastVerified }}" onChange="{{ mf.on.lastVerified }}" readOnly="{{ me2.readOnly }}" style="min-height:42px;padding:0 12px;border-radius:10px;border:{{ mer.lastVerifiedB }};background:var(--bg)"><sc-if value="{{ mer.lastVerifiedBad }}"><span style="font-size:13px;color:var(--err)">{{ mer.lastVerified }}</span></sc-if></label>
+                  <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:600">Prossima revisione *</span><input type="date" value="{{ mf.nextReview }}" onChange="{{ mf.on.nextReview }}" readOnly="{{ me2.readOnly }}" style="min-height:42px;padding:0 12px;border-radius:10px;border:{{ mer.nextReviewB }};background:var(--bg)"><sc-if value="{{ mer.nextReviewBad }}"><span style="font-size:13px;color:var(--err)">{{ mer.nextReview }}</span></sc-if></label>
+                </div>
+                <sc-if value="{{ mf.isPdf }}">
+                  <div style="display:flex;flex-direction:column;gap:8px;padding:14px;border-radius:12px;border:{{ mer.fileB }};background:var(--bg)">
+                    <span style="font-size:14px;font-weight:600">File PDF *</span>
+                    <sc-if value="{{ mf.hasFile }}"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';color:var(--accent-text)">picture_as_pdf</span><span style="font-weight:600">{{ mf.fileName }}</span><span style="font-size:13px;color:var(--ink-3)">{{ mf.fileSize }}</span><sc-if value="{{ me2.editable }}"><button onClick="{{ mf.removeFile }}" style="min-height:36px;padding:0 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-size:13px">Rimuovi</button></sc-if></div></sc-if>
+                    <sc-if value="{{ mf.noFile }}"><span style="font-size:13px;color:var(--ink-3)">Nessun file. Usa «Importa da file» con un PDF fino a 3 MB.</span></sc-if>
+                    <sc-if value="{{ mer.fileBad }}"><span style="font-size:13px;color:var(--err)">{{ mer.file }}</span></sc-if>
+                  </div>
+                </sc-if>
+                <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:600">Concetti chiave <span style="font-weight:400;color:var(--ink-3)">· uno per riga</span></span><textarea value="{{ mf.keyText }}" onInput="{{ mf.on.keyText }}" readOnly="{{ me2.readOnly }}" rows="3" style="padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);resize:vertical"></textarea></label>
+                <sc-if value="{{ mf.isScheda }}">
+                  <div style="display:flex;flex-direction:column;gap:10px">
+                    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span style="font-size:14px;font-weight:600">Sezioni * · {{ mf.secCount }}</span><sc-if value="{{ me2.editable }}"><button onClick="{{ mf.addSection }}" style="min-height:38px;padding:0 12px;border-radius:9px;border:1px solid var(--ink);background:transparent;cursor:pointer;font-weight:600;display:flex;gap:4px;align-items:center"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:18px">add</span>Aggiungi sezione</button></sc-if></div>
+                    <sc-if value="{{ mer.sectionsBad }}"><span style="font-size:13px;color:var(--err)">{{ mer.sections }}</span></sc-if>
+                    <sc-for list="{{ mf.sections }}" as="s" hint-placeholder-count="2">
+                      <div style="padding:14px;border-radius:12px;background:var(--bg);display:flex;flex-direction:column;gap:8px">
+                        <div style="display:flex;gap:8px;align-items:center"><span style="font:700 13px Manrope,sans-serif;color:var(--ink-3);width:22px">{{ s.n }}</span><input value="{{ s.title }}" onInput="{{ s.onTitle }}" readOnly="{{ me2.readOnly }}" aria-label="Titolo sezione {{ s.n }}" placeholder="Titolo della sezione" style="flex:1;min-height:40px;padding:0 10px;border-radius:9px;border:1px solid var(--line);background:var(--surface);font-weight:600">
+                          <sc-if value="{{ me2.editable }}"><button onClick="{{ s.up }}" disabled="{{ s.first }}" aria-label="Sposta su" style="width:36px;height:36px;border-radius:8px;border:1px solid var(--line);background:var(--surface);cursor:pointer;opacity:{{ s.upO }}"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:18px">arrow_upward</span></button><button onClick="{{ s.down }}" disabled="{{ s.last }}" aria-label="Sposta giù" style="width:36px;height:36px;border-radius:8px;border:1px solid var(--line);background:var(--surface);cursor:pointer;opacity:{{ s.downO }}"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:18px">arrow_downward</span></button><button onClick="{{ s.remove }}" aria-label="Elimina sezione {{ s.n }}" style="width:36px;height:36px;border-radius:8px;border:1px solid var(--line);background:var(--surface);cursor:pointer;color:var(--err)"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:18px">delete</span></button></sc-if>
+                        </div>
+                        <textarea value="{{ s.body }}" onInput="{{ s.onBody }}" readOnly="{{ me2.readOnly }}" aria-label="Testo sezione {{ s.n }}" rows="5" style="padding:10px 12px;border-radius:9px;border:1px solid var(--line);background:var(--surface);resize:vertical;line-height:1.55"></textarea>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;padding-top:6px;border-top:1px solid var(--line)">
+                  <sc-if value="{{ me2.editable }}"><button onClick="{{ me2.save }}" style="min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--ink);background:transparent;cursor:pointer;font-weight:600">Salva bozza</button><button onClick="{{ me2.submit }}" style="min-height:44px;padding:0 18px;border-radius:10px;border:0;background:var(--accent);color:#171717;cursor:pointer;font-weight:700">Salva e invia in revisione</button></sc-if>
+                  <sc-if value="{{ me2.canPreview }}"><a href="BandoLab%20App.dc.html" style="min-height:44px;padding:0 14px;border-radius:10px;border:1px solid var(--line);display:flex;align-items:center;text-decoration:none;color:var(--ink);font-weight:600">Vedi nella biblioteca</a></sc-if>
+                </div>
+              </section>
+            </div>
+          </sc-if>
+
           <sc-if value="{{ sMaterials }}">
             <div style="display:flex;flex-direction:column;gap:12px;animation:blFade .2s ease-out">
+              <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between">
+                <p style="color:var(--ink-2)">{{ mt.summary }}</p>
+                <button onClick="{{ mt.create }}" title="{{ mt.createWhy }}" style="min-height:44px;padding:0 16px;border-radius:10px;border:0;background:var(--accent);color:#171717;font-weight:700;cursor:pointer;display:flex;gap:6px;align-items:center;opacity:{{ mt.createOpacity }}"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:20px">add</span>Nuovo materiale o importazione</button>
+              </div>
               <sc-for list="{{ mt.items }}" as="m" hint-placeholder-count="5">
                 <article style="padding:16px 18px;border-radius:16px;background:var(--surface);border:1px solid var(--line);display:flex;flex-wrap:wrap;gap:12px;align-items:center">
                   <span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:24px;color:var(--accent-text)">{{ m.icon }}</span>
                   <div style="flex:1;min-width:220px;display:flex;flex-direction:column;gap:2px"><span style="font-weight:600">{{ m.title }}</span><span style="font-size:13px;color:var(--ink-3)">{{ m.meta }}</span></div>
                   <span style="padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;background:{{ m.sBg }};color:{{ m.sColor }}">{{ m.status }}</span>
+                  <button onClick="{{ m.open }}" style="min-height:40px;padding:0 12px;border-radius:9px;border:1px solid var(--ink);background:transparent;cursor:pointer;font-weight:600;font-size:13px">{{ m.openLabel }}</button>
                   <sc-for list="{{ m.actions }}" as="a" hint-placeholder-count="1"><button onClick="{{ a.onClick }}" disabled="{{ a.disabled }}" title="{{ a.why }}" style="min-height:40px;padding:0 12px;border-radius:9px;border:1px solid var(--line);background:var(--bg);cursor:pointer;font-weight:600;font-size:13px;opacity:{{ a.opacity }}">{{ a.label }}</button></sc-for>
                 </article>
               </sc-for>
@@ -382,12 +476,34 @@ button:disabled{cursor:not-allowed}
 </x-dc>
 <script type="text/x-dc" data-dc-script>
 class Component extends DCLogic {
-  state = { ready: false, w: window.innerWidth, sec: 'overview', qid: null, form: null, dirty: false, errors: {}, note: '', toast: null, ql: { q: '', status: 'all', subject: 'all' }, rTab: 'open', taxKind: 'subjects', taxEdits: {}, taxNew: '', taxParent: '', hq: '', suspendAsk: null };
+  state = { ready: false, w: window.innerWidth, sec: 'overview', matId: null, mform: null, mdirty: false, merr: {}, importing: false, importMsg: null, qid: null, form: null, dirty: false, errors: {}, note: '', toast: null, ql: { q: '', status: 'all', subject: 'all' }, rTab: 'open', taxKind: 'subjects', taxEdits: {}, taxNew: '', taxParent: '', hq: '', suspendAsk: null };
   componentDidMount() { this.onResize = () => this.setState({ w: window.innerWidth }); window.addEventListener('resize', this.onResize); const go = () => window.BL ? (this.B = window.BL, window.BL.load(), this.setState({ ready: true })) : setTimeout(go, 30); go(); }
   componentWillUnmount() { window.removeEventListener('resize', this.onResize); clearTimeout(this.tt); }
   toast(text, kind) { clearTimeout(this.tt); this.setState({ toast: { text, kind: kind || 'ok' } }); this.tt = setTimeout(() => this.setState({ toast: null }), kind === 'err' ? 8000 : 4500); }
   done(r, ok) { if (!r.ok) { this.toast(r.why || ('Non salvato: ' + r.error), 'err'); if (r.errors) this.setState({ errors: r.errors }); return false; } if (ok) this.toast(ok); this.forceUpdate(); return true; }
   go(sec, extra) { this.setState(Object.assign({ sec }, extra || {})); window.scrollTo(0, 0); }
+  openM(mid) { const m = this.B.bank('demo').materials.find(x => x.id === mid); const f = JSON.parse(JSON.stringify(m)); f.keyText = (m.keyConcepts || []).join('\n'); this.go('matEditor', { matId: mid, mform: f, mdirty: false, merr: {}, importMsg: null }); }
+  saveM() { const f = this.state.mform; const r = this.B.updateMaterial(this.B.me(), this.state.matId, { title: f.title.trim(), subject: f.subject, topic: f.topic, format: f.format, minutes: Math.max(1, +f.minutes || 1), source: f.source, lastVerified: f.lastVerified, nextReview: f.nextReview, keyConcepts: f.keyText.split('\n').map(x => x.trim()).filter(Boolean), sections: f.sections.filter(x => x.title.trim() || x.body.trim()) }); if (r.ok) this.setState({ mdirty: false }); return r; }
+  async importFile(e) {
+    const B = this.B; const file = e.target.files && e.target.files[0]; e.target.value = ''; if (!file) return;
+    const name = file.name.toLowerCase(); const f = this.state.mform; this.setState({ importing: true, importMsg: null });
+    try {
+      if (name.endsWith('.pdf')) {
+        if (file.size > B.MAX_FILE) throw new Error('Il PDF supera i 3 MB consentiti nel prototipo.');
+        const data = await B.readFileAsDataURL(file); const r = B.storeFile(this.state.matId, { name: file.name, size: file.size, type: 'application/pdf', data, at: Date.now() }); if (!r.ok) throw new Error(r.error);
+        this.setState({ mform: Object.assign({}, f, { format: f.format === 'scheda' ? 'pdf-view' : f.format, title: f.title || file.name.replace(/\.pdf$/i, '') }), mdirty: true, importMsg: { ok: true, text: 'PDF caricato: ' + file.name + '. Salva la bozza per confermare formato e titolo.' } });
+      } else {
+        let parsed;
+        if (name.endsWith('.docx')) parsed = await B.parseDocx(await file.arrayBuffer());
+        else if (name.endsWith('.txt') || name.endsWith('.md')) parsed = B.parseText(await file.text());
+        else throw new Error('Formato non supportato. Usa .docx, .txt, .md o .pdf.');
+        if (!parsed.sections.length) throw new Error('Nessuna sezione trovata nel file. Usa titoli «## Sezione» o lo stile Titolo 2.');
+        const words = parsed.sections.reduce((n, x) => n + x.body.split(/\s+/).length, 0);
+        this.setState({ mform: Object.assign({}, f, { format: 'scheda', title: parsed.title || f.title || file.name.replace(/\.[^.]+$/, ''), sections: parsed.sections, keyText: parsed.keyConcepts.length ? parsed.keyConcepts.join('\n') : f.keyText, minutes: Math.max(1, Math.round(words / 200)) }), mdirty: true, importMsg: { ok: true, text: `Importate ${parsed.sections.length} sezioni e ${parsed.keyConcepts.length} concetti chiave da ${file.name}. Controlla e salva la bozza.` } });
+      }
+    } catch (err) { this.setState({ importMsg: { ok: false, text: err.message } }); }
+    this.setState({ importing: false });
+  }
   openQ(qid) { const q = this.B.bank('demo').questions.find(x => x.id === qid); const w = this.B.working(q); this.go('editor', { qid, form: JSON.parse(JSON.stringify(w)), dirty: false, errors: {}, note: '' }); }
   statusChip(s) { return { draft: ['var(--surface-2)', 'var(--ink-2)'], review: ['var(--info-soft)', 'var(--info)'], changes: ['var(--warn-soft)', 'var(--warn)'], approved: ['var(--ok-soft)', 'var(--ok)'], published: ['var(--ink)', 'var(--bg)'], rejected: ['var(--err-soft)', 'var(--err)'], superseded: ['var(--surface-2)', 'var(--ink-3)'], suspended: ['var(--err-soft)', 'var(--err)'], merged: ['var(--surface-2)', 'var(--ink-3)'], open: ['var(--accent-soft)', 'var(--accent-text)'], resolved: ['var(--ok-soft)', 'var(--ok)'], dismissed: ['var(--surface-2)', 'var(--ink-2)'] }[s] || ['var(--surface-2)', 'var(--ink-2)']; }
   qStatus(q) { const B = this.B; if (q.mergedInto) return ['merged', 'Consolidata in ' + q.mergedInto]; if (q.suspended) return ['suspended', 'Sospesa']; const w = B.working(q); return [w.status, B.STATUS[w.status]]; }
@@ -403,11 +519,12 @@ class Component extends DCLogic {
     } finally { this.busy = false; }
   }
   renderVals() {
-    const st = this.state, B = this.B; const wide = st.w >= 1000;
+    const st = this.state, B = this.B; const wide = st.w >= 800;
     const out = { notReady: !st.ready, wide, narrow: !wide };
     if (!st.ready) return out;
     const me = B.me(); const S = B.state();
-    if (!me || me.role === 'user') return Object.assign(out, { denied: true, deniedUser: !!me, deniedMsg: me ? `L'account ${me.name} ha il ruolo Utente e non può accedere all'area amministrativa.` : "Accedi con un account Editor, Revisore o Amministratore." });
+    if (!me || me.role === 'user') return Object.assign(out, { denied: true, deniedUser: !!me,
+      quickLogins: S.users.filter(u => u.role !== 'user').sort((a, b) => (b.role === 'admin') - (a.role === 'admin')).map(u => ({ name: u.name, role: B.ROLES[u.role], bg: u.role === 'admin' ? '#F47732' : 'var(--surface-2)', color: u.role === 'admin' ? '#171717' : 'var(--ink-2)', onClick: () => { const r = B.login(u.id, 'demo'); if (r.ok) location.reload(); else this.toast(r.error, 'err'); } })), deniedMsg: me ? `L'account ${me.name} ha il ruolo Utente e non può accedere all'area amministrativa.` : "Accedi con un account Editor, Revisore o Amministratore." });
     const bank = B.bank('demo'), T = bank.taxonomy, qs = bank.questions;
     const can = (a, t) => B.can(me, a, t);
     const chip = on => ({ bg: on ? 'var(--accent-soft)' : 'var(--surface)', border: on ? '1.5px solid var(--accent)' : '1.5px solid var(--line)' });
@@ -417,16 +534,16 @@ class Component extends DCLogic {
     const openRep = S.reports.filter(r => r.status === 'open');
     const dups = B.duplicates(bank); const dupPending = dups.filter(d => !(S.dupDecisions || {})[d.a + '|' + d.b]);
     const navDef = [['overview', 'Dashboard', 'space_dashboard'], ['questions', 'Domande', 'quiz'], ['review', 'Coda di revisione', 'fact_check', inReview.length + bank.materials.filter(m => m.status === 'review').length], ['reports', 'Segnalazioni', 'flag', openRep.length], ['verify', 'Verifiche normative', 'event_upcoming', dueQ.length + dueM.length], ['materials', 'Materiali', 'menu_book'], ['quizzes', 'Quiz e associazioni', 'checklist'], ['dup', 'Duplicati', 'compare', dupPending.length], ['tax', 'Tassonomia e catalogo', 'account_tree'], ['users', 'Utenti e ruoli', 'group'], ['history', 'Cronologia', 'history'], ['settings', 'Impostazioni', 'settings']];
-    const sec = st.sec === 'editor' ? 'questions' : st.sec;
-    const titles = { overview: 'Dashboard editoriale', questions: 'Gestione domande', editor: 'Editor della domanda', review: 'Coda di revisione', reports: 'Segnalazioni', verify: 'Verifica e aggiornamento', materials: 'Gestione materiali', quizzes: 'Quiz e associazioni', dup: 'Banca dati e duplicati', tax: 'Tassonomia e catalogo', users: 'Utenti e ruoli', history: 'Cronologia delle versioni', settings: 'Impostazioni editoriali e di prodotto' };
+    const sec = st.sec === 'editor' ? 'questions' : st.sec === 'matEditor' ? 'materials' : st.sec;
+    const titles = { overview: 'Dashboard editoriale', questions: 'Gestione domande', editor: 'Editor della domanda', matEditor: 'Editor del materiale', review: 'Coda di revisione', reports: 'Segnalazioni', verify: 'Verifica e aggiornamento', materials: 'Gestione materiali', quizzes: 'Quiz e associazioni', dup: 'Banca dati e duplicati', tax: 'Tassonomia e catalogo', users: 'Utenti e ruoli', history: 'Cronologia delle versioni', settings: 'Impostazioni editoriali e di prodotto' };
     const aud = a => ({ target: a.target, actor: B.userName(a.actor), action: a.action, time: B.fmtDateTime(a.at), note: a.note ? ' · ' + a.note : '' });
     Object.assign(out, { ok: true, title: titles[st.sec], me: { first: me.name.split(' ')[0] }, meId: me.id, section: sec, onSection: e => this.go(e.target.value),
-      nav: navDef.map(([id, label, icon, count]) => ({ id, label, icon, current: sec === id ? 'page' : 'false', bg: sec === id ? '#F47732' : 'transparent', color: sec === id ? '#171717' : 'var(--side-ink-2)', hasCount: !!count, count: String(count || ''), countBg: sec === id ? '#171717' : '#34302B', countColor: '#F5F0E6', onClick: () => this.go(id) })),
+      nav: navDef.map(([id, label, icon, count]) => ({ id, label, icon, current: sec === id ? 'page' : 'false', chipBg: sec === id ? '#F47732' : 'var(--surface)', chipColor: sec === id ? '#171717' : 'var(--ink)', chipBorder: sec === id ? '#F47732' : 'var(--line)', bg: sec === id ? '#F47732' : 'transparent', color: sec === id ? '#171717' : 'var(--side-ink-2)', hasCount: !!count, count: String(count || ''), countBg: sec === id ? '#171717' : '#34302B', countColor: '#F5F0E6', onClick: () => this.go(id) })),
       staff: S.users.filter(u => u.role !== 'user').map(u => ({ id: u.id, label: `${u.name} · ${B.ROLES[u.role]}` })),
       onRole: e => { const r = B.login(e.target.value, 'demo'); if (this.done(r, 'Ruolo simulato: ' + B.ROLES[S.users.find(u => u.id === e.target.value).role])) this.setState({ form: st.qid ? JSON.parse(JSON.stringify(B.working(qs.find(x => x.id === st.qid)))) : null, dirty: false, errors: {} }); },
       toggleTheme: () => { B.commit(s => { s.theme = s.theme === 'dark' ? 'light' : 'dark'; }); B.applyTheme(); this.forceUpdate(); },
       logout: () => { B.logout(); location.href = 'BandoLab%20Landing.dc.html'; },
-      sOverview: st.sec === 'overview', sQuestions: st.sec === 'questions', sEditor: st.sec === 'editor', sReview: st.sec === 'review', sReports: st.sec === 'reports', sVerify: st.sec === 'verify', sMaterials: st.sec === 'materials', sQuizzes: st.sec === 'quizzes', sDup: st.sec === 'dup', sTax: st.sec === 'tax', sUsers: st.sec === 'users', sHistory: st.sec === 'history', sSettings: st.sec === 'settings' });
+      sOverview: st.sec === 'overview', sQuestions: st.sec === 'questions', sEditor: st.sec === 'editor', sReview: st.sec === 'review', sReports: st.sec === 'reports', sVerify: st.sec === 'verify', sMaterials: st.sec === 'materials', sMatEditor: st.sec === 'matEditor', sQuizzes: st.sec === 'quizzes', sDup: st.sec === 'dup', sTax: st.sec === 'tax', sUsers: st.sec === 'users', sHistory: st.sec === 'history', sSettings: st.sec === 'settings' });
     const qRow = q => { const [s, label] = this.qStatus(q); const c = this.statusChip(s); const w = B.working(q); return { id: q.id, text: w.text || '(senza testo)', status: label.toUpperCase(), sBg: c[0], sColor: c[1], open: () => this.openQ(q.id) }; };
     if (st.sec === 'overview') {
       const mine = qs.filter(q => B.working(q).author === me.id && ['draft', 'changes', 'review', 'rejected'].includes(B.working(q).status));
@@ -514,9 +631,32 @@ class Component extends DCLogic {
       out.vf = { items, empty: items.length === 0 };
     }
     if (st.sec === 'materials') {
-      out.mt = { items: bank.materials.map(m => { const c = this.statusChip(m.status); const acts = { draft: [['submit', 'Invia in revisione']], review: [['approve', 'Approva']], approved: [['publish', 'Pubblica']], published: [['unpublish', 'Ritira']] }[m.status] || [];
-        return { title: m.title, icon: m.format === 'scheda' ? 'article' : 'picture_as_pdf', meta: `${m.id} · ${B.FORMAT[m.format]} · ${B.name(bank, 'subjects', m.subject)} · fonte ${m.source} · autore ${B.userName(m.author)} · verifica ${B.fmtDate(m.lastVerified)}`, status: B.STATUS[m.status].toUpperCase(), sBg: c[0], sColor: c[1],
+      const cm = can('m.edit');
+      out.mt = { summary: `${bank.materials.filter(m => m.status === 'published').length} pubblicati su ${bank.materials.length} materiali`, createWhy: cm.ok ? 'Crea una bozza vuota e importa un file' : cm.why, createOpacity: cm.ok ? 1 : .5, create: () => { const r = B.createMaterial(me); if (this.done(r, 'Bozza di materiale creata.')) this.openM(r.id); },
+        items: bank.materials.map(m => { const c = this.statusChip(m.status); const acts = { draft: [['submit', 'Invia in revisione']], review: [['approve', 'Approva']], approved: [['publish', 'Pubblica']], published: [['unpublish', 'Ritira']] }[m.status] || [];
+        return { open: () => this.openM(m.id), openLabel: m.status === 'draft' && cm.ok ? 'Modifica' : 'Apri', title: m.title || '(senza titolo)', icon: m.format === 'scheda' ? 'article' : 'picture_as_pdf', meta: `${m.id} · ${B.FORMAT[m.format]} · ${B.name(bank, 'subjects', m.subject)} · fonte ${m.source} · autore ${B.userName(m.author)} · verifica ${B.fmtDate(m.lastVerified)}`, status: B.STATUS[m.status].toUpperCase(), sBg: c[0], sColor: c[1],
           actions: acts.map(([a, label]) => { const p = can({ submit: 'm.edit', approve: 'm.review', publish: 'm.review', unpublish: 'm.review' }[a], a === 'approve' ? m : null); return { label, disabled: !p.ok, why: p.ok ? '' : p.why, opacity: p.ok ? 1 : .45, onClick: () => this.done(B.materialTransition(me, m.id, a), 'Stato aggiornato.') }; }) }; }) };
+    }
+    if (st.sec === 'matEditor' && st.matId) {
+      const m = bank.materials.find(x => x.id === st.matId); const f = st.mform; const c = this.statusChip(m.status); const pe = can('m.edit');
+      const editable = m.status === 'draft' && pe.ok; const setF = p => this.setState({ mform: Object.assign({}, f, p), mdirty: true });
+      const E = st.merr; const mer = {}; ['title', 'subject', 'topic', 'source', 'lastVerified', 'nextReview', 'sections', 'file'].forEach(k => { mer[k] = E[k] || ''; mer[k + 'Bad'] = !!E[k]; mer[k + 'B'] = E[k] ? '1.5px solid var(--err)' : '1px solid var(--line)'; }); out.mer = mer;
+      const on = {}; ['title', 'topic', 'source', 'lastVerified', 'nextReview', 'minutes', 'keyText', 'format'].forEach(k => { on[k] = e => setF({ [k]: e.target.value }); }); on.subject = e => setF({ subject: e.target.value, topic: '' });
+      const secs = f.sections || []; const setS = list => setF({ sections: list }); const file = B.getFile(m.id);
+      out.mf = { title: f.title, format: f.format, subject: f.subject || '', topic: f.topic || '', minutes: String(f.minutes || ''), source: f.source, lastVerified: f.lastVerified, nextReview: f.nextReview, keyText: f.keyText || '', on,
+        subjectOpts: [{ value: '', label: 'Seleziona' }].concat(T.subjects.map(x => ({ value: x.id, label: x.name }))), topicOpts: [{ value: '', label: 'Seleziona' }].concat(T.topics.filter(t => t.subject === f.subject).map(x => ({ value: x.id, label: x.name }))),
+        isPdf: f.format !== 'scheda', isScheda: f.format === 'scheda', hasFile: !!file, noFile: !file, fileName: file ? file.name : '', fileSize: file ? Math.round(file.size / 1024) + ' KB' : '', removeFile: () => { B.removeFile(m.id); this.toast('File rimosso.'); this.forceUpdate(); },
+        secCount: secs.length, addSection: () => setS(secs.concat({ title: '', body: '' })),
+        sections: secs.map((x, i) => ({ n: i + 1, title: x.title, body: x.body, first: i === 0, last: i === secs.length - 1, upO: i === 0 ? .35 : 1, downO: i === secs.length - 1 ? .35 : 1,
+          onTitle: e => { const l = secs.slice(); l[i] = Object.assign({}, x, { title: e.target.value }); setS(l); }, onBody: e => { const l = secs.slice(); l[i] = Object.assign({}, x, { body: e.target.value }); setS(l); },
+          up: () => { const l = secs.slice(); [l[i - 1], l[i]] = [l[i], l[i - 1]]; setS(l); }, down: () => { const l = secs.slice(); [l[i + 1], l[i]] = [l[i], l[i + 1]]; setS(l); }, remove: () => setS(secs.filter((_, j) => j !== i)) })) };
+      const im = st.importMsg;
+      out.me2 = { id: m.id, status: B.STATUS[m.status].toUpperCase(), sBg: c[0], sColor: c[1], dirty: st.mdirty, back: () => this.go('materials'), editable, readOnly: !editable,
+        readOnlyMsg: !pe.ok ? 'Sola lettura: ' + pe.why : m.status === 'published' ? 'Materiale pubblicato: per modificarlo ritiralo dalla pubblicazione (torna in bozza).' : 'In lavorazione editoriale: modificabile solo in bozza.',
+        hasErrors: Object.keys(E).length > 0, importing: st.importing, hasImportMsg: !!im, importMsg: im ? im.text : '', importBg: im && im.ok ? 'var(--ok-soft)' : 'var(--err-soft)', importColor: im && im.ok ? 'var(--ok)' : 'var(--err)',
+        onImport: e => this.importFile(e), canPreview: m.status === 'published',
+        save: () => { const r = this.saveM(); this.done(r, 'Bozza salvata.'); },
+        submit: () => { const r = this.saveM(); if (!r.ok) return this.done(r); const t = B.materialTransition(me, m.id, 'submit'); if (t.errors) this.setState({ merr: t.errors }); if (this.done(t, 'Materiale inviato in revisione.')) this.setState({ merr: {} }); } };
     }
     if (st.sec === 'quizzes') {
       const pz = can('z.publish');
