@@ -36,7 +36,8 @@ eliminazione account (dati locali), notifiche.
 sessioni d'esame validate dal server, audit log immutabile, export/cancellazione GDPR reali, storage PDF.
 
 ## Database
-Schema PostgreSQL/Supabase e funzioni API previste: vedi `db/schema.sql` e `db/README.md`. Non ancora collegato.
+Schema PostgreSQL/Supabase, patch 01–08 e funzioni RPC per sessioni, punteggio e soluzioni: vedi `db/README.md` e `db/API.md`.
+Il database è attivo e le RPC sono testate (`db/tests/rpc-sessions.test.sql`), ma il sito **non è ancora collegato**: salva ancora nel browser.
 
 ## Limiti noti
 - Dati e permessi manipolabili dal browser: nessuna sicurezza reale.
@@ -47,7 +48,7 @@ Schema PostgreSQL/Supabase e funzioni API previste: vedi `db/schema.sql` e `db/R
 
 ## Roadmap verso una prima versione reale
 1. Repository React + TypeScript (Vite), tipi derivati dai modelli del core; porting di `bandolab-core` in moduli testati (Vitest).
-2. Backend (es. Postgres + API) con OAuth Google, ruoli imposti lato server, RLS/policy per ambiente.
-3. Sessioni d'esame con scadenza firmata dal server e registrazione delle interruzioni.
+2. Backend Supabase con OAuth Google, ruoli imposti lato server, RLS/policy per ambiente (database e RPC fatti; manca il collegamento del client).
+3. Sessioni d'esame con scadenza decisa dal server e registrazione delle interruzioni (fatto lato database).
 4. Workflow editoriale e audit log lato server; storage PDF.
 5. Popolamento del catalogo reale solo con contenuti revisionati; test end-to-end e audit di accessibilità.

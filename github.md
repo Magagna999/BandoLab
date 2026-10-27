@@ -2,12 +2,14 @@ repo: Magagna999/MySite
 branch: main
 
 ## Last sync
-date: 2026-10-16T12:20:00Z
+date: 2026-10-27T15:00:00Z
 
 ### Updated in this project
-- Database Supabase creato ed eseguito: schema + patch 01-05 (regole RLS, sicurezza, prestazioni, indici)
-- Security Advisor a 0 errori; resta solo l'avviso "unused index" (da ignorare)
-- Il sito non è ancora collegato al database (salva ancora nel browser)
+- Revisione del database: patch 06 (policy più restrittive), 07 (RPC per sessioni, punteggio, XP), 08 (risposte corrette nascoste al client)
+- Test eseguito sul database reale: 39 controlli (T01–T33) tutti ok, nessun dato lasciato
+- Documentazione: db/API.md (contratto RPC), db/README.md aggiornato, README.md aggiornato
+- Security Advisor: 8 avvisi attesi per le funzioni security definer, nessun errore
+- Il sito non è ancora collegato al database (salva ancora nel browser); prossimo passo: bandolab-api.js
 
 ## Screen map
 | Schermata | File nel repository |
@@ -17,9 +19,11 @@ date: 2026-10-16T12:20:00Z
 | Area amministrativa | BandoLab Admin.dc.html, bandolab-core.js |
 | Test automatici | BandoLab Test.dc.html, bandolab-core.js |
 | Pagina iniziale (redirect) | index.html |
-| Database | db/schema.sql, db/patch-01..05, db/README.md, GUIDA-SUPABASE.md |
+| Database | db/schema.sql, db/patch-01..08, db/API.md, db/README.md, db/tests/, GUIDA-SUPABASE.md |
 
 ## Sync history
+- 2026-10-27T15:00:00Z — patch 06–08, RPC sessioni, test sul database, documentazione API
+- 2026-10-16T12:20:00Z — database Supabase creato: schema + patch 01-05
 - 2026-10-16T11:19:11Z — importazione materiali, accesso rapido admin, guida Supabase
 - 2026-10-12T10:05:54Z — schema DB, 15 domande demo, index.html
 - 2026-10-12T09:31:24Z — prima pubblicazione (8 file)
