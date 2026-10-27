@@ -36,11 +36,11 @@ eliminazione account (dati locali), notifiche.
 sessioni d'esame validate dal server, audit log immutabile, export/cancellazione GDPR reali, storage PDF.
 
 ## Database
-Schema PostgreSQL/Supabase, patch 01–08 e funzioni RPC per sessioni, punteggio e soluzioni: vedi `db/README.md` e `db/API.md`.
-Il database è attivo e le RPC sono testate (`db/tests/rpc-sessions.test.sql`), ma il sito **non è ancora collegato**: salva ancora nel browser.
+Schema PostgreSQL/Supabase, patch 01–12 e funzioni RPC per sessioni, punteggio, soluzioni, area utente e redazione: vedi `db/README.md` e `db/API.md`.
+Il database è attivo e le RPC sono testate (`db/tests/*.test.sql`), ma il sito **non è ancora collegato**: salva ancora nel browser.
 
 ## Test automatici
-`npm test` (Node 20 o successivo, nessuna dipendenza) esegue 80 unit test su `bandolab-core.js` e `bandolab-api.js`: punteggio, date, permessi, workflow editoriale, sessioni, XP, badge, statistiche, ricerca, duplicati, materiali e persistenza.
+`npm test` (Node 20 o successivo, nessuna dipendenza) esegue 83 unit test su `bandolab-core.js` e `bandolab-api.js`: punteggio, date, permessi, workflow editoriale, sessioni, XP, badge, statistiche, ricerca, duplicati, materiali e persistenza.
 Il core viene caricato in un contesto isolato con un orologio finto (`test/helpers/core.js`), quindi i risultati sono ripetibili. La pagina `BandoLab Test.dc.html` resta per le prove nel browser.
 I test servono da rete di sicurezza: il codice del core può essere riorganizzato finché `npm test` resta verde e l'API pubblica `BL.*` non cambia.
 

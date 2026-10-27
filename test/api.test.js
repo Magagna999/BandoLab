@@ -95,6 +95,63 @@ test('interruzioni, abbandono e soluzioni usano le RPC corrette', async () => {
   assert.equal((await api.getQuestionVersionStaff('demo', 'q01', 1)).error, 'forbidden');
 });
 
+test('area utente: le RPC ricevono i parametri attesi', async () => {
+  const { fake, api } = setup();
+  ['complete_material', 'mark_reviewed', 'create_report', 'export_my_data', 'delete_my_account'].forEach(n => { fake.rpcResults[n] = { data: { ok: true }, error: null }; });
+  await api.completeMaterial('demo', 'm1');
+  assert.deepEqual(lastCall(fake), { type: 'rpc', name: 'complete_material', args: { p_env: 'demo', p_mid: 'm1' } });
+  await api.markReviewed('a1');
+  assert.deepEqual(lastCall(fake).args, { p_attempt_id: 'a1' });
+  await api.createReport('demo', 'q01', 2, 'errore', 'Descrizione abbastanza lunga');
+  assert.deepEqual(lastCall(fake).args, { p_env: 'demo', p_qid: 'q01', p_v: 2, p_reason: 'errore', p_text: 'Descrizione abbastanza lunga' });
+  await api.exportMyData();
+  assert.equal(lastCall(fake).name, 'export_my_data');
+  await api.deleteMyAccount('ELIMINA');
+  assert.deepEqual(lastCall(fake).args, { p_confirm: 'ELIMINA' });
+  fake.rpcResults.create_report = { data: { ok: false, error: 'too_many' }, error: null };
+  const r = await api.createReport('demo', 'q01', 1, 'x', 'y'.repeat(12));
+  assert.equal(r.error, 'too_many'); assert.match(r.why, /limite giornaliero/);
+  fake.rpcResults.delete_my_account = { data: { ok: false, error: 'staff_account' }, error: null };
+  assert.equal((await api.deleteMyAccount('ELIMINA')).error, 'staff_account');
+});
+
+test('redazione: nomi e parametri delle RPC editoriali', async () => {
+  const { fake, api } = setup();
+  const names = ['create_question', 'update_draft', 'transition', 'update_report', 'decide_duplicate', 'import_questions', 'create_material',
+    'update_material', 'set_material_file', 'material_transition', 'save_quiz', 'set_quiz_status', 'tax_edit', 'set_role'];
+  names.forEach(n => { fake.rpcResults[n] = { data: { ok: true }, error: null }; });
+  const check = async (call, name, args) => { await call(); const c = lastCall(fake); assert.equal(c.name, name); assert.deepEqual(c.args, args); };
+  await check(() => api.createQuestion('demo'), 'create_question', { p_env: 'demo' });
+  await check(() => api.updateDraft('demo', 'q1', { text: 'x' }), 'update_draft', { p_env: 'demo', p_qid: 'q1', p_fields: { text: 'x' } });
+  await check(() => api.transition('demo', 'q1', 'changes', 'nota'), 'transition', { p_env: 'demo', p_qid: 'q1', p_action: 'changes', p_note: 'nota' });
+  await check(() => api.transition('demo', 'q1', 'submit'), 'transition', { p_env: 'demo', p_qid: 'q1', p_action: 'submit', p_note: null });
+  await check(() => api.updateReport('r1', { status: 'resolved' }), 'update_report', { p_id: 'r1', p_patch: { status: 'resolved' } });
+  await check(() => api.decideDuplicate('demo', 'a', 'b', 'merge'), 'decide_duplicate', { p_env: 'demo', p_a: 'a', p_b: 'b', p_decision: 'merge', p_note: null });
+  await check(() => api.importQuestions('real', [{ text: 't' }]), 'import_questions', { p_env: 'real', p_rows: [{ text: 't' }], p_status: 'draft' });
+  await check(() => api.createMaterial('demo', 'Titolo', 's1', 't1'), 'create_material', { p_env: 'demo', p_title: 'Titolo', p_subject_id: 's1', p_topic_id: 't1', p_format: 'scheda' });
+  await check(() => api.updateMaterial('demo', 'm1', { source: 'f' }), 'update_material', { p_env: 'demo', p_mid: 'm1', p_fields: { source: 'f' } });
+  await check(() => api.setMaterialFile('demo', 'm1', 'a/b.pdf'), 'set_material_file', { p_env: 'demo', p_mid: 'm1', p_path: 'a/b.pdf' });
+  await check(() => api.materialTransition('demo', 'm1', 'publish'), 'material_transition', { p_env: 'demo', p_mid: 'm1', p_action: 'publish' });
+  await check(() => api.saveQuiz('demo', { title: 'Q' }), 'save_quiz', { p_env: 'demo', p_quiz: { title: 'Q' } });
+  await check(() => api.setQuizStatus('demo', 'z1', 'published'), 'set_quiz_status', { p_env: 'demo', p_zid: 'z1', p_status: 'published' });
+  await check(() => api.taxEdit('demo', 'subjects', null, { name: 'N' }), 'tax_edit', { p_env: 'demo', p_kind: 'subjects', p_id: null, p_patch: { name: 'N' } });
+  await check(() => api.setRole('u1', 'editor'), 'set_role', { p_uid: 'u1', p_role: 'editor' });
+});
+
+test('redazione: gli errori di validazione conservano i dettagli del server', async () => {
+  const { fake, api } = setup();
+  fake.rpcResults.transition = { data: { ok: false, error: 'validation', why: 'Completa i campi obbligatori.', errors: { text: 'Troppo corto' } }, error: null };
+  const r = await api.transition('demo', 'q1', 'submit');
+  assert.equal(r.ok, false); assert.equal(r.error, 'validation'); assert.deepEqual(r.errors, { text: 'Troppo corto' });
+  fake.rpcResults.import_questions = { data: { ok: false, error: 'validation', bad_rows: 2, rows: [{ row: 2, errors: { options: 'x' } }] }, error: null };
+  const i = await api.importQuestions('demo', [{}]);
+  assert.equal(i.bad_rows, 2); assert.equal(i.rows[0].row, 2);
+  fake.rpcResults.set_quiz_status = { data: { ok: false, error: 'checks_failed', failed: ['Numero di domande sufficiente'] }, error: null };
+  assert.deepEqual((await api.setQuizStatus('demo', 'z1', 'published')).failed, ['Numero di domande sufficiente']);
+  fake.rpcResults.set_role = { data: null, error: { code: '42501', message: 'x' } };
+  assert.equal((await api.setRole('u1', 'admin')).error, 'forbidden');
+});
+
 test('accesso: Google, uscita, utente corrente, cambi di stato', async () => {
   const { fake, api } = setup();
   assert.equal((await api.signInWithGoogle('https://example.org/app')).ok, true);

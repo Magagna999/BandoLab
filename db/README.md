@@ -22,26 +22,25 @@ Il contratto delle funzioni RPC è in [`API.md`](API.md).
 | `patch-07-rpc-sessions.sql` | RPC per sessioni, punteggio, XP, percorsi | applicata |
 | `patch-08-hide-answers.sql` | viste senza soluzioni, permessi per colonna, RPC per soluzioni | applicata |
 | `patch-09-admin-self-review.sql` | un amministratore può essere autore e revisore dello stesso contenuto (trigger al posto del vincolo) | applicata |
+| `patch-10-rpc-user.sql` | RPC area utente: materiali, revisione errori, segnalazioni, esportazione e cancellazione dati; notifiche aggiornabili solo in `read_at` | applicata |
+| `patch-11-rpc-questions.sql` | RPC redazione delle domande: creazione, bozze, transizioni, segnalazioni, duplicati, import | applicata |
+| `patch-12-rpc-content.sql` | RPC materiali, quiz, catalogo e ruoli | applicata |
 
 Ordine di esecuzione su un progetto nuovo: schema, poi le patch in ordine numerico.
 
 ## Funzioni RPC
-| Funzione | Stato |
-|---|---|
-| `start_session`, `save_session`, `finish_session`, `log_interruption`, `abandon_session` | **implementate e testate** |
-| `get_question_feedback`, `get_attempt_review`, `get_question_version_staff` | **implementate e testate** |
-| `complete_material(mid)` | da implementare |
-| `create_report(qid, v, reason, text)` | da implementare (la policy di inserimento esiste) |
-| `create_question()`, `update_draft(qid, fields)` | da implementare |
-| `transition(qid, action, note)` | da implementare — submit, approve, changes, reject, publish, newVersion, suspend, unsuspend, verify, reopen |
-| `material_transition(mid, action)` | da implementare |
-| `set_quiz_status(zid, status)` | da implementare — controlli di `BL.quizChecks` |
-| `decide_duplicate(a, b, decision, note)` | da implementare |
-| `tax_edit(kind, id, patch)` | da implementare |
-| `set_role(uid, role)` | da implementare |
-| `export_my_data()`, `request_account_deletion()` | da implementare (GDPR) |
+Tutte **implementate e testate** (dettaglio in [`API.md`](API.md)).
 
-Ogni RPC che modifica contenuti dovrà scrivere una riga in `audit_log`.
+| Gruppo | Funzioni |
+|---|---|
+| Sessioni (07) | `start_session`, `save_session`, `finish_session`, `log_interruption`, `abandon_session` |
+| Soluzioni (08) | `get_question_feedback`, `get_attempt_review`, `get_question_version_staff` |
+| Area utente (10) | `complete_material`, `mark_reviewed`, `create_report`, `export_my_data`, `delete_my_account` |
+| Domande (11) | `create_question`, `update_draft`, `transition`, `update_report`, `decide_duplicate`, `import_questions` |
+| Materiali e quiz (12) | `create_material`, `update_material`, `set_material_file`, `material_transition`, `save_quiz`, `set_quiz_status` |
+| Catalogo e ruoli (12) | `tax_edit`, `set_role` |
+
+Ogni RPC che modifica contenuti scrive una riga in `audit_log`. Differenza voluta rispetto al prototipo: lato server un editor modifica solo le proprie bozze.
 
 ## Dati demo
 `seed-demo.sql` carica l'ambiente `demo` con i dati del prototipo: tassonomia, 53 domande (54 versioni: 50 pubblicate, 1 in revisione, 1 bozza, 1 con modifiche richieste, più una seconda versione in revisione), 8 materiali, 5 quiz, 2 percorsi e 3 utenti di redazione fittizi (2 editor e 1 revisore, email `@example.com`, senza possibilità di accesso).
@@ -59,11 +58,12 @@ Con `--status published` serve `--reviewer` diverso da `--author` (vincolo del d
 `import/modello-domande.xlsx` si rigenera con `python3 db/tools/make-excel-template.py`.
 Prerequisito: l'autore deve essere un utente esistente (`profiles_user`). Finché non c'è il login Google si può usare uno degli utenti di redazione del seed demo.
 Verifica: un file di prova importato come pubblicato nell'ambiente `real` risulta visibile agli utenti anonimi tramite `live_questions` (prova annullata, nessun dato lasciato).
-Prossimo passo possibile: funzione `import_questions(jsonb)` per admin, per caricare dall'interfaccia senza passare dall'SQL.
+Dall'interfaccia si può caricare con `import_questions` (solo amministratori).
 
 ## Test
 `tests/rpc-sessions.test.sql` è un blocco `DO` che crea utenti e domande fittizi, simula i ruoli con `set local role` e `request.jwt.claims`, verifica 39 casi (T01–T33) e termina sempre con un errore `RISULTATI: ...` che annulla ogni modifica.
 Si esegue nell'editor SQL di Supabase (o con `execute_sql`) e non lascia dati. Esito del 27/10/2026: tutti i controlli ok.
+Altri tre blocchi con lo stesso schema, tutti passati il 27/10/2026: `tests/rpc-user.test.sql` (U01–U21: materiali, revisione, segnalazioni, esportazione, cancellazione), `tests/rpc-editorial.test.sql` (E01–E41: permessi per ruolo, autore/revisore, transizioni, segnalazioni, duplicati, import) e `tests/rpc-content.test.sql` (44 controlli: materiali, quiz, catalogo, ruoli).
 Copre: avvio e bilanciamento, sessione già aperta, dati non validi, salvataggio, feedback, punteggio e XP, idempotenza, revisione, scadenza e tolleranza, bonus miglioramento, interruzioni, abbandono, percorso, preferenze notifiche, accesso anonimo, funzione staff, soglia di superamento, precedenza agli errori passati.
 
 ## Livello API del sito (`bandolab-api.js`)
@@ -75,12 +75,14 @@ Modulo senza dipendenze (oltre a supabase-js) che chiama il database al posto di
 - **Timer**: la sessione include `clockSkew` (scarto tra orologio del server e del dispositivo) per mostrare la scadenza corretta; la scadenza vera la decide il server.
 Nel browser: caricare supabase-js, poi `const api = BandoLabAPI.connect();`. URL del progetto e chiave pubblica (publishable) sono nel file; la sicurezza dei dati è nelle regole RLS.
 Materie, argomenti, sezioni dei materiali e percorsi sono leggibili solo dopo l'accesso; quiz e materiali pubblicati anche da anonimi.
-**Non ancora disponibili** (mancano le RPC nel database): completamento materiali, revisione errori, segnalazioni, preferenze, tutta l'area editoriale/admin.
+- **Area utente**: `completeMaterial`, `markReviewed`, `createReport`, `exportMyData`, `deleteMyAccount`.
+- **Redazione**: `createQuestion`, `updateDraft`, `transition`, `updateReport`, `decideDuplicate`, `importQuestions`, `createMaterial`, `updateMaterial`, `setMaterialFile`, `materialTransition`, `saveQuiz`, `setQuizStatus`, `taxEdit`, `setRole`. Il server ricontrolla ruoli e regole.
+Resta da fare solo la scrittura delle preferenze (letta e scritta oggi dalla tabella `user_prefs`).
 **Non ancora collegato alle pagine**: le pagine chiamano il core in modo sincrono; l'aggancio richiede una cache locale che rispecchi lo stato del server (passo successivo).
-Test: `test/api.test.js` (14 test, client Supabase finto in `test/helpers/fake-supabase.js`). Verificato sul database reale che tutte le tabelle e colonne lette esistono.
+Test: `test/api.test.js` (17 test, client Supabase finto in `test/helpers/fake-supabase.js`). Verificato sul database reale che tutte le tabelle e colonne lette esistono.
 
 ## Passi per il collegamento
-1. Progetto Supabase creato, schema e patch 01–08 applicati (fatto).
+1. Progetto Supabase creato, schema e patch 01–12 applicati (fatto).
 2. Attivare il provider Google in Authentication e impostare Site URL e redirect (vedi `GUIDA-SUPABASE.md`).
 3. Popolare la tassonomia dell'ambiente `real` solo con contenuti revisionati.
 4. In `bandolab-core.js` sostituire `BL.commit` e le funzioni elencate con chiamate a `supabase.rpc(...)` (livello `bandolab-api.js`, prossimo passo).
@@ -91,4 +93,4 @@ Test: `test/api.test.js` (14 test, client Supabase finto in `test/helpers/fake-s
 - `review_note`, `change_note`, `author_id` e `reviewer_id` delle domande pubblicate sono leggibili dagli utenti.
 - In allenamento il server si fida del flag "rivelata" inviato dal client.
 - Non vengono ancora create notifiche per i badge.
-- Il Security Advisor segnala 8 avvisi attesi (funzioni `security definer` eseguibili da `authenticated`).
+- Il Security Advisor segnala 27 avvisi attesi (funzioni `security definer` eseguibili da `authenticated`: sono le RPC pubbliche) e uno sull'impostazione di Auth «leaked password protection», da attivare in Supabase (non riguarda l'accesso con Google).

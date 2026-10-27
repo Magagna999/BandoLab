@@ -2,7 +2,7 @@ repo: Magagna999/BandoLab
 branch: main
 
 ## Last sync
-date: 2026-10-27T19:30:00Z
+date: 2026-10-27T21:00:00Z
 
 ### Updated in this project
 - Revisione del database: patch 06 (policy più restrittive), 07 (RPC per sessioni, punteggio, XP), 08 (risposte corrette nascoste al client)
@@ -17,7 +17,10 @@ date: 2026-10-27T19:30:00Z
 - 66 unit test (npm test) su bandolab-core.js con orologio finto; corretti due crash (updateDraft e materialTransition con id inesistente)
 - Refactoring del core senza cambiare l'API BL.*: transizioni delle domande a tabella, XP e avanzamento percorsi estratti in funzioni, one-liner del workflow riformattati
 - bandolab-api.js: livello API verso Supabase (accesso Google, sessioni, soluzioni, letture), 14 test con client finto; non ancora agganciato alle pagine
-- Il sito non è ancora collegato al database (salva ancora nel browser); prossimo passo: bandolab-api.js
+- Patch 10–12: tutte le RPC mancanti (area utente, redazione domande, materiali, quiz, catalogo, ruoli, import, esportazione e cancellazione dati); applicate e verificate sul database con rpc-user (U01–U21), rpc-editorial (E01–E41) e rpc-content (44 controlli), tutte annullate a fine prova
+- Corretto un difetto emerso dal test: la cancellazione dell'account di ex-redattori violava un vincolo; ora risponde staff_account
+- bandolab-api.js: wrapper per tutte le nuove RPC, 17 test con client finto (83 test in totale)
+- Il sito non è ancora collegato al database (salva ancora nel browser); prossimo passo: agganciare le pagine tramite cache locale
 
 ## Screen map
 | Schermata | File nel repository |
@@ -27,9 +30,10 @@ date: 2026-10-27T19:30:00Z
 | Area amministrativa | BandoLab Admin.dc.html, bandolab-core.js |
 | Test automatici | BandoLab Test.dc.html, bandolab-core.js, package.json, test/ |
 | Pagina iniziale (redirect) | index.html |
-| Database | db/schema.sql, db/patch-01..09, db/seed-demo.sql, db/import/, db/tools/, db/API.md, db/README.md, db/tests/, GUIDA-SUPABASE.md |
+| Database | db/schema.sql, db/patch-01..12, db/seed-demo.sql, db/import/, db/tools/, db/API.md, db/README.md, db/tests/, GUIDA-SUPABASE.md |
 
 ## Sync history
+- 2026-10-27T21:00:00Z — patch 10–12, RPC complete e test sul database
 - 2026-10-27T19:30:00Z — livello API bandolab-api.js e test
 - 2026-10-27T18:30:00Z — unit test del core e refactoring
 - 2026-10-27T17:30:00Z — patch 09, admin autore e revisore

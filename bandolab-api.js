@@ -41,7 +41,19 @@
     not_authenticated: 'Devi accedere per continuare.',
     forbidden: 'Non sei autorizzato a questa azione.',
     invalid: 'Dati non validi.',
-    network: 'Connessione al database non riuscita. Riprova.'
+    network: 'Connessione al database non riuscita. Riprova.',
+    too_many: 'Hai raggiunto il limite giornaliero di segnalazioni.',
+    not_author: 'Puoi modificare solo i tuoi contenuti.',
+    not_editable: 'Il contenuto non è modificabile nello stato attuale.',
+    invalid_state: 'Operazione non consentita dallo stato attuale.',
+    validation: 'Completa i campi obbligatori.',
+    note_required: 'Serve una nota.',
+    self_review: 'Non puoi revisionare un contenuto di cui sei autore. Solo un amministratore può farlo.',
+    staff_account: 'Un account di redazione, o con contenuti a proprio nome, non si cancella da qui: contatta un amministratore.',
+    checks_failed: 'Il quiz non supera i controlli di pubblicazione.',
+    last_admin: 'Non puoi rimuovere il ruolo dall\'unico amministratore.',
+    already_merged: 'Una delle due domande è già stata consolidata.',
+    no_live: 'Nessuna versione pubblicata.'
   };
   const PG_CODES = { '28000': 'not_authenticated', '42501': 'forbidden', '22023': 'invalid', 'PGRST301': 'not_authenticated' };
 
@@ -171,6 +183,38 @@
     api.getQuestionFeedback = (sessionId, qid) => rpc('get_question_feedback', { p_session_id: sessionId, p_qid: qid });
     api.getAttemptReview = attemptId => rpc('get_attempt_review', { p_attempt_id: attemptId });
     api.getQuestionVersionStaff = (env, qid, v) => rpc('get_question_version_staff', { p_env: env, p_qid: qid, p_v: v });
+
+    /* ----- area utente: materiali, errori, segnalazioni, dati personali ----- */
+    api.completeMaterial = (env, mid) => rpc('complete_material', { p_env: env, p_mid: mid });
+    api.markReviewed = attemptId => rpc('mark_reviewed', { p_attempt_id: attemptId });
+    api.createReport = (env, qid, v, reason, text) => rpc('create_report', { p_env: env, p_qid: qid, p_v: v, p_reason: reason, p_text: text });
+    /** Esporta tutti i dati personali (portabilità). */
+    api.exportMyData = () => rpc('export_my_data', {});
+    /** Cancella l'account e i dati personali; serve digitare ELIMINA come conferma. */
+    api.deleteMyAccount = confirm => rpc('delete_my_account', { p_confirm: confirm });
+
+    /* ----- redazione (editor, revisori, amministratori): il server controlla ruoli e regole ----- */
+    api.createQuestion = env => rpc('create_question', { p_env: env });
+    /** fields: text, options[4], correct, explanation, subject_id, topic_id, difficulty, source, source_url, last_verified, next_review */
+    api.updateDraft = (env, qid, fields) => rpc('update_draft', { p_env: env, p_qid: qid, p_fields: fields });
+    /** action: submit | approve | changes | reject | publish | newVersion | suspend | unsuspend | verify | reopen */
+    api.transition = (env, qid, action, note) => rpc('transition', { p_env: env, p_qid: qid, p_action: action, p_note: note || null });
+    /** patch: { status?, priority?, assignee_id? } */
+    api.updateReport = (reportId, patch) => rpc('update_report', { p_id: reportId, p_patch: patch });
+    api.decideDuplicate = (env, a, b, decision, note) => rpc('decide_duplicate', { p_env: env, p_a: a, p_b: b, p_decision: decision, p_note: note || null });
+    /** Solo amministratori. rows: righe già controllate lato client o prodotte da excel-to-sql; status: draft | review | published */
+    api.importQuestions = (env, rows, status) => rpc('import_questions', { p_env: env, p_rows: rows, p_status: status || 'draft' });
+    api.createMaterial = (env, title, subjectId, topicId, format) => rpc('create_material', { p_env: env, p_title: title, p_subject_id: subjectId, p_topic_id: topicId, p_format: format || 'scheda' });
+    api.updateMaterial = (env, mid, fields) => rpc('update_material', { p_env: env, p_mid: mid, p_fields: fields });
+    api.setMaterialFile = (env, mid, path) => rpc('set_material_file', { p_env: env, p_mid: mid, p_path: path });
+    /** action: submit | approve | publish | unpublish */
+    api.materialTransition = (env, mid, action) => rpc('material_transition', { p_env: env, p_mid: mid, p_action: action });
+    /** quiz: { id?, title, mode, subject_ids?, topic_ids?, question_count, duration_min? } */
+    api.saveQuiz = (env, quiz) => rpc('save_quiz', { p_env: env, p_quiz: quiz });
+    api.setQuizStatus = (env, zid, status) => rpc('set_quiz_status', { p_env: env, p_zid: zid, p_status: status });
+    /** kind: areas | subjects | topics | professional_profiles | entities; id null = nuova voce */
+    api.taxEdit = (env, kind, id, patch) => rpc('tax_edit', { p_env: env, p_kind: kind, p_id: id || null, p_patch: patch });
+    api.setRole = (uid, role) => rpc('set_role', { p_uid: uid, p_role: role });
 
     /* ----- lettura dello stato dell'utente ----- */
     /** Sessione aperta, se esiste (per riprendere dopo una chiusura del browser). */

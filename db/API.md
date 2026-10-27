@@ -1,6 +1,6 @@
 # BandoLab — Contratto delle funzioni RPC
 
-Funzioni disponibili dopo le patch 07 e 08. Tutte richiedono un utente autenticato (`authenticated`);
+Funzioni disponibili dopo le patch 07, 08, 10, 11 e 12. Tutte richiedono un utente autenticato (`authenticated`);
 gli anonimi ricevono `permission denied`. Si chiamano con `supabase.rpc(nome, parametri)`.
 
 Convenzioni:
@@ -60,6 +60,46 @@ Errore: `attempt_not_found` (anche per tentativi di altri utenti).
 
 ### `get_question_version_staff(p_env env_t, p_qid text, p_v int)`
 Versione completa di una domanda per editor, revisori e amministratori; gli altri ricevono `42501`. Errore: `not_found`.
+
+## Area utente (patch 10)
+
+### `complete_material(p_env, p_mid)`
+Segna un materiale pubblicato come completato: +8 XP una sola volta e avanzamento dei percorsi che lo contengono. Esiti: `{ok:true, already:false, xp:8}`, `{ok:true, already:true}`, errore `not_found`.
+
+### `mark_reviewed(p_attempt_id)`
+Revisione degli errori di un proprio tentativo concluso: +5 XP una sola volta. Errore `attempt_not_found`.
+
+### `create_report(p_env, p_qid, p_v, p_reason, p_text)`
+Segnalazione di una versione pubblicata. Motivo 2–60 caratteri, descrizione 10–2000 (altrimenti `22023`). Massimo 5 al giorno (`too_many`). Crea una notifica se le preferenze lo consentono. Ritorna `{ok:true, id}`.
+
+### `export_my_data()`
+Tutti i dati personali dell'utente in un unico JSON (profilo, preferenze, tentativi con risposte, XP, letture, percorsi, notifiche, segnalazioni).
+
+### `delete_my_account(p_confirm)`
+Cancella l'account e i dati personali; `p_confirm` deve essere `'ELIMINA'` (altrimenti `22023`). Gli account di redazione, o con contenuti o decisioni a proprio nome, ricevono `staff_account`: l'amministratore deve prima riassegnarli. Le segnalazioni restano anonime.
+
+Le notifiche sono aggiornabili dal client solo nella colonna `read_at`.
+
+## Redazione: domande (patch 11)
+Ruoli: editor, revisori e amministratori; chi non ha il ruolo riceve `42501`. Ogni modifica scrive una riga in `audit_log`.
+Regola di autore/revisore: editor e revisori non possono approvare un proprio contenuto (`self_review`); l'amministratore sì. Un editor modifica solo le proprie bozze (`not_author`).
+
+- `create_question(p_env)` → `{ok, id, v}` nuova bozza.
+- `update_draft(p_env, p_qid, p_fields)` — campi ammessi: `text, options[4], correct, explanation, subject_id, topic_id, difficulty, source, source_url, last_verified, next_review`. Dati non validi: `22023`.
+- `transition(p_env, p_qid, p_action, p_note = null)` — azioni: `submit, approve, changes, reject, publish, newVersion, suspend, unsuspend, verify, reopen`. `changes`, `reject` e `suspend` richiedono una nota (`note_required`). Errori: `not_found`, `invalid_state`, `validation`, `self_review`.
+- `update_report(p_id, p_patch)` — `status`, `priority`, `assignee_id`.
+- `decide_duplicate(p_env, p_a, p_b, p_decision, p_note = null)` — registra la decisione sulla coppia.
+- `import_questions(p_env, p_rows, p_status = 'draft')` — solo amministratori; `p_status` è `draft`, `review` o `published`. Controlla ogni riga con le regole del database: se anche una sola è errata non scrive nulla e ritorna `{ok:false, error:'validation', bad_rows, rows:[{row, errors}]}` (prime 50). Gli id già presenti vengono saltati.
+
+## Redazione: materiali, quiz, catalogo, ruoli (patch 12)
+- `create_material(p_env, p_title, p_subject_id, p_topic_id, p_format = 'scheda')`
+- `update_material(p_env, p_mid, p_fields)` — `title, subject_id, topic_id, format, minutes, source, key_concepts, last_verified, next_review, sections, related`.
+- `set_material_file(p_env, p_mid, p_path)` — collega il file caricato.
+- `material_transition(p_env, p_mid, p_action)` — `submit, approve, publish, unpublish`.
+- `save_quiz(p_env, p_quiz)` — crea o aggiorna un quiz in bozza.
+- `set_quiz_status(p_env, p_zid, p_status)` — `published` o `draft`; la pubblicazione applica i controlli di `BL.quizChecks`, altrimenti `{ok:false, error:'checks_failed', failed:[...]}`.
+- `tax_edit(p_env, p_kind, p_id, p_patch)` — solo amministratori; `p_kind`: `areas, subjects, topics, professional_profiles, entities`; `p_id` nullo crea una voce.
+- `set_role(p_uid, p_role)` — solo amministratori; l'ultimo amministratore non può essere declassato (`last_admin`).
 
 ## Esempi
 
