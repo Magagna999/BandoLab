@@ -2,7 +2,7 @@ repo: Magagna999/BandoLab
 branch: main
 
 ## Last sync
-date: 2026-10-27T18:30:00Z
+date: 2026-10-27T19:30:00Z
 
 ### Updated in this project
 - Revisione del database: patch 06 (policy più restrittive), 07 (RPC per sessioni, punteggio, XP), 08 (risposte corrette nascoste al client)
@@ -16,12 +16,13 @@ date: 2026-10-27T18:30:00Z
 - Patch 09: l'amministratore può essere autore e revisore (trigger nel database + regola in bandolab-core.js); editor e revisori restano vincolati
 - 66 unit test (npm test) su bandolab-core.js con orologio finto; corretti due crash (updateDraft e materialTransition con id inesistente)
 - Refactoring del core senza cambiare l'API BL.*: transizioni delle domande a tabella, XP e avanzamento percorsi estratti in funzioni, one-liner del workflow riformattati
+- bandolab-api.js: livello API verso Supabase (accesso Google, sessioni, soluzioni, letture), 14 test con client finto; non ancora agganciato alle pagine
 - Il sito non è ancora collegato al database (salva ancora nel browser); prossimo passo: bandolab-api.js
 
 ## Screen map
 | Schermata | File nel repository |
 |---|---|
-| Landing + quiz demo + accesso | BandoLab Landing.dc.html, bandolab-core.js |
+| Landing + quiz demo + accesso | BandoLab Landing.dc.html, bandolab-core.js, bandolab-api.js |
 | App utente | BandoLab App.dc.html, bandolab-core.js |
 | Area amministrativa | BandoLab Admin.dc.html, bandolab-core.js |
 | Test automatici | BandoLab Test.dc.html, bandolab-core.js, package.json, test/ |
@@ -29,6 +30,7 @@ date: 2026-10-27T18:30:00Z
 | Database | db/schema.sql, db/patch-01..09, db/seed-demo.sql, db/import/, db/tools/, db/API.md, db/README.md, db/tests/, GUIDA-SUPABASE.md |
 
 ## Sync history
+- 2026-10-27T19:30:00Z — livello API bandolab-api.js e test
 - 2026-10-27T18:30:00Z — unit test del core e refactoring
 - 2026-10-27T17:30:00Z — patch 09, admin autore e revisore
 - 2026-10-27T17:00:00Z — modello Excel e importatore delle domande

@@ -40,7 +40,7 @@ Schema PostgreSQL/Supabase, patch 01–08 e funzioni RPC per sessioni, punteggio
 Il database è attivo e le RPC sono testate (`db/tests/rpc-sessions.test.sql`), ma il sito **non è ancora collegato**: salva ancora nel browser.
 
 ## Test automatici
-`npm test` (Node 20 o successivo, nessuna dipendenza) esegue 66 unit test su `bandolab-core.js`: punteggio, date, permessi, workflow editoriale, sessioni, XP, badge, statistiche, ricerca, duplicati, materiali e persistenza.
+`npm test` (Node 20 o successivo, nessuna dipendenza) esegue 80 unit test su `bandolab-core.js` e `bandolab-api.js`: punteggio, date, permessi, workflow editoriale, sessioni, XP, badge, statistiche, ricerca, duplicati, materiali e persistenza.
 Il core viene caricato in un contesto isolato con un orologio finto (`test/helpers/core.js`), quindi i risultati sono ripetibili. La pagina `BandoLab Test.dc.html` resta per le prove nel browser.
 I test servono da rete di sicurezza: il codice del core può essere riorganizzato finché `npm test` resta verde e l'API pubblica `BL.*` non cambia.
 

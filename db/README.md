@@ -66,6 +66,19 @@ Prossimo passo possibile: funzione `import_questions(jsonb)` per admin, per cari
 Si esegue nell'editor SQL di Supabase (o con `execute_sql`) e non lascia dati. Esito del 27/10/2026: tutti i controlli ok.
 Copre: avvio e bilanciamento, sessione già aperta, dati non validi, salvataggio, feedback, punteggio e XP, idempotenza, revisione, scadenza e tolleranza, bonus miglioramento, interruzioni, abbandono, percorso, preferenze notifiche, accesso anonimo, funzione staff, soglia di superamento, precedenza agli errori passati.
 
+## Livello API del sito (`bandolab-api.js`)
+Modulo senza dipendenze (oltre a supabase-js) che chiama il database al posto di `localStorage`. Tutte le funzioni sono asincrone e non sollevano eccezioni: ritornano `{ ok:true, ... }` oppure `{ ok:false, error, why }` con messaggio in italiano.
+- **Accesso**: `signInWithGoogle`, `signOut`, `getUser`, `onAuthChange`, `getProfile`.
+- **Sessioni**: `startSession`, `saveSession`, `finishSession`, `logInterruption`, `abandonSession`, `getActiveSession` (riprende dopo la chiusura del browser).
+- **Soluzioni**: `getQuestionFeedback`, `getAttemptReview`, `getQuestionVersionStaff`.
+- **Lettura**: `listAttempts`, `listXp`, `listNotifications`, `getPathProgress`, `getTaxonomy`, `listQuizzes`, `listMaterials`, `listPaths`. I dati tornano già nel formato usato dal core (camelCase, date in millisecondi, punteggio con `display`).
+- **Timer**: la sessione include `clockSkew` (scarto tra orologio del server e del dispositivo) per mostrare la scadenza corretta; la scadenza vera la decide il server.
+Nel browser: caricare supabase-js, poi `const api = BandoLabAPI.connect();`. URL del progetto e chiave pubblica (publishable) sono nel file; la sicurezza dei dati è nelle regole RLS.
+Materie, argomenti, sezioni dei materiali e percorsi sono leggibili solo dopo l'accesso; quiz e materiali pubblicati anche da anonimi.
+**Non ancora disponibili** (mancano le RPC nel database): completamento materiali, revisione errori, segnalazioni, preferenze, tutta l'area editoriale/admin.
+**Non ancora collegato alle pagine**: le pagine chiamano il core in modo sincrono; l'aggancio richiede una cache locale che rispecchi lo stato del server (passo successivo).
+Test: `test/api.test.js` (14 test, client Supabase finto in `test/helpers/fake-supabase.js`). Verificato sul database reale che tutte le tabelle e colonne lette esistono.
+
 ## Passi per il collegamento
 1. Progetto Supabase creato, schema e patch 01–08 applicati (fatto).
 2. Attivare il provider Google in Authentication e impostare Site URL e redirect (vedi `GUIDA-SUPABASE.md`).
