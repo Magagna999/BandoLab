@@ -1,0 +1,9 @@
+{
+  "name": "bandolab",
+  "private": true,
+  "description": "BandoLab - prototipo e logica condivisa (bandolab-core.js)",
+  "scripts": {
+    "test": "node --test \"test/**/*.test.js\""
+  },
+  "engines": { "node": ">=20" }
+}

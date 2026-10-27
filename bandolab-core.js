@@ -493,8 +493,9 @@ BL.validate = (v, settings) => {
 const audit = (s, actor, target, v, action, note) => s.audit.unshift({ at: Date.now(), actor: actor.id, target, v, action, note: note || '' });
 BL.createQuestion = actor => { const c = BL.can(actor, 'q.create'); if (!c.ok) return c; const id = 'q' + Date.now().toString(36); return BL.commit(s => { const q = { id, demo: true, suspended: false, mergedInto: null, current: null, versions: [blankVersion(actor.id)] }; BL.bank('demo').questions.unshift(q); audit(s, actor, id, 1, 'Creazione bozza'); return { id }; }); };
 BL.updateDraft = (actor, qid, fields) => {
-  const q = BL.bank('demo').questions.find(x => x.id === qid); const w = BL.working(q);
   const c = BL.can(actor, 'q.edit'); if (!c.ok) return c;
+  const q = BL.bank('demo').questions.find(x => x.id === qid); if (!q) return { ok: false, why: 'Domanda non trovata.' };
+  const w = BL.working(q);
   if (!['draft', 'changes'].includes(w.status)) return { ok: false, why: 'Solo le bozze o i contenuti con modifiche richieste sono modificabili.' };
   return BL.commit(() => { Object.assign(w, fields); if (fields.subject !== undefined) Object.assign(w, derive(BL.bank('demo').taxonomy, w.subject)); w.updatedAt = Date.now(); w.updatedBy = actor.id; });
 };
@@ -528,7 +529,9 @@ BL.transition = (actor, qid, action, note) => {
   });
 };
 BL.materialTransition = (actor, mid, action) => {
-  const m = BL.bank('demo').materials.find(x => x.id === mid); const need = { submit: 'm.edit', approve: 'm.review', publish: 'm.review', unpublish: 'm.review' }[action];
+  const m = BL.bank('demo').materials.find(x => x.id === mid); if (!m) return { ok: false, why: 'Materiale non trovato.' };
+  const need = { submit: 'm.edit', approve: 'm.review', publish: 'm.review', unpublish: 'm.review' }[action];
+  if (!need) return { ok: false, why: 'Azione non valida.' };
   const c = BL.can(actor, need, ['approve'].includes(action) ? m : null); if (!c.ok) return c;
   const ok = { submit: ['draft'], approve: ['review'], publish: ['approved'], unpublish: ['published'] }[action]; if (!ok.includes(m.status)) return { ok: false, why: 'Transizione non consentita dallo stato attuale.' };
   if (action === 'submit' || action === 'publish') { const e = BL.validateMaterial(m, !!BL.getFile(m.id) || !!m.demo && m.format !== 'scheda' && !m.createdAt); if (Object.keys(e).length) return { ok: false, why: 'Completa i campi obbligatori del materiale: ' + Object.values(e).join(' '), errors: e }; }
