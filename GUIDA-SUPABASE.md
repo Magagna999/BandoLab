@@ -42,8 +42,8 @@ Tempo: circa 30 minuti. Costo: zero (piano gratuito).
    - incolla **Client ID** e **Client secret**
    - **Save**.
 6. Poi **Authentication → URL Configuration**:
-   - **Site URL**: `https://magagna999.github.io/MySite/`
-   - **Redirect URLs** → Add URL: `https://magagna999.github.io/MySite/**`
+   - **Site URL**: `https://magagna999.github.io/BandoLab/`
+   - **Redirect URLs** → Add URL: `https://magagna999.github.io/BandoLab/**`
    - Save.
 
 (Il Client secret non va dato a me né scritto su GitHub: resta solo dentro Supabase.)

@@ -1,4 +1,4 @@
-repo: Magagna999/MySite
+repo: Magagna999/BandoLab
 branch: main
 
 ## Last sync
