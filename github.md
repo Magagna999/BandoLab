@@ -9,6 +9,9 @@ date: 2026-10-27T15:00:00Z
 - Test eseguito sul database reale: 39 controlli (T01–T33) tutti ok, nessun dato lasciato
 - Documentazione: db/API.md (contratto RPC), db/README.md aggiornato, README.md aggiornato
 - Security Advisor: 8 avvisi attesi per le funzioni security definer, nessun errore
+- Dati demo caricati nel database (db/seed-demo.sql: 53 domande, 8 materiali, 5 quiz, 2 percorsi); generatore in db/tools/
+- Corretto il testo di q41 nel core (troppo corto per il vincolo del database)
+- Riferimenti MySite sostituiti con BandoLab
 - Il sito non è ancora collegato al database (salva ancora nel browser); prossimo passo: bandolab-api.js
 
 ## Screen map
@@ -19,9 +22,10 @@ date: 2026-10-27T15:00:00Z
 | Area amministrativa | BandoLab Admin.dc.html, bandolab-core.js |
 | Test automatici | BandoLab Test.dc.html, bandolab-core.js |
 | Pagina iniziale (redirect) | index.html |
-| Database | db/schema.sql, db/patch-01..08, db/API.md, db/README.md, db/tests/, GUIDA-SUPABASE.md |
+| Database | db/schema.sql, db/patch-01..08, db/seed-demo.sql, db/tools/, db/API.md, db/README.md, db/tests/, GUIDA-SUPABASE.md |
 
 ## Sync history
+- 2026-10-27T16:00:00Z — seed demo nel database, generatore, riferimenti BandoLab
 - 2026-10-27T15:00:00Z — patch 06–08, RPC sessioni, test sul database, documentazione API
 - 2026-10-16T12:20:00Z — database Supabase creato: schema + patch 01-05
 - 2026-10-16T11:19:11Z — importazione materiali, accesso rapido admin, guida Supabase

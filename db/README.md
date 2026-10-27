@@ -41,6 +41,17 @@ Ordine di esecuzione su un progetto nuovo: schema, poi le patch in ordine numeri
 
 Ogni RPC che modifica contenuti dovrà scrivere una riga in `audit_log`.
 
+## Dati demo
+`seed-demo.sql` carica l'ambiente `demo` con i dati del prototipo: tassonomia, 53 domande (54 versioni: 50 pubblicate, 1 in revisione, 1 bozza, 1 con modifiche richieste, più una seconda versione in revisione), 8 materiali, 5 quiz, 2 percorsi e 3 utenti di redazione fittizi (2 editor e 1 revisore, email `@example.com`, senza possibilità di accesso).
+Il file è generato da `bandolab-core.js` con `node db/tools/generate-demo-seed.js` ed è idempotente (`on conflict do nothing`). **Stato: caricato nel database il 27/10/2026.** L'ambiente `real` è ancora vuoto.
+I materiali in PDF restano in bozza finché non c'è un file nello storage (vincolo `file_path` del database).
+Nota: il database ha fatto emergere due difetti dei dati demo che il prototipo non controllava (testo di `q41` troppo corto, date vuote nelle bozze): il primo è corretto nel core.
+
+## Caricamento delle domande reali
+Per ora non esiste un import da interfaccia. Il canale è SQL, con lo stesso schema del seed: una riga in `questions`, una o più in `question_versions` (4 opzioni, risposta 0–3, spiegazione, materia, argomento, difficoltà 1–3, fonte, `last_verified`, `next_review`), poi `current_version`.
+Prerequisiti: materie e argomenti dell'ambiente `real` già presenti; un autore (utente esistente in `profiles_user`) e, per pubblicare, un revisore diverso dall'autore. Altrimenti le domande restano in bozza.
+Prossimo passo previsto: funzione `import_questions(jsonb)` riservata agli admin (tutto o niente), con un modello CSV/Excel da compilare.
+
 ## Test
 `tests/rpc-sessions.test.sql` è un blocco `DO` che crea utenti e domande fittizi, simula i ruoli con `set local role` e `request.jwt.claims`, verifica 39 casi (T01–T33) e termina sempre con un errore `RISULTATI: ...` che annulla ogni modifica.
 Si esegue nell'editor SQL di Supabase (o con `execute_sql`) e non lascia dati. Esito del 27/10/2026: tutti i controlli ok.
