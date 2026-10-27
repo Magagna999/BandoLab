@@ -368,46 +368,128 @@ BL.buildQuiz = (bank, cfg, rec) => {
   });
   return { ok: true, items: shuffle(items, r), plan: p, prioritized: wrongIds.size > 0 };
 };
-BL.startSession = (cfg) => {
+BL.startSession = cfg => {
   const bank = BL.bank(), rec = BL.rec();
   const b = BL.buildQuiz(bank, cfg, rec);
   if (!b.ok) return b;
   const now = Date.now();
-  const session = { id: 's' + now, mode: cfg.mode, title: cfg.title, key: cfg.key, items: b.items, answers: {}, revealed: {}, current: 0, startedAt: now, deadline: cfg.mode === 'exam' ? now + cfg.durationMin * 60e3 : null, durationMin: cfg.durationMin || null, interruptions: [], lastSeen: now, pathRef: cfg.pathRef || null, prioritized: b.prioritized };
+  const isExam = cfg.mode === 'exam';
+  const session = {
+    id: 's' + now, mode: cfg.mode, title: cfg.title, key: cfg.key,
+    items: b.items, answers: {}, revealed: {}, current: 0,
+    startedAt: now, deadline: isExam ? now + cfg.durationMin * 60e3 : null, durationMin: cfg.durationMin || null,
+    interruptions: [], lastSeen: now, pathRef: cfg.pathRef || null, prioritized: b.prioritized
+  };
   const res = BL.commit(() => { rec.session = session; });
   return res.ok ? { ok: true, session } : res;
 };
-BL.saveSession = patch => { const rec = BL.rec(); return BL.commit(() => { if (rec.session) Object.assign(rec.session, patch, { lastSeen: Date.now() }); }); };
-BL.logInterruption = type => { const rec = BL.rec(); if (!rec.session) return; BL.commit(() => { rec.session.interruptions.push({ at: Date.now(), type }); }); };
-BL.abandonSession = () => { const rec = BL.rec(); return BL.commit(() => { const s = rec.session; if (!s) return; rec.attempts.push({ id: 'a' + Date.now(), mode: s.mode, title: s.title, key: s.key, startedAt: s.startedAt, finishedAt: Date.now(), durationSec: 0, items: [], score: null, reason: 'abandoned', interruptions: s.interruptions, status: 'abandoned' }); rec.session = null; }); };
-BL.notify = (rec, type, title, body) => { const pref = { goal: 'goals', progress: 'progress', content: 'content' }[type]; if (pref && rec.prefs.notif[pref] === false) return; rec.notifications.unshift({ id: 'n' + Date.now() + Math.random().toString(36).slice(2, 5), type, title, body, at: Date.now(), read: false }); };
+BL.saveSession = patch => {
+  const rec = BL.rec();
+  return BL.commit(() => { if (rec.session) Object.assign(rec.session, patch, { lastSeen: Date.now() }); });
+};
+BL.logInterruption = type => {
+  const rec = BL.rec();
+  if (!rec.session) return;
+  BL.commit(() => { rec.session.interruptions.push({ at: Date.now(), type }); });
+};
+BL.abandonSession = () => {
+  const rec = BL.rec();
+  return BL.commit(() => {
+    const s = rec.session;
+    if (!s) return;
+    rec.attempts.push({
+      id: 'a' + Date.now(), mode: s.mode, title: s.title, key: s.key, startedAt: s.startedAt, finishedAt: Date.now(),
+      durationSec: 0, items: [], score: null, reason: 'abandoned', interruptions: s.interruptions, status: 'abandoned'
+    });
+    rec.session = null;
+  });
+};
+BL.notify = (rec, type, title, body) => {
+  const pref = { goal: 'goals', progress: 'progress', content: 'content' }[type];
+  if (pref && rec.prefs.notif[pref] === false) return;
+  rec.notifications.unshift({ id: 'n' + Date.now() + Math.random().toString(36).slice(2, 5), type, title, body, at: Date.now(), read: false });
+};
+
+/* Segna un passo di un percorso come completato (usato da quiz e materiali). */
+function markPathStep(rec, pid, sid, at) {
+  const p = rec.paths[pid] || (rec.paths[pid] = { order: null, status: {} });
+  p.status[sid] = 'done';
+  p.at = at;
+}
+
+/* XP di un quiz concluso: base 10 + corrette (0 dalla terza ripetizione in 24 ore), più bonus miglioramento in simulazione. */
+function xpForAttempt(rec, att) {
+  const { score } = att;
+  const recent = rec.attempts.filter(a => a.key === att.key && a.status === 'completed' && att.finishedAt - a.finishedAt < DAY).length;
+  const xp = [recent >= 2
+    ? { amount: 0, reason: 'Ripetizione dello stesso quiz nelle 24 ore: nessun XP aggiuntivo' }
+    : { amount: 10 + score.C, reason: 'Quiz completato' }];
+  if (att.mode === 'exam') {
+    const prev = rec.attempts.filter(a => a.mode === 'exam' && a.status === 'completed' && a.score && a.score.N === score.N).slice(-1)[0];
+    if (prev && score.score > prev.score.score) xp.push({ amount: 15, reason: 'Miglioramento in simulazione comparabile' });
+  }
+  return xp;
+}
+
 BL.finishSession = reason => {
-  const rec = BL.rec(), bank = BL.bank(); const s = rec.session; if (!s) return { ok: false, error: 'Nessuna sessione attiva' };
+  const rec = BL.rec(), bank = BL.bank();
+  const s = rec.session;
+  if (!s) return { ok: false, error: 'Nessuna sessione attiva' };
   const end = s.deadline && reason === 'timeout' ? Math.min(Date.now(), s.deadline) : Date.now();
-  const items = s.items.map(it => { const v = BL.versionOf(bank, it.qid, it.v); const a = s.answers[it.qid]; const answer = a == null ? null : a; return { qid: it.qid, v: it.v, answer, correct: answer != null && v && answer === v.correct }; });
+  const items = s.items.map(it => {
+    const v = BL.versionOf(bank, it.qid, it.v);
+    const answer = s.answers[it.qid] == null ? null : s.answers[it.qid];
+    return { qid: it.qid, v: it.v, answer, correct: answer != null && !!v && answer === v.correct };
+  });
   const score = BL.scoreItems(items);
-  const before = BL.badges(rec).filter(b => b.earned).map(b => b.id);
-  const att = { id: 'a' + Date.now(), mode: s.mode, title: s.title, key: s.key, startedAt: s.startedAt, finishedAt: end, durationSec: Math.round((end - s.startedAt) / 1000), items, score, reason, interruptions: s.interruptions, status: 'completed', pathRef: s.pathRef };
-  const recent = rec.attempts.filter(a => a.key === att.key && a.status === 'completed' && end - a.finishedAt < DAY).length;
-  const xp = []; if (recent >= 2) xp.push({ amount: 0, reason: 'Ripetizione dello stesso quiz nelle 24 ore: nessun XP aggiuntivo' }); else xp.push({ amount: 10 + score.C, reason: 'Quiz completato' });
-  if (att.mode === 'exam') { const prev = rec.attempts.filter(a => a.mode === 'exam' && a.status === 'completed' && a.score && a.score.N === score.N).slice(-1)[0]; if (prev && score.score > prev.score.score) xp.push({ amount: 15, reason: 'Miglioramento in simulazione comparabile' }); }
+  const att = {
+    id: 'a' + Date.now(), mode: s.mode, title: s.title, key: s.key, startedAt: s.startedAt, finishedAt: end,
+    durationSec: Math.round((end - s.startedAt) / 1000), items, score, reason,
+    interruptions: s.interruptions, status: 'completed', pathRef: s.pathRef
+  };
+  const xp = xpForAttempt(rec, att);
+  const earnedBefore = BL.badges(rec).filter(b => b.earned).map(b => b.id);
   const res = BL.commit(() => {
-    rec.attempts.push(att); rec.session = null;
+    rec.attempts.push(att);
+    rec.session = null;
     xp.forEach(x => rec.xpLog.push({ at: end, amount: x.amount, reason: x.reason }));
-    if (s.pathRef) { const p = rec.paths[s.pathRef.pid] || (rec.paths[s.pathRef.pid] = { order: null, status: {} }); p.status[s.pathRef.sid] = 'done'; p.at = end; }
-    BL.notify(rec, 'progress', att.mode === 'exam' ? 'Simulazione consegnata' : 'Quiz completato', `${att.title}: ${score.display}/30` + (xp[0].amount ? ` · +${xp.reduce((a, b) => a + b.amount, 0)} XP` : ''));
-    BL.badges(rec).filter(b => b.earned && !before.includes(b.id)).forEach(b => BL.notify(rec, 'progress', 'Nuovo badge', `Hai ottenuto il badge «${b.name}».`));
+    if (s.pathRef) markPathStep(rec, s.pathRef.pid, s.pathRef.sid, end);
+    const total = xp.reduce((a, b) => a + b.amount, 0);
+    BL.notify(rec, 'progress', att.mode === 'exam' ? 'Simulazione consegnata' : 'Quiz completato',
+      `${att.title}: ${score.display}/30` + (xp[0].amount ? ` · +${total} XP` : ''));
+    BL.badges(rec).filter(b => b.earned && !earnedBefore.includes(b.id))
+      .forEach(b => BL.notify(rec, 'progress', 'Nuovo badge', `Hai ottenuto il badge «${b.name}».`));
   });
   return res.ok ? { ok: true, attempt: att, xp } : res;
 };
 /* ripresa: se la simulazione è scaduta, viene consegnata con le risposte salvate */
 BL.checkSession = () => {
-  const rec = BL.rec(); const s = rec.session; if (!s) return { state: 'none' };
-  if (s.mode === 'exam' && Date.now() >= s.deadline) { const r = BL.finishSession('timeout'); return { state: 'expired', attempt: r.attempt, ok: r.ok }; }
+  const rec = BL.rec();
+  const s = rec.session;
+  if (!s) return { state: 'none' };
+  if (s.mode === 'exam' && Date.now() >= s.deadline) {
+    const r = BL.finishSession('timeout');
+    return { state: 'expired', attempt: r.attempt, ok: r.ok };
+  }
   return { state: 'active', session: s };
 };
-BL.completeMaterial = mid => { const rec = BL.rec(); const bank = BL.bank(); return BL.commit(() => { if (rec.completed[mid]) return; rec.completed[mid] = Date.now(); rec.xpLog.push({ at: Date.now(), amount: 8, reason: 'Materiale completato' }); bank.paths.forEach(p => p.steps.forEach(st => { if (st.type === 'material' && st.ref === mid) { const pr = rec.paths[p.id] || (rec.paths[p.id] = { order: null, status: {} }); pr.status[st.id] = 'done'; pr.at = Date.now(); } })); }); };
-BL.markReviewed = aid => { const rec = BL.rec(); if (rec.reviewed[aid]) return { ok: true, already: true }; return BL.commit(() => { rec.reviewed[aid] = true; rec.xpLog.push({ at: Date.now(), amount: 5, reason: 'Revisione degli errori' }); }); };
+BL.completeMaterial = mid => {
+  const rec = BL.rec(), bank = BL.bank();
+  return BL.commit(() => {
+    if (rec.completed[mid]) return;
+    const now = Date.now();
+    rec.completed[mid] = now;
+    rec.xpLog.push({ at: now, amount: 8, reason: 'Materiale completato' });
+    bank.paths.forEach(p => p.steps.forEach(st => {
+      if (st.type === 'material' && st.ref === mid) markPathStep(rec, p.id, st.id, now);
+    }));
+  });
+};
+BL.markReviewed = aid => {
+  const rec = BL.rec();
+  if (rec.reviewed[aid]) return { ok: true, already: true };
+  return BL.commit(() => { rec.reviewed[aid] = true; rec.xpLog.push({ at: Date.now(), amount: 5, reason: 'Revisione degli errori' }); });
+};
 
 /* ---------- PROGRESSI, GAMIFICATION ---------- */
 BL.xp = rec => rec.xpLog.reduce((a, b) => a + b.amount, 0);
@@ -491,7 +573,17 @@ BL.validate = (v, settings) => {
   return e;
 };
 const audit = (s, actor, target, v, action, note) => s.audit.unshift({ at: Date.now(), actor: actor.id, target, v, action, note: note || '' });
-BL.createQuestion = actor => { const c = BL.can(actor, 'q.create'); if (!c.ok) return c; const id = 'q' + Date.now().toString(36); return BL.commit(s => { const q = { id, demo: true, suspended: false, mergedInto: null, current: null, versions: [blankVersion(actor.id)] }; BL.bank('demo').questions.unshift(q); audit(s, actor, id, 1, 'Creazione bozza'); return { id }; }); };
+BL.createQuestion = actor => {
+  const c = BL.can(actor, 'q.create');
+  if (!c.ok) return c;
+  const id = 'q' + Date.now().toString(36);
+  return BL.commit(s => {
+    const q = { id, demo: true, suspended: false, mergedInto: null, current: null, versions: [blankVersion(actor.id)] };
+    BL.bank('demo').questions.unshift(q);
+    audit(s, actor, id, 1, 'Creazione bozza');
+    return { id };
+  });
+};
 BL.updateDraft = (actor, qid, fields) => {
   const c = BL.can(actor, 'q.edit'); if (!c.ok) return c;
   const q = BL.bank('demo').questions.find(x => x.id === qid); if (!q) return { ok: false, why: 'Domanda non trovata.' };
@@ -499,33 +591,92 @@ BL.updateDraft = (actor, qid, fields) => {
   if (!['draft', 'changes'].includes(w.status)) return { ok: false, why: 'Solo le bozze o i contenuti con modifiche richieste sono modificabili.' };
   return BL.commit(() => { Object.assign(w, fields); if (fields.subject !== undefined) Object.assign(w, derive(BL.bank('demo').taxonomy, w.subject)); w.updatedAt = Date.now(); w.updatedBy = actor.id; });
 };
+/* Transizioni editoriali delle domande: permesso richiesto, controllo dello stato di partenza e effetto sulla versione di lavoro.
+   `check` restituisce un messaggio di errore oppure null; `apply` modifica w (versione di lavoro) e q (domanda). */
+const Q_TRANSITIONS = {
+  submit: {
+    perm: 'q.submit', label: 'Invio in revisione',
+    check: (c) => !['draft', 'changes'].includes(c.w.status) ? 'Solo una bozza può essere inviata in revisione.' : null,
+    apply: (c) => { c.w.status = 'review'; c.w.reviewNote = ''; }
+  },
+  approve: {
+    perm: 'q.review', reviewer: true, label: 'Approvazione',
+    check: (c) => c.w.status !== 'review' ? 'Il contenuto non è in revisione.' : null,
+    apply: (c) => { Object.assign(c.w, { status: 'approved', reviewer: c.actor.id, approvedAt: Date.now() }); }
+  },
+  changes: {
+    perm: 'q.review', reviewer: true, label: 'Modifiche richieste',
+    check: (c) => c.w.status !== 'review' ? 'Il contenuto non è in revisione.' : !(c.note || '').trim() ? 'Specifica le modifiche richieste.' : null,
+    apply: (c) => { Object.assign(c.w, { status: 'changes', reviewer: c.actor.id, reviewNote: c.note }); }
+  },
+  reject: {
+    perm: 'q.review', reviewer: true, label: 'Rifiuto',
+    check: (c) => c.w.status !== 'review' ? 'Il contenuto non è in revisione.' : null,
+    apply: (c) => { Object.assign(c.w, { status: 'rejected', reviewer: c.actor.id, reviewNote: c.note || '' }); }
+  },
+  publish: {
+    perm: 'q.publish', label: 'Pubblicazione',
+    check: (c) => c.w.status !== 'approved' ? 'Si possono pubblicare soltanto contenuti approvati.' : null,
+    apply: (c) => {
+      const prev = BL.live(c.q);
+      if (prev && prev !== c.w) prev.status = 'superseded';
+      Object.assign(c.w, { status: 'published', publishedAt: Date.now(), publishedBy: c.actor.id });
+      c.q.current = c.w.v;
+    }
+  },
+  newVersion: {
+    perm: 'q.edit', label: 'Nuova versione in bozza', auditVersion: (c) => c.w.v + 1,
+    check: (c) => c.w.status !== 'published' ? 'Esiste già una versione in lavorazione.' : null,
+    apply: (c) => {
+      c.q.versions.push(Object.assign(clone(c.w), {
+        v: c.w.v + 1, status: 'draft', author: c.actor.id, reviewer: null, createdAt: Date.now(),
+        publishedAt: null, note: c.note || 'Modifica della versione pubblicata', reviewNote: ''
+      }));
+    }
+  },
+  suspend: {
+    perm: 'q.suspend', label: 'Sospensione dai nuovi quiz',
+    check: (c) => !(c.note || '').trim() ? 'Indica il motivo della sospensione.' : null,
+    apply: (c) => { c.q.suspended = true; c.q.suspendNote = c.note; }
+  },
+  unsuspend: {
+    perm: 'q.suspend', label: 'Revoca della sospensione',
+    apply: (c) => { c.q.suspended = false; }
+  },
+  verify: {
+    perm: 'q.verify', label: 'Verifica normativa completata',
+    check: (c) => !BL.live(c.q) ? 'Nessuna versione pubblicata da verificare.' : null,
+    apply: (c) => {
+      const v = BL.live(c.q);
+      v.lastVerified = todayISO();
+      v.nextReview = addDays(todayISO(), Math.round(c.settings.verifyMonths * 30.4));
+    }
+  },
+  reopen: {
+    perm: 'q.edit', label: 'Riapertura come bozza',
+    check: (c) => c.w.status !== 'rejected' ? 'Solo un contenuto rifiutato può essere riaperto.' : null,
+    apply: (c) => { c.w.status = 'draft'; }
+  }
+};
 BL.transition = (actor, qid, action, note) => {
-  const s = BL.state(); const q = BL.bank('demo').questions.find(x => x.id === qid); if (!q) return { ok: false, why: 'Domanda non trovata.' };
-  const w = BL.working(q); const need = { submit: 'q.submit', approve: 'q.review', changes: 'q.review', reject: 'q.review', publish: 'q.publish', newVersion: 'q.edit', suspend: 'q.suspend', unsuspend: 'q.suspend', verify: 'q.verify', reopen: 'q.edit' }[action];
-  const c = BL.can(actor, need, ['approve', 'changes', 'reject'].includes(action) ? q : null); if (!c.ok) return c;
-  const from = w.status;
-  const fail = why => ({ ok: false, why });
-  if (action === 'submit') { if (!['draft', 'changes'].includes(from)) return fail('Solo una bozza può essere inviata in revisione.'); const e = BL.validate(w, s.settings); if (Object.keys(e).length) return { ok: false, why: 'Completa i campi obbligatori.', errors: e }; }
-  if (['approve', 'changes', 'reject'].includes(action) && from !== 'review') return fail('Il contenuto non è in revisione.');
-  if (action === 'changes' && !(note || '').trim()) return fail('Specifica le modifiche richieste.');
-  if (action === 'publish' && from !== 'approved') return fail('Si possono pubblicare soltanto contenuti approvati.');
-  if (action === 'newVersion' && from !== 'published') return fail('Esiste già una versione in lavorazione.');
-  if (action === 'reopen' && from !== 'rejected') return fail('Solo un contenuto rifiutato può essere riaperto.');
-  if (action === 'suspend' && !(note || '').trim()) return fail('Indica il motivo della sospensione.');
-  if (action === 'verify' && !BL.live(q)) return fail('Nessuna versione pubblicata da verificare.');
-  const labels = { submit: 'Invio in revisione', approve: 'Approvazione', changes: 'Modifiche richieste', reject: 'Rifiuto', publish: 'Pubblicazione', newVersion: 'Nuova versione in bozza', suspend: 'Sospensione dai nuovi quiz', unsuspend: 'Revoca della sospensione', verify: 'Verifica normativa completata', reopen: 'Riapertura come bozza' };
+  const s = BL.state();
+  const q = BL.bank('demo').questions.find(x => x.id === qid);
+  if (!q) return { ok: false, why: 'Domanda non trovata.' };
+  const rule = Q_TRANSITIONS[action];
+  if (!rule) return { ok: false, why: 'Azione non valida.' };
+  const perm = BL.can(actor, rule.perm, rule.reviewer ? q : null);
+  if (!perm.ok) return perm;
+  const ctx = { actor, q, w: BL.working(q), note, settings: s.settings };
+  const why = rule.check && rule.check(ctx);
+  if (why) return { ok: false, why };
+  if (action === 'submit') {
+    const errors = BL.validate(ctx.w, s.settings);
+    if (Object.keys(errors).length) return { ok: false, why: 'Completa i campi obbligatori.', errors };
+  }
+  const auditV = rule.auditVersion ? rule.auditVersion(ctx) : ctx.w.v;
   return BL.commit(st => {
-    if (action === 'submit') { w.status = 'review'; w.reviewNote = ''; }
-    if (action === 'approve') { w.status = 'approved'; w.reviewer = actor.id; w.approvedAt = Date.now(); }
-    if (action === 'changes') { w.status = 'changes'; w.reviewer = actor.id; w.reviewNote = note; }
-    if (action === 'reject') { w.status = 'rejected'; w.reviewer = actor.id; w.reviewNote = note || ''; }
-    if (action === 'reopen') { w.status = 'draft'; }
-    if (action === 'publish') { const prev = BL.live(q); if (prev && prev !== w) prev.status = 'superseded'; w.status = 'published'; w.publishedAt = Date.now(); w.publishedBy = actor.id; q.current = w.v; }
-    if (action === 'newVersion') { const nv = Object.assign(clone(w), { v: w.v + 1, status: 'draft', author: actor.id, reviewer: null, createdAt: Date.now(), publishedAt: null, note: note || 'Modifica della versione pubblicata', reviewNote: '' }); q.versions.push(nv); }
-    if (action === 'suspend') { q.suspended = true; q.suspendNote = note; }
-    if (action === 'unsuspend') { q.suspended = false; }
-    if (action === 'verify') { const v = BL.live(q); v.lastVerified = todayISO(); v.nextReview = addDays(todayISO(), Math.round(st.settings.verifyMonths * 30.4)); }
-    audit(st, actor, qid, action === 'newVersion' ? w.v + 1 : w.v, labels[action], note);
+    rule.apply(ctx);
+    audit(st, actor, qid, auditV, rule.label, note);
   });
 };
 BL.materialTransition = (actor, mid, action) => {
@@ -537,8 +688,26 @@ BL.materialTransition = (actor, mid, action) => {
   if (action === 'submit' || action === 'publish') { const e = BL.validateMaterial(m, !!BL.getFile(m.id) || !!m.demo && m.format !== 'scheda' && !m.createdAt); if (Object.keys(e).length) return { ok: false, why: 'Completa i campi obbligatori del materiale: ' + Object.values(e).join(' '), errors: e }; }
   return BL.commit(s => { m.status = { submit: 'review', approve: 'approved', publish: 'published', unpublish: 'draft' }[action]; audit(s, actor, mid, 1, 'Materiale: ' + { submit: 'invio in revisione', approve: 'approvazione', publish: 'pubblicazione', unpublish: 'ritiro dalla pubblicazione' }[action]); });
 };
-BL.report = (qid, v, reason, text) => { const s = BL.state(); return BL.commit(() => { s.reports.unshift({ id: 'r' + Date.now(), qid, v, by: s.auth.uid, reason, text, at: Date.now(), status: 'open', priority: 'media', assignee: null, log: [] }); BL.notify(BL.rec(), 'content', 'Segnalazione inviata', 'La segnalazione è in coda di revisione. Riceverai un avviso quando verrà gestita.'); }); };
-BL.updateReport = (actor, rid, patch, label) => { const c = BL.can(actor, patch.status ? 'r.handle' : 'r.assign'); if (!c.ok) return c; return BL.commit(s => { const r = s.reports.find(x => x.id === rid); Object.assign(r, patch); r.log.push({ at: Date.now(), actor: actor.id, label }); audit(s, actor, r.qid, r.v, 'Segnalazione ' + rid + ': ' + label); if (patch.status === 'resolved' && s.recs[r.by + '@demo']) BL.notify(s.recs[r.by + '@demo'], 'content', 'Segnalazione gestita', 'Il team editoriale ha gestito la tua segnalazione.'); }); };
+BL.report = (qid, v, reason, text) => {
+  const s = BL.state();
+  return BL.commit(() => {
+    s.reports.unshift({ id: 'r' + Date.now(), qid, v, by: s.auth.uid, reason, text, at: Date.now(), status: 'open', priority: 'media', assignee: null, log: [] });
+    BL.notify(BL.rec(), 'content', 'Segnalazione inviata', 'La segnalazione è in coda di revisione. Riceverai un avviso quando verrà gestita.');
+  });
+};
+BL.updateReport = (actor, rid, patch, label) => {
+  const c = BL.can(actor, patch.status ? 'r.handle' : 'r.assign');
+  if (!c.ok) return c;
+  return BL.commit(s => {
+    const r = s.reports.find(x => x.id === rid);
+    Object.assign(r, patch);
+    r.log.push({ at: Date.now(), actor: actor.id, label });
+    audit(s, actor, r.qid, r.v, 'Segnalazione ' + rid + ': ' + label);
+    if (patch.status === 'resolved' && s.recs[r.by + '@demo']) {
+      BL.notify(s.recs[r.by + '@demo'], 'content', 'Segnalazione gestita', 'Il team editoriale ha gestito la tua segnalazione.');
+    }
+  });
+};
 BL.quizChecks = (bank, z, settings) => {
   const all = bank.questions.filter(q => { const v = BL.live(q) || BL.working(q); return (!z.filter.subjects || z.filter.subjects.includes(v.subject)) && (!z.filter.topics || z.filter.topics.includes(v.topic)); });
   const live = all.filter(BL.isLive).map(BL.live); const susp = all.filter(q => q.suspended).length; const notApproved = all.filter(q => !BL.isLive(q) && !q.suspended).length;
@@ -560,11 +729,43 @@ BL.duplicates = bank => { const tok = t => new Set(norm(t).split(/[^a-z0-9]+/).f
     const sameSrc = va.source && norm(va.source) === norm(vb.source) ? 1 : 0; const ca = va.options[va.correct], cb = vb.options[vb.correct]; const sameAns = ca && cb && norm(ca) === norm(cb) ? 1 : 0;
     const sim = .5 * jac + .25 * sameSrc + .25 * sameAns; if (sim >= .45) out.push({ a: qs[i].id, b: qs[j].id, sim }); }
   return out.sort((x, y) => y.sim - x.sim); };
-BL.decideDuplicate = (actor, a, b, decision, note) => { const c = BL.can(actor, 'dup.decide'); if (!c.ok) return c; return BL.commit(s => { const bank = BL.bank('demo'); s.dupDecisions = s.dupDecisions || {}; s.dupDecisions[a + '|' + b] = { decision, at: Date.now(), actor: actor.id, note };
-  if (decision === 'merge') { const qa = bank.questions.find(q => q.id === a), qb = bank.questions.find(q => q.id === b); qb.mergedInto = a; const la = BL.live(qa) || BL.working(qa), lb = BL.live(qb) || BL.working(qb); la.profiles = [...new Set(la.profiles.concat(lb.profiles))]; la.entities = [...new Set(la.entities.concat(lb.entities))]; }
-  audit(s, actor, a, null, decision === 'merge' ? `Consolidamento: ${b} confluita in ${a}` : `Duplicato: mantenute entrambe (${a}, ${b})`, note); }); };
-BL.taxEdit = (actor, kind, id, patch) => { const c = BL.can(actor, 'tax.edit'); if (!c.ok) return c; return BL.commit(s => { const list = BL.bank('demo').taxonomy[kind]; if (id) Object.assign(list.find(x => x.id === id), patch); else { const nid = kind[0] + '-' + Date.now().toString(36); list.push(Object.assign({ id: nid }, patch)); id = nid; } audit(s, actor, id, null, 'Catalogo: ' + (patch.name ? `«${patch.name}»` : 'modifica'), kind); }); };
-BL.setRole = (actor, uid, role) => { const c = BL.can(actor, 'users.edit'); if (!c.ok) return c; const s = BL.state(); if (uid === actor.id && role !== 'admin' && s.users.filter(u => u.role === 'admin').length <= 1) return { ok: false, why: "Non puoi rimuovere il ruolo dall'unico amministratore." }; return BL.commit(st => { st.users.find(u => u.id === uid).role = role; audit(st, actor, uid, null, 'Ruolo modificato: ' + BL.ROLES[role]); }); };
+BL.decideDuplicate = (actor, a, b, decision, note) => {
+  const c = BL.can(actor, 'dup.decide');
+  if (!c.ok) return c;
+  return BL.commit(s => {
+    const bank = BL.bank('demo');
+    s.dupDecisions = s.dupDecisions || {};
+    s.dupDecisions[a + '|' + b] = { decision, at: Date.now(), actor: actor.id, note };
+    if (decision === 'merge') {
+      const qa = bank.questions.find(q => q.id === a), qb = bank.questions.find(q => q.id === b);
+      qb.mergedInto = a;
+      const la = BL.live(qa) || BL.working(qa), lb = BL.live(qb) || BL.working(qb);
+      la.profiles = [...new Set(la.profiles.concat(lb.profiles))];
+      la.entities = [...new Set(la.entities.concat(lb.entities))];
+    }
+    audit(s, actor, a, null, decision === 'merge' ? `Consolidamento: ${b} confluita in ${a}` : `Duplicato: mantenute entrambe (${a}, ${b})`, note);
+  });
+};
+BL.taxEdit = (actor, kind, id, patch) => {
+  const c = BL.can(actor, 'tax.edit');
+  if (!c.ok) return c;
+  return BL.commit(s => {
+    const list = BL.bank('demo').taxonomy[kind];
+    if (id) Object.assign(list.find(x => x.id === id), patch);
+    else { id = kind[0] + '-' + Date.now().toString(36); list.push(Object.assign({ id }, patch)); }
+    audit(s, actor, id, null, 'Catalogo: ' + (patch.name ? `«${patch.name}»` : 'modifica'), kind);
+  });
+};
+BL.setRole = (actor, uid, role) => {
+  const c = BL.can(actor, 'users.edit');
+  if (!c.ok) return c;
+  const admins = BL.state().users.filter(u => u.role === 'admin').length;
+  if (uid === actor.id && role !== 'admin' && admins <= 1) return { ok: false, why: "Non puoi rimuovere il ruolo dall'unico amministratore." };
+  return BL.commit(st => {
+    st.users.find(u => u.id === uid).role = role;
+    audit(st, actor, uid, null, 'Ruolo modificato: ' + BL.ROLES[role]);
+  });
+};
 BL.userName = uid => { const u = BL.state().users.find(x => x.id === uid); return u ? u.name : uid || '—'; };
 
 /* ---------- MATERIALI: CREAZIONE, IMPORTAZIONE, FILE ---------- */
