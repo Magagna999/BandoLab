@@ -1,8 +1,8 @@
 -- BandoLab — patch 08: le risposte corrette non sono più leggibili dal client
 -- Da eseguire dopo patch-07.
 --
--- STATO: NON ANCORA APPLICATA al database (bozza in attesa di approvazione, 27/10/2026).
--- Quando viene applicata, aggiornare questa riga.
+-- STATO: APPLICATA al database il 27/10/2026, in due migrazioni (patch_08a: viste e permessi;
+-- patch_08b: funzioni) con lo stesso SQL di questo file.
 --
 -- Problema: question_versions era leggibile da qualsiasi utente (anche anonimo) per le domande
 -- pubblicate, comprese le colonne "correct" ed "explanation". Chiunque poteva leggere le soluzioni
