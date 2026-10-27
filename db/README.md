@@ -6,6 +6,7 @@ Il contratto delle funzioni RPC è in [`API.md`](API.md).
 ## Principi
 - **Ambienti separati**: ogni tabella di contenuto ha la colonna `env` (`demo` | `real`) nella chiave primaria. I dati demo non possono finire nel reale.
 - **ID stabili**: le associazioni usano ID (`s-amm`, `q01`…), mai i nomi visualizzati.
+- **Autore ≠ revisore**: vale per editor e revisori; un amministratore può approvare e pubblicare i propri contenuti (patch 09). Per le domande la regola è nel trigger `question_versions_self_review`.
 - **Versioni**: `questions` punta a `current_version`; le modifiche creano righe nuove in `question_versions`. `attempt_items` conserva la versione usata.
 - **Nessuna eliminazione automatica**: sospensione (`suspended`) e consolidamento (`merged_into`) invece di `DELETE`.
 - **Permessi lato server**: RLS sulle letture, funzioni RPC `security definer` (con `search_path` fisso) per le transizioni.
@@ -20,6 +21,7 @@ Il contratto delle funzioni RPC è in [`API.md`](API.md).
 | `patch-06-hardening.sql` | segnalazioni, notifiche e note di sospensione più restrittive | applicata |
 | `patch-07-rpc-sessions.sql` | RPC per sessioni, punteggio, XP, percorsi | applicata |
 | `patch-08-hide-answers.sql` | viste senza soluzioni, permessi per colonna, RPC per soluzioni | applicata |
+| `patch-09-admin-self-review.sql` | un amministratore può essere autore e revisore dello stesso contenuto (trigger al posto del vincolo) | applicata |
 
 Ordine di esecuzione su un progetto nuovo: schema, poi le patch in ordine numerico.
 

@@ -13,6 +13,7 @@ date: 2026-10-27T15:00:00Z
 - Corretto il testo di q41 nel core (troppo corto per il vincolo del database)
 - Riferimenti MySite sostituiti con BandoLab
 - Import domande da Excel: modello db/import/modello-domande.xlsx e controllo/conversione db/tools/excel-to-sql.py (provato sul database, annullato)
+- Patch 09: l'amministratore può essere autore e revisore (trigger nel database + regola in bandolab-core.js); editor e revisori restano vincolati
 - Il sito non è ancora collegato al database (salva ancora nel browser); prossimo passo: bandolab-api.js
 
 ## Screen map
@@ -23,9 +24,10 @@ date: 2026-10-27T15:00:00Z
 | Area amministrativa | BandoLab Admin.dc.html, bandolab-core.js |
 | Test automatici | BandoLab Test.dc.html, bandolab-core.js |
 | Pagina iniziale (redirect) | index.html |
-| Database | db/schema.sql, db/patch-01..08, db/seed-demo.sql, db/import/, db/tools/, db/API.md, db/README.md, db/tests/, GUIDA-SUPABASE.md |
+| Database | db/schema.sql, db/patch-01..09, db/seed-demo.sql, db/import/, db/tools/, db/API.md, db/README.md, db/tests/, GUIDA-SUPABASE.md |
 
 ## Sync history
+- 2026-10-27T17:30:00Z — patch 09, admin autore e revisore
 - 2026-10-27T17:00:00Z — modello Excel e importatore delle domande
 - 2026-10-27T16:00:00Z — seed demo nel database, generatore, riferimenti BandoLab
 - 2026-10-27T15:00:00Z — patch 06–08, RPC sessioni, test sul database, documentazione API

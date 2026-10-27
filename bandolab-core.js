@@ -473,7 +473,7 @@ const PERMS = {
 BL.PERMS = PERMS;
 BL.can = (user, action, target) => {
   const role = user && user.role; if (!(PERMS[role] || []).includes(action)) return { ok: false, why: `Il ruolo ${BL.ROLES[role] || 'ospite'} non è autorizzato a questa azione.` };
-  if (target && (action === 'q.review' || action === 'm.review')) { const w = target.versions ? BL.working(target) : target; if (w.author === user.id) return { ok: false, why: 'Non puoi revisionare o approvare un contenuto di cui sei autore.' }; }
+  if (target && (action === 'q.review' || action === 'm.review')) { const w = target.versions ? BL.working(target) : target; if (w.author === user.id && role !== 'admin') return { ok: false, why: 'Non puoi revisionare o approvare un contenuto di cui sei autore. Solo un amministratore può farlo.' }; }
   return { ok: true };
 };
 BL.validate = (v, settings) => {
