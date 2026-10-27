@@ -47,10 +47,17 @@ Il file è generato da `bandolab-core.js` con `node db/tools/generate-demo-seed.
 I materiali in PDF restano in bozza finché non c'è un file nello storage (vincolo `file_path` del database).
 Nota: il database ha fatto emergere due difetti dei dati demo che il prototipo non controllava (testo di `q41` troppo corto, date vuote nelle bozze): il primo è corretto nel core.
 
-## Caricamento delle domande reali
-Per ora non esiste un import da interfaccia. Il canale è SQL, con lo stesso schema del seed: una riga in `questions`, una o più in `question_versions` (4 opzioni, risposta 0–3, spiegazione, materia, argomento, difficoltà 1–3, fonte, `last_verified`, `next_review`), poi `current_version`.
-Prerequisiti: materie e argomenti dell'ambiente `real` già presenti; un autore (utente esistente in `profiles_user`) e, per pubblicare, un revisore diverso dall'autore. Altrimenti le domande restano in bozza.
-Prossimo passo previsto: funzione `import_questions(jsonb)` riservata agli admin (tutto o niente), con un modello CSV/Excel da compilare.
+## Caricamento delle domande reali (da Excel)
+1. Compilare `import/modello-domande.xlsx` (fogli «Domande» e «Tassonomia»; le celle gialle sono obbligatorie, la riga «ESEMPIO» viene ignorata).
+2. Controllare e generare l'SQL:
+   `python3 db/tools/excel-to-sql.py FILE.xlsx --author UUID [--env real] [--status draft|review|published] [--reviewer UUID]`
+   Lo script applica le regole del database (testo ≥ 10 caratteri, 4 opzioni, risposta A–D, spiegazione e fonte obbligatorie, difficoltà 1–3, argomento coerente con la materia, date, duplicati) e, se c'è anche un solo errore, elenca le righe da correggere senza scrivere nulla.
+3. Eseguire l'SQL ottenuto nel database (editor SQL di Supabase o `execute_sql`). È ripetibile: gli ID già presenti non vengono duplicati.
+Con `--status published` serve `--reviewer` diverso da `--author` (vincolo del database). Senza ID in colonna A le domande ricevono ID `r0001…` (`--start` per proseguire una numerazione).
+`import/modello-domande.xlsx` si rigenera con `python3 db/tools/make-excel-template.py`.
+Prerequisito: l'autore deve essere un utente esistente (`profiles_user`). Finché non c'è il login Google si può usare uno degli utenti di redazione del seed demo.
+Verifica: un file di prova importato come pubblicato nell'ambiente `real` risulta visibile agli utenti anonimi tramite `live_questions` (prova annullata, nessun dato lasciato).
+Prossimo passo possibile: funzione `import_questions(jsonb)` per admin, per caricare dall'interfaccia senza passare dall'SQL.
 
 ## Test
 `tests/rpc-sessions.test.sql` è un blocco `DO` che crea utenti e domande fittizi, simula i ruoli con `set local role` e `request.jwt.claims`, verifica 39 casi (T01–T33) e termina sempre con un errore `RISULTATI: ...` che annulla ogni modifica.
