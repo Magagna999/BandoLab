@@ -78,8 +78,8 @@ Materie, argomenti, sezioni dei materiali e percorsi sono leggibili solo dopo l'
 - **Area utente**: `completeMaterial`, `markReviewed`, `createReport`, `exportMyData`, `deleteMyAccount`.
 - **Redazione**: `createQuestion`, `updateDraft`, `transition`, `updateReport`, `decideDuplicate`, `importQuestions`, `createMaterial`, `updateMaterial`, `setMaterialFile`, `materialTransition`, `saveQuiz`, `setQuizStatus`, `taxEdit`, `setRole`. Il server ricontrolla ruoli e regole.
 Resta da fare solo la scrittura delle preferenze (letta e scritta oggi dalla tabella `user_prefs`).
-**Non ancora collegato alle pagine**: le pagine chiamano il core in modo sincrono; l'aggancio richiede una cache locale che rispecchi lo stato del server (passo successivo).
-Test: `test/api.test.js` (17 test, client Supabase finto in `test/helpers/fake-supabase.js`). Verificato sul database reale che tutte le tabelle e colonne lette esistono.
+**Collegamento alle pagine**: scelta di sicurezza, nessuna copia locale dei dati del server: le pagine chiamano direttamente questo modulo (il server decide punteggi, scadenze e soluzioni; il core resta solo per il demo anonimo). Fatto: Landing (accesso con Google, flusso PKCE, utente connesso e uscita). Da fare: App utente, poi Admin.
+Test: `test/api.test.js` (17 test; la Landing è provata in browser con la libreria vera e le chiamate al database intercettate, client Supabase finto in `test/helpers/fake-supabase.js`). Verificato sul database reale che tutte le tabelle e colonne lette esistono.
 
 ## Passi per il collegamento
 1. Progetto Supabase creato, schema e patch 01–12 applicati (fatto).

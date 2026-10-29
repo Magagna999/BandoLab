@@ -37,7 +37,7 @@ sessioni d'esame validate dal server, audit log immutabile, export/cancellazione
 
 ## Database
 Schema PostgreSQL/Supabase, patch 01–12 e funzioni RPC per sessioni, punteggio, soluzioni, area utente e redazione: vedi `db/README.md` e `db/API.md`.
-Il database è attivo e le RPC sono testate (`db/tests/*.test.sql`), ma il sito **non è ancora collegato**: salva ancora nel browser.
+Il database è attivo e le RPC sono testate (`db/tests/*.test.sql`), ma il sito è collegato solo in parte: la **Landing** ha l'accesso reale con Google (flusso PKCE, libreria supabase-js con controllo di integrità); **App e Admin** salvano ancora nel browser e vanno collegate una pagina alla volta, chiamando direttamente `bandolab-api.js` (nessuna copia locale dei dati, che resta solo per il demo anonimo). Per l'accesso reale servono Google e Supabase configurati (`GUIDA-SUPABASE.md`).
 
 ## Test automatici
 `npm test` (Node 20 o successivo, nessuna dipendenza) esegue 83 unit test su `bandolab-core.js` e `bandolab-api.js`: punteggio, date, permessi, workflow editoriale, sessioni, XP, badge, statistiche, ricerca, duplicati, materiali e persistenza.

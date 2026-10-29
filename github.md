@@ -2,7 +2,7 @@ repo: Magagna999/BandoLab
 branch: main
 
 ## Last sync
-date: 2026-10-29T09:00:00Z
+date: 2026-10-29T11:00:00Z
 
 ### Updated in this project
 - Revisione del database: patch 06 (policy più restrittive), 07 (RPC per sessioni, punteggio, XP), 08 (risposte corrette nascoste al client)
@@ -22,7 +22,9 @@ date: 2026-10-29T09:00:00Z
 - bandolab-api.js: wrapper per tutte le nuove RPC, 17 test con client finto (83 test in totale)
 - Pulizia: tolti dall'Admin gli accessi rapidi con account demo (la schermata «Permesso insufficiente» rimanda alla Landing); rimosso il file `download` (screenshot della pagina dei test, non usato)
 - Bozza patch 13 (permessi di tabella minimi) in db/patch-13-table-privileges.sql: NON applicata al database, in attesa di conferma
-- Il sito non è ancora collegato al database (salva ancora nel browser); prossimo passo: agganciare le pagine tramite cache locale
+- Scelta di sicurezza per il collegamento: le pagine parlano direttamente con bandolab-api.js, senza copia locale dei dati del server (il core calcolerebbe punteggi con le risposte corrette in memoria)
+- Landing: accesso reale con Google (supabase-js 2.117.3 da jsdelivr con SRI, flusso PKCE), stato connesso con email e «Esci»; il demo simulato resta; provato in browser
+- App utente e Admin non ancora collegate (salvano nel browser); prossimo passo: App utente
 
 ## Screen map
 | Schermata | File nel repository |
@@ -35,6 +37,7 @@ date: 2026-10-29T09:00:00Z
 | Database | db/schema.sql, db/patch-01..13 (la 13 solo come bozza), db/seed-demo.sql, db/import/, db/tools/, db/API.md, db/README.md, db/tests/, GUIDA-SUPABASE.md |
 
 ## Sync history
+- 2026-10-29T11:00:00Z — Landing con accesso reale Google
 - 2026-10-29T09:00:00Z — pulizia Admin e repository, bozza patch 13
 - 2026-10-27T21:00:00Z — patch 10–12, RPC complete e test sul database
 - 2026-10-27T19:30:00Z — livello API bandolab-api.js e test

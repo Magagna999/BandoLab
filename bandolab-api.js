@@ -302,7 +302,7 @@
     opts = opts || {};
     const lib = opts.lib || (typeof window !== 'undefined' && window.supabase);
     if (!lib || !lib.createClient) throw new Error('supabase-js non è stato caricato');
-    const client = lib.createClient(opts.url || PROJECT_URL, opts.key || PUBLISHABLE_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
+    const client = lib.createClient(opts.url || PROJECT_URL, opts.key || PUBLISHABLE_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: 'pkce' } });
     return create({ client });
   }
 

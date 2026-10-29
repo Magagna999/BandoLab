@@ -11,6 +11,8 @@
 <title>BandoLab — Preparati meglio. Un quiz alla volta.</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..24,400..600,0..1,0&display=block" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js" integrity="sha384-BWcjm9OdFth9TbhCxZPdm+gAOUMAzQy9nmTs12ioXdCcbVnJaPMn+fMUoQCLt60R" crossorigin="anonymous"></script>
+<script src="bandolab-api.js"></script>
 <script src="bandolab-core.js"></script>
 <style>
 :root{--bg:#F5F0E6;--surface:#FFFDF9;--surface-2:#EDE6D8;--ink:#171717;--ink-2:#45403A;--ink-3:#655E55;--line:#E2D9C9;--accent:#F47732;--accent-hover:#E2621C;--accent-soft:#FDE6D6;--accent-text:#A3440E;--side:#171717;--side-ink:#F5F0E6;--side-ink-2:#B8B0A3;--ok:#1F7A4A;--ok-soft:#DDF0E4;--err:#B3261E;--err-soft:#F9E0DC;--warn:#7E5300;--warn-soft:#F7E9C6;--info:#24578A;--info-soft:#DDE8F4;--shadow:0 1px 2px rgba(23,23,23,.05),0 8px 28px rgba(23,23,23,.06);--overlay:rgba(23,23,23,.45)}
@@ -47,6 +49,10 @@ summary::-webkit-details-marker{display:none}
         <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
           <sc-if value="{{ loggedIn }}">
             <a href="{{ appHref }}" style="padding:10px 16px;border-radius:10px;background:var(--accent);color:#171717;font-weight:600;text-decoration:none;font-size:15px" style-hover="background:var(--accent-hover);color:#171717">Vai alla dashboard</a>
+          </sc-if>
+          <sc-if value="{{ serverIn }}">
+            <span style="font-size:14px;color:var(--ink-2);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ serverEmail }}</span>
+            <button onClick="{{ serverSignOut }}" style="padding:10px 14px;border-radius:10px;background:transparent;border:1px solid var(--line);font-weight:600;cursor:pointer;font-size:15px" style-hover="background:var(--surface-2)">Esci</button>
           </sc-if>
           <sc-if value="{{ loggedOut }}" hint-placeholder-val="{{ true }}">
             <button onClick="{{ openLogin }}" style="padding:10px 14px;border-radius:10px;background:transparent;border:0;font-weight:600;cursor:pointer;font-size:15px" style-hover="background:var(--surface-2)">Accedi</button>
@@ -372,15 +378,27 @@ summary::-webkit-details-marker{display:none}
   <sc-if value="{{ vLogin }}">
     <main style="min-height:calc(100vh - 70px);display:grid;place-items:center;padding:32px 20px">
       <div style="max-width:480px;width:100%;padding:clamp(24px,5vw,40px);border-radius:24px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:20px;animation:blFade .25s ease-out">
+        <sc-if value="{{ serverIn }}">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <span style="font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--ok)">ACCESSO ESEGUITO</span>
+            <h1 style="font:800 26px Manrope,sans-serif;letter-spacing:-.02em">Sei connesso a BandoLab</h1>
+            <p style="color:var(--ink-2);line-height:1.5">Account: <strong>{{ serverEmail }}</strong> · ruolo: <strong>{{ serverRole }}</strong></p>
+          </div>
+          <p style="display:flex;gap:10px;padding:12px 14px;border-radius:12px;background:var(--info-soft);color:var(--info);font-size:14px;line-height:1.45"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:20px">info</span>L'accesso con Google è reale e collegato al database. L'area utente non è ancora collegata: arriverà nel prossimo aggiornamento.</p>
+          <button onClick="{{ serverSignOut }}" style="min-height:48px;border-radius:12px;border:1px solid var(--line);background:var(--bg);cursor:pointer;font-weight:600">Esci</button>
+          <button onClick="{{ goHome }}" style="align-self:center;min-height:44px;padding:0 12px;border:0;background:transparent;cursor:pointer;color:var(--ink-2);text-decoration:underline">Torna alla home</button>
+        </sc-if>
         <sc-if value="{{ loginStep1 }}" hint-placeholder-val="{{ true }}">
           <div style="display:flex;flex-direction:column;gap:8px">
             <h1 style="font:800 28px Manrope,sans-serif;letter-spacing:-.02em">Accedi a BandoLab</h1>
             <p style="color:var(--ink-2);line-height:1.5">Un solo account per quiz, materiali e progressi. Gratuito al lancio.</p>
           </div>
-          <button onClick="{{ googleStep }}" style="min-height:52px;border-radius:12px;border:1px solid var(--line);background:var(--bg);cursor:pointer;font-weight:600;font-size:16px;display:flex;align-items:center;justify-content:center;gap:12px" style-hover="border-color:var(--ink)">
-            <span aria-hidden="true" style="width:22px;height:22px;border-radius:50%;background:#FFFFFF;border:1px solid var(--line);display:grid;place-items:center;font:700 13px Inter,sans-serif;color:#4285F4">G</span>Continua con Google
+          <button onClick="{{ googleReal }}" disabled="{{ googleBusy }}" style="min-height:52px;border-radius:12px;border:1px solid var(--line);background:var(--bg);cursor:pointer;font-weight:600;font-size:16px;display:flex;align-items:center;justify-content:center;gap:12px" style-hover="border-color:var(--ink)">
+            <span aria-hidden="true" style="width:22px;height:22px;border-radius:50%;background:#FFFFFF;border:1px solid var(--line);display:grid;place-items:center;font:700 13px Inter,sans-serif;color:#4285F4">G</span>{{ googleLabel }}
           </button>
-          <p style="display:flex;gap:10px;padding:12px 14px;border-radius:12px;background:var(--info-soft);color:var(--info);font-size:14px;line-height:1.45"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:20px">info</span>Prototipo: l'accesso con Google è simulato. Nessun dato viene inviato a Google e i dati restano in questo browser.</p>
+          <sc-if value="{{ hasServerError }}"><p role="alert" style="padding:12px;border-radius:10px;background:var(--err-soft);color:var(--err);font-size:14px">{{ serverError }}</p></sc-if>
+          <button onClick="{{ googleStep }}" style="min-height:48px;border-radius:12px;border:1px dashed var(--line);background:transparent;cursor:pointer;font-weight:600;font-size:15px;color:var(--ink-2)" style-hover="border-color:var(--ink)">Prova con un account demo (simulato)</button>
+          <p style="display:flex;gap:10px;padding:12px 14px;border-radius:12px;background:var(--info-soft);color:var(--info);font-size:14px;line-height:1.45"><span aria-hidden="true" style="font-family:'Material Symbols Rounded';font-size:20px">info</span>Con Google l'accesso è reale e i dati vanno nel database. L'area utente è in fase di collegamento: per esplorare l'app usa per ora un account demo simulato, i cui dati restano solo in questo browser.</p>
           <button onClick="{{ goHome }}" style="align-self:center;min-height:44px;padding:0 12px;border:0;background:transparent;cursor:pointer;color:var(--ink-2);text-decoration:underline">Torna alla home</button>
         </sc-if>
         <sc-if value="{{ loginStep2 }}">
@@ -442,7 +460,7 @@ summary::-webkit-details-marker{display:none}
 </x-dc>
 <script type="text/x-dc" data-dc-script>
 class Component extends DCLogic {
-  state = { ready: false, w: typeof window !== 'undefined' ? window.innerWidth : 1200, view: 'home', menu: false, cat: 'real', idx: 0, ans: {}, confirm: false, loginStep: 1, env: 'demo', legal: 'privacy', loginError: '' };
+  state = { ready: false, w: typeof window !== 'undefined' ? window.innerWidth : 1200, view: 'home', menu: false, cat: 'real', idx: 0, ans: {}, confirm: false, loginStep: 1, env: 'demo', legal: 'privacy', loginError: '', server: null, googleBusy: false, serverError: '' };
   componentDidMount() {
     this.onResize = () => this.setState({ w: window.innerWidth });
     window.addEventListener('resize', this.onResize);
@@ -454,8 +472,29 @@ class Component extends DCLogic {
     };
     window.addEventListener('keydown', this.onKey);
     const go = () => window.BL ? this.setState({ ready: true }) : setTimeout(go, 30); go();
+    this.initServer();
   }
-  componentWillUnmount() { window.removeEventListener('resize', this.onResize); window.removeEventListener('keydown', this.onKey); }
+  /* Accesso reale: collegamento al database (Supabase). Se la libreria non è disponibile resta solo il demo simulato. */
+  initServer() {
+    try { this.api = window.BandoLabAPI && window.supabase ? window.BandoLabAPI.connect() : null; } catch (e) { this.api = null; }
+    if (!this.api) return;
+    this.refreshServer();
+    this.unsubAuth = this.api.onAuthChange(() => this.refreshServer());
+  }
+  async refreshServer() {
+    const u = await this.api.getUser();
+    if (!u.ok || !u.user) { this.setState({ server: null }); return; }
+    const p = await this.api.getProfile();
+    this.setState({ server: p.ok ? { email: p.profile.email || u.user.email, name: p.profile.name, role: p.profile.role } : { email: u.user.email, name: '', role: 'user' } });
+  }
+  async googleReal() {
+    if (!this.api) { this.setState({ serverError: 'Accesso non disponibile: connessione al servizio non riuscita. Riprova più tardi.' }); return; }
+    this.setState({ googleBusy: true, serverError: '' });
+    const r = await this.api.signInWithGoogle(location.origin + location.pathname);
+    if (!r.ok) this.setState({ googleBusy: false, serverError: r.why || 'Accesso non riuscito. Riprova.' });
+  }
+  async serverSignOut() { if (this.api) await this.api.signOut(); this.setState({ server: null, googleBusy: false }); }
+  componentWillUnmount() { if (this.unsubAuth) this.unsubAuth(); window.removeEventListener('resize', this.onResize); window.removeEventListener('keydown', this.onKey); }
   qs() { const B = window.BL; const bank = B.bank('demo'); return B.DEMO_QUIZ_IDS.map(id => { const q = bank.questions.find(x => x.id === id); return Object.assign({ id }, B.live(q)); }); }
   pick(i) { const q = this.qs()[this.state.idx]; this.setState(s => ({ ans: Object.assign({}, s.ans, { [q.id]: i }) })); }
   move(d) { this.setState(s => ({ idx: Math.max(0, Math.min(4, s.idx + d)) })); }
@@ -464,6 +503,7 @@ class Component extends DCLogic {
     const B = window.BL; const st = this.state; const wide = st.w >= 900;
     const S = st.ready ? B.state() : null; const me = st.ready ? B.me() : null;
     const appHref = me && me.role !== 'user' ? 'BandoLab%20Admin.dc.html' : 'BandoLab%20App.dc.html';
+    const sv = st.server; const roleName = sv ? ((B && B.ROLES && B.ROLES[sv.role]) || sv.role) : '';
     const openLogin = () => { if (me) { location.href = appHref; return; } this.view('login', { loginStep: 1 }); };
     const goSection = e => { if (st.view !== 'home') { e.preventDefault(); const h = e.currentTarget.getAttribute('href'); this.view('home'); setTimeout(() => { const el = document.querySelector(h); if (el) window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 70); }, 60); } this.setState({ menu: false }); };
     const legalData = {
@@ -472,7 +512,10 @@ class Component extends DCLogic {
       contacts: { title: 'Contatti', sections: [{ h: 'Recapiti', p: 'I recapiti ufficiali saranno pubblicati prima del lancio.' }, { h: 'Segnalazioni sui contenuti', p: "Dall'interno dell'app puoi segnalare ogni domanda con il pulsante «Segnala»." }] } };
     const out = {
       wide, narrow: !wide, menuOpen: st.menu, showMobileMenu: !wide && st.menu, menuIcon: st.menu ? 'close' : 'menu', toggleMenu: () => this.setState(s => ({ menu: !s.menu })),
-      loggedIn: !!me, loggedOut: !me, appHref, openLogin, goSection,
+      loggedIn: !!me, loggedOut: !me && !sv, appHref, openLogin, goSection,
+      serverIn: !!sv, serverEmail: sv ? sv.email : '', serverRole: roleName, serverSignOut: () => this.serverSignOut(),
+      googleReal: () => this.googleReal(), googleBusy: st.googleBusy, googleLabel: st.googleBusy ? 'Apro Google…' : 'Continua con Google',
+      hasServerError: !!st.serverError, serverError: st.serverError,
       goHome: e => { if (e && e.preventDefault) e.preventDefault(); this.view('home'); },
       startDemo: () => this.view('demo', { idx: 0, ans: {}, confirm: false }),
       vHome: st.view === 'home', vDemo: st.view === 'demo' && st.ready, vResult: st.view === 'result' && st.ready, vLogin: st.view === 'login' && st.ready, vLegal: st.view === 'legal',
@@ -487,7 +530,7 @@ class Component extends DCLogic {
       openPrivacy: () => this.view('legal', { legal: 'privacy' }), openTerms: () => this.view('legal', { legal: 'terms' }), openContacts: () => this.view('legal', { legal: 'contacts' }),
       legal: legalData[st.legal],
       toggleTheme: () => { if (!st.ready) return; B.commit(s => { s.theme = s.theme === 'dark' ? 'light' : 'dark'; }); B.applyTheme(); this.forceUpdate(); },
-      loginStep1: st.loginStep === 1, loginStep2: st.loginStep === 2, googleStep: () => this.setState({ loginStep: 2 }), backStep1: () => this.setState({ loginStep: 1 }),
+      loginStep1: st.loginStep === 1 && !sv, loginStep2: st.loginStep === 2 && !sv, googleStep: () => this.setState({ loginStep: 2 }), backStep1: () => this.setState({ loginStep: 1 }),
       hasLoginError: !!st.loginError, loginError: st.loginError
     };
     if (!st.ready) return out;
