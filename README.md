@@ -1,3 +1,7 @@
+# BandoLab
+
+> **Chi riprende il lavoro (persone o IA): leggi prima [`HANDOFF.md`](HANDOFF.md).**
+
 # BandoLab — prototipo interattivo
 
 Prototipo ad alta fedeltà. **Non è pronto per la produzione.** Tutti i dati vivono nel `localStorage` del browser.
