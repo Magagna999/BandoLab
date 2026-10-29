@@ -1,5 +1,3 @@
-# BandoLab
-
 > **Chi riprende il lavoro (persone o IA): leggi prima [`HANDOFF.md`](HANDOFF.md).**
 
 # BandoLab — prototipo interattivo
